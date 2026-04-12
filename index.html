@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Planet Math Defense</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="game-shell">
+    <button id="menu-toggle-btn" class="stats-toggle" data-panel="menu-toggle">Menu</button>
+
+    <section id="menu-panel" class="menu-panel hidden">
+      <div class="settings-head">
+        <div>
+          <p class="console-label">Menu</p>
+          <h3>Game Menu</h3>
+        </div>
+        <button id="menu-close-btn" class="settings-close">Close</button>
+      </div>
+      <div class="menu-tabs">
+        <button class="menu-tab active" data-menu-tab="overview">Overview</button>
+        <button class="menu-tab" data-menu-tab="stats">Stats</button>
+        <button class="menu-tab" data-menu-tab="settings">Settings</button>
+        <button class="menu-tab" data-menu-tab="missions">Missions</button>
+        <button class="menu-tab" data-menu-tab="archive">Archive</button>
+      </div>
+
+      <div class="menu-body">
+        <section class="menu-section active" data-menu-section="overview">
+          <div class="stats-grid compact-stats">
+            <div class="effect-chip">
+              <span>Level</span>
+              <strong id="level-value">1</strong>
+            </div>
+            <div class="effect-chip">
+              <span>Damage</span>
+              <strong id="attack-value">8</strong>
+            </div>
+            <div class="effect-chip">
+              <span>Regen</span>
+              <strong id="regen-value">+1/s</strong>
+            </div>
+            <div class="effect-chip">
+              <span>Attack Speed</span>
+              <strong id="speed-value">1.1/s</strong>
+            </div>
+            <div class="effect-chip">
+              <span>Shield Max</span>
+              <strong id="max-shield-live">30</strong>
+            </div>
+            <div class="effect-chip">
+              <span>Targets</span>
+              <strong id="target-count-value">1</strong>
+            </div>
+          </div>
+        </section>
+
+        <section class="menu-section" data-menu-section="stats">
+          <div class="stats-grid">
+            <div class="effect-chip">
+              <span>Power</span>
+              <strong id="addition-upgrade-text">0 power ups</strong>
+            </div>
+            <div class="effect-chip">
+              <span>Shield</span>
+              <strong id="subtraction-upgrade-text">0 max ups</strong>
+            </div>
+            <div class="effect-chip">
+              <span>Multishot</span>
+              <strong id="multiplication-upgrade-text">0 target ups</strong>
+            </div>
+            <div class="effect-chip">
+              <span>Regen</span>
+              <strong id="division-upgrade-text">0 regen ups</strong>
+            </div>
+            <div class="effect-chip">
+              <span>Max Shield</span>
+              <strong id="max-shield-stat">30</strong>
+            </div>
+            <div class="effect-chip">
+              <span>Population</span>
+              <strong id="population-stat">100%</strong>
+            </div>
+            <div class="effect-chip">
+              <span>Checkpoint</span>
+              <strong id="checkpoint-stat">Level 0</strong>
+            </div>
+            <div class="effect-chip">
+              <span>Best Streak</span>
+              <strong id="best-streak-stat">0</strong>
+            </div>
+          </div>
+        </section>
+
+        <section class="menu-section" data-menu-section="settings">
+          <div class="theme-block">
+            <p class="console-label">Theme</p>
+            <div class="theme-grid">
+              <button class="theme-button active" data-theme="nebula" type="button">
+                <strong>Nebula Blue</strong>
+                <span>Calm space blues with soft glow.</span>
+              </button>
+              <button class="theme-button" data-theme="sunset" type="button">
+                <strong>Sunset Orbit</strong>
+                <span>Warm gold and coral for cozy energy.</span>
+              </button>
+              <button class="theme-button" data-theme="mint" type="button">
+                <strong>Mint Nova</strong>
+                <span>Fresh teal and green for a friendly feel.</span>
+              </button>
+              <button class="theme-button" data-theme="arcade" type="button">
+                <strong>Arcade Pop</strong>
+                <span>Bold contrast built for playful focus.</span>
+              </button>
+            </div>
+          </div>
+          <div class="settings-grid">
+            <label class="settings-control">
+              <span>All Size</span>
+              <input id="global-scale-input" type="range" min="80" max="140" value="100">
+            </label>
+            <label class="settings-control">
+              <span>Box Size</span>
+              <input id="panel-scale-input" type="range" min="70" max="160" value="100">
+            </label>
+          </div>
+          <button id="layout-edit-btn" class="layout-reset">Move UI</button>
+          <p class="settings-copy">Open this and drag boxes to move them. Click a box, then change its size.</p>
+          <button id="layout-reset-btn" class="layout-reset">Reset Layout</button>
+        </section>
+
+        <section class="menu-section" data-menu-section="missions">
+          <p class="settings-copy">Missions will be added later.</p>
+        </section>
+
+        <section class="menu-section" data-menu-section="archive">
+          <p class="settings-copy">Archive will be added later.</p>
+        </section>
+      </div>
+    </section>
+
+    <div class="system-banner" id="system-banner" data-panel="banner">Planetary defense online. Solve math to power the weapons grid.</div>
+
+    <main class="arena-view">
+      <div id="enemy-field" class="space-arena">
+        <div id="projectile-layer" class="projectile-layer"></div>
+
+        <div class="planet-anchor">
+          <div class="shield-shell" id="shield-ring"></div>
+          <div class="planet-glow"></div>
+          <button id="planet-core-btn" class="planet-core" type="button" aria-label="Planet help">
+            <div class="planet-surface">
+              <span class="continent continent-1"></span>
+              <span class="continent continent-2"></span>
+              <span class="continent continent-3"></span>
+            </div>
+            <div class="planet-lights"></div>
+          </button>
+        </div>
+      </div>
+
+      <section class="planet-status" data-panel="status">
+        <div class="status-block">
+          <label>Planet State</label>
+          <strong id="planet-state-text">Safe</strong>
+        </div>
+        <div class="status-block">
+          <label>Population</label>
+          <strong id="population-live-text">100%</strong>
+        </div>
+      </section>
+
+      <section class="math-console upgrade-console" data-panel="upgrade-console">
+        <div class="console-topline">
+          <p class="console-label">Upgrade Deck</p>
+          <p class="console-sub">Pick the math power you want.</p>
+        </div>
+
+        <div class="upgrade-deck">
+          <div class="category-grid">
+            <button class="category-button active" data-category="addition">
+              <span>Addition</span>
+              <strong>Power</strong>
+            </button>
+            <button class="category-button" data-category="subtraction">
+              <span>Subtraction</span>
+              <strong>Shield</strong>
+            </button>
+            <button class="category-button" data-category="multiplication">
+              <span>Multiplication</span>
+              <strong>Multishot</strong>
+            </button>
+            <button class="category-button" data-category="division">
+              <span>Division</span>
+              <strong>Regen</strong>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="math-console answer-console" data-panel="answer-console">
+        <div class="console-topline">
+          <p class="console-label">Answer To Help Planet</p>
+          <p class="console-sub">A right answer makes the Planet stronger.</p>
+        </div>
+
+        <div class="answer-platform">
+          <div class="question-zone">
+            <div class="question-copy">
+              <p class="question-label">Question</p>
+              <h2 id="question-text">2 + 3 = ?</h2>
+            </div>
+            <div class="answer-row">
+              <input id="answer-input" type="number" inputmode="numeric" placeholder="Answer">
+              <button id="submit-answer-btn" class="primary-button">Deploy</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <section id="repair-panel" class="repair-panel hidden">
+      <p class="console-label">Repair Time</p>
+      <h2>Planet Needs Repair</h2>
+      <p id="repair-copy" class="repair-copy">Answer 3 easy questions to fix the Planet and win your streak back.</p>
+      <h3 id="repair-question-text">1 + 1 = ?</h3>
+      <div class="answer-row repair-answer-row">
+        <input id="repair-answer-input" type="number" inputmode="numeric" placeholder="Answer">
+        <button id="repair-submit-btn" class="primary-button">Fix</button>
+      </div>
+      <p id="repair-progress-text" class="lesson-feedback">0 of 3 correct</p>
+    </section>
+
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
