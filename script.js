@@ -16,7 +16,6 @@ const state = {
   threatMultiplier: 1,
   totalUpgrades: 0,
   level: 1,
-  previousStreak: 0,
   savedStreakAtFailure: 0,
   checkpointSnapshot: null,
   checkpointGuard: false,
@@ -57,6 +56,10 @@ const state = {
   lastBannerMessage: "",
   planetHintIndex: -1
 };
+
+const CATEGORY_KEYS = ["addition", "subtraction", "multiplication", "division"];
+const REPAIR_QUESTION_CATEGORIES = ["addition", "subtraction"];
+const OPENING_WAVE_SIZE = 3;
 
 const planetHints = [
   "Solve math to power the Planet. Each correct answer gives one upgrade.",
@@ -149,19 +152,15 @@ const enemyTemplates = {
 
 const categoryEffects = {
   addition: {
-    label: "Power",
     feedback: "Addition makes your attacks stronger."
   },
   subtraction: {
-    label: "Shield",
     feedback: "Subtraction makes the Planet's max shield and health bigger."
   },
   multiplication: {
-    label: "Multishot",
     feedback: "Multiplication lets the Planet hit more enemies."
   },
   division: {
-    label: "Regen",
     feedback: "Division helps the Planet heal and rebuild shield over time."
   }
 };
@@ -249,8 +248,7 @@ function getCheckpointLevel() {
 }
 
 function nextRepairQuestion() {
-  const kinds = ["addition", "subtraction"];
-  const kind = kinds[randomInt(0, kinds.length - 1)];
+  const kind = REPAIR_QUESTION_CATEGORIES[randomInt(0, REPAIR_QUESTION_CATEGORIES.length - 1)];
   state.repairQuestion = getQuestion(kind);
   ui.repairQuestionText.textContent = state.repairQuestion.prompt;
   ui.repairAnswerInput.value = "";
@@ -301,15 +299,15 @@ function applyLevelRollback(amount) {
   recalculatePlanetStats();
 }
 
-function applyCheckpointState(populationPercent, fillRatio) {
+function applyCheckpointState(populationPercent, fillRatio, guardActive = true) {
   state.population = populationPercent;
   state.baseHp = Math.round(state.maxBaseHp * fillRatio);
   state.shield = Math.round(state.maxShield * fillRatio);
   state.streak = Math.floor(state.savedStreakAtFailure * fillRatio);
   state.bestStreak = Math.max(state.bestStreak, state.streak);
   state.correctSincePopulationGain = 0;
-  state.checkpointGuard = true;
-  state.checkpointRecoveryAnswers = 0;
+  state.checkpointGuard = guardActive;
+  state.checkpointRecoveryAnswers = guardActive ? 0 : state.checkpointRecoveryAnswers;
 }
 
 function openRepairMode(reason) {
@@ -329,6 +327,29 @@ function openRepairMode(reason) {
   setBanner("Checkpoint lesson ready. Save the Planet's streak.");
 }
 
+function resetCategoryLocks() {
+  state.wrongLocks = {
+    addition: false,
+    subtraction: false,
+    multiplication: false,
+    division: false
+  };
+  state.spamLockCategory = null;
+  state.spamUnlockProgress = 0;
+  state.focusCategory = null;
+  state.focusCount = 0;
+}
+
+function spawnOpeningWave() {
+  for (let i = 0; i < OPENING_WAVE_SIZE; i += 1) {
+    spawnEnemy();
+  }
+}
+
+function captureFailureStreak() {
+  state.savedStreakAtFailure = Math.max(state.savedStreakAtFailure, state.streak);
+}
+
 function resetToCheckpoint() {
   if (state.checkpointSnapshot) {
     state.elapsedSec = state.checkpointSnapshot.elapsedSec;
@@ -343,16 +364,7 @@ function resetToCheckpoint() {
     state.repairAttempts = 0;
     state.repairCorrect = 0;
     state.question = null;
-    state.wrongLocks = {
-      addition: false,
-      subtraction: false,
-      multiplication: false,
-      division: false
-    };
-    state.spamLockCategory = null;
-    state.spamUnlockProgress = 0;
-    state.focusCategory = null;
-    state.focusCount = 0;
+    resetCategoryLocks();
     state.enemies = [];
     state.enemyId = 1;
     state.lastAttack = 0;
@@ -360,9 +372,7 @@ function resetToCheckpoint() {
     recalculatePlanetStats();
     applyCheckpointState(40, 0.5);
     setCategory("addition");
-    spawnEnemy();
-    spawnEnemy();
-    spawnEnemy();
+    spawnOpeningWave();
     return;
   }
 
@@ -383,7 +393,6 @@ function resetToCheckpoint() {
   state.threatMultiplier = 1;
   state.totalUpgrades = 0;
   state.level = 1;
-  state.previousStreak = 0;
   state.savedStreakAtFailure = 0;
   state.checkpointSnapshot = null;
   state.checkpointGuard = false;
@@ -394,16 +403,7 @@ function resetToCheckpoint() {
   state.repairQuestion = null;
   state.category = "addition";
   state.question = null;
-  state.wrongLocks = {
-    addition: false,
-    subtraction: false,
-    multiplication: false,
-    division: false
-  };
-  state.spamLockCategory = null;
-  state.spamUnlockProgress = 0;
-  state.focusCategory = null;
-  state.focusCount = 0;
+  resetCategoryLocks();
   state.enemies = [];
   state.enemyId = 1;
   state.lastAttack = 0;
@@ -417,9 +417,7 @@ function resetToCheckpoint() {
 
   recalculatePlanetStats();
   setCategory("addition");
-  spawnEnemy();
-  spawnEnemy();
-  spawnEnemy();
+  spawnOpeningWave();
 }
 
 function setBanner(message, options = {}) {
@@ -496,7 +494,7 @@ function nextQuestion() {
 }
 
 function getCategories() {
-  return ["addition", "subtraction", "multiplication", "division"];
+  return CATEGORY_KEYS;
 }
 
 function isCategoryLocked(category) {
@@ -517,8 +515,7 @@ function losePopulation(reason) {
 
   if (previous > 0 && state.population === 0) {
     captureCheckpointSnapshot();
-    state.savedStreakAtFailure = Math.max(state.savedStreakAtFailure, state.streak);
-    state.previousStreak = state.streak;
+    captureFailureStreak();
     state.streak = 0;
     openRepairMode("population");
     return true;
@@ -841,8 +838,7 @@ function dealDamageToPlanet(amount, mode = "normal") {
   if (state.baseHp === 0) {
     state.baseHp = 0;
     state.shield = 0;
-    state.previousStreak = state.streak;
-    state.savedStreakAtFailure = Math.max(state.savedStreakAtFailure, state.streak);
+    captureFailureStreak();
     state.streak = 0;
     if (losePopulation("attack")) {
       return;
@@ -1091,10 +1087,9 @@ function submitRepairAnswer() {
     ui.repairPanel.classList.add("hidden");
 
     if (state.repairCorrect === state.repairTarget) {
-      applyCheckpointState(100, 1);
+      applyCheckpointState(100, 1, false);
       state.streak = state.savedStreakAtFailure;
       state.bestStreak = Math.max(state.bestStreak, state.streak);
-      state.checkpointGuard = false;
       state.checkpointRecoveryAnswers = 0;
       state.savedStreakAtFailure = 0;
       setBanner("Perfect repair. Full health, full shield, full population.");
@@ -1332,9 +1327,7 @@ initLayoutEditor();
 applyTheme(state.theme);
 setCategory("addition");
 setMenuTab("overview");
-spawnEnemy();
-spawnEnemy();
-spawnEnemy();
+spawnOpeningWave();
 setBanner("Help the Planet. Answer math questions to stop the swarm.");
 updateUi();
 requestAnimationFrame(gameLoop);
