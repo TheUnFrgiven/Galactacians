@@ -1750,9 +1750,9 @@ input {
   }
 
   .game-shell {
-    min-height: 100vh;
-    height: auto;
-    padding-bottom: 320px;
+    min-height: 100svh;
+    height: 100svh;
+    padding-bottom: 0;
   }
 
   .planet-status,
@@ -1760,52 +1760,208 @@ input {
     position: absolute;
   }
 
+  .space-arena {
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 264px;
+  }
+
   .planet-status {
     left: 12px;
     right: 12px;
     width: auto;
-    top: 184px;
+    top: 72px;
     transform: none;
-    flex-direction: column;
+    flex-direction: row;
+    gap: 8px;
+    padding: 8px 10px;
   }
 
   .system-banner {
-    left: 12px;
-    right: 12px;
-    width: auto;
-    top: 280px;
-    transform: none;
+    left: 50%;
+    right: auto;
+    width: min(78vw, 320px);
+    top: calc(50% - min(36vw, 36vh) - 54px);
+    transform: translateX(-50%);
   }
 
   .math-console {
     left: 12px;
     right: 12px;
-    bottom: 12px;
     width: auto;
     transform: none;
+    padding: 14px;
+    border-radius: 20px;
   }
 
   .console-topline {
     flex-direction: column;
+    gap: 4px;
+    margin-bottom: 10px;
+  }
+
+  .console-sub {
+    font-size: 0.82rem;
+  }
+
+  .upgrade-console {
+    top: auto;
+    bottom: 134px;
+  }
+
+  .answer-console {
+    top: auto;
+    bottom: 12px;
   }
 
   .menu-panel {
     left: 12px;
     right: 12px;
+    top: 60px;
     width: auto;
+    max-height: calc(100svh - 72px);
+    overflow: auto;
   }
 
   .planet-core {
-    width: min(36vw, 36vh);
-    height: min(36vw, 36vh);
+    width: min(44vw, 44vh);
+    height: min(44vw, 44vh);
+    min-width: 170px;
+    min-height: 170px;
   }
 
   .shield-shell {
-    width: min(48vw, 48vh);
-    height: min(48vw, 48vh);
+    width: min(58vw, 58vh);
+    height: min(58vw, 58vh);
+  }
+
+  .question-zone {
+    min-height: 0;
+    gap: 10px;
+  }
+
+  #question-text {
+    font-size: clamp(1.6rem, 8vw, 2.4rem);
+  }
+
+  .answer-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  .answer-row input,
+  .primary-button {
+    min-height: 48px;
+  }
+
+  .category-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .category-button {
+    min-width: 0;
+    padding: 10px 12px;
+  }
+
+  .stats-grid,
+  .compact-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .effect-chip {
+    min-width: 0;
   }
 
   .theme-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .stats-toggle {
+    top: 10px;
+    left: 10px;
+    padding: 9px 12px;
+    border-radius: 14px;
+  }
+
+  .space-arena {
+    bottom: 286px;
+  }
+
+  .planet-status {
+    top: 58px;
+    gap: 6px;
+  }
+
+  .status-block label {
+    font-size: 0.72rem;
+  }
+
+  .status-block strong {
+    font-size: 0.98rem;
+  }
+
+  .upgrade-console {
+    bottom: 146px;
+  }
+
+  .answer-console {
+    bottom: 10px;
+  }
+
+  .math-console {
+    left: 10px;
+    right: 10px;
+    padding: 12px;
+  }
+
+  .menu-panel {
+    left: 10px;
+    right: 10px;
+    top: 52px;
+    padding: 12px;
+    border-radius: 18px;
+  }
+
+  .menu-tabs {
+    gap: 6px;
+  }
+
+  .menu-tab {
+    flex: 1 1 calc(50% - 6px);
+    text-align: center;
+    padding: 9px 10px;
+  }
+
+  .planet-core {
+    width: min(48vw, 48vh);
+    height: min(48vw, 48vh);
+    min-width: 152px;
+    min-height: 152px;
+  }
+
+  .shield-shell {
+    width: min(64vw, 64vh);
+    height: min(64vw, 64vh);
+  }
+
+  .system-banner {
+    width: min(84vw, 300px);
+    padding: 9px 14px;
+    font-size: 0.84rem;
+  }
+
+  .answer-row {
+    grid-template-columns: 1fr;
+  }
+
+  .primary-button {
+    width: 100%;
   }
 }
