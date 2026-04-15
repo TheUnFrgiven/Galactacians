@@ -1,0 +1,425 @@
+:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Nunito", sans-serif;
+  color: #f8fafc;
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.06), transparent 30%),
+    linear-gradient(180deg, #070a13, #03050c);
+}
+
+.preview-page {
+  width: min(1400px, calc(100vw - 32px));
+  margin: 0 auto;
+  padding: 36px 0 56px;
+}
+
+.preview-head {
+  margin-bottom: 28px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: #93c5fd;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.84rem;
+  font-weight: 900;
+}
+
+.preview-head h1 {
+  margin: 0;
+  font-family: "Baloo 2", cursive;
+  font-size: clamp(2rem, 4vw, 3.6rem);
+  line-height: 1;
+}
+
+.subcopy {
+  margin: 12px 0 0;
+  max-width: 760px;
+  color: #cbd5e1;
+  font-size: 1rem;
+}
+
+.preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.theme-card {
+  --bg-a: #0f172a;
+  --bg-b: #1e293b;
+  --planet-a: #60a5fa;
+  --planet-b: #1d4ed8;
+  --continent-a: #86efac;
+  --continent-b: #22c55e;
+  --shield: rgba(125, 211, 252, 0.9);
+  --glow: rgba(96, 165, 250, 0.28);
+  --enemy-1: #bfdbfe;
+  --enemy-2: #fde68a;
+  --enemy-3: #86efac;
+  --enemy-4: #fca5a5;
+  padding: 16px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.06), transparent 28%),
+    linear-gradient(180deg, var(--bg-b), var(--bg-a));
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.34);
+}
+
+.theme-meta h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.theme-meta p {
+  margin: 6px 0 0;
+  min-height: 40px;
+  color: rgba(248, 250, 252, 0.78);
+  font-size: 0.9rem;
+}
+
+.mini-scene {
+  position: relative;
+  height: 186px;
+  margin: 14px 0 14px;
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    radial-gradient(circle at 20% 24%, rgba(255, 255, 255, 0.12) 0 1px, transparent 2px),
+    radial-gradient(circle at 72% 18%, rgba(255, 255, 255, 0.12) 0 1px, transparent 2px),
+    radial-gradient(circle at 84% 68%, rgba(255, 255, 255, 0.12) 0 1px, transparent 2px),
+    radial-gradient(circle at 16% 78%, rgba(255, 255, 255, 0.12) 0 1px, transparent 2px),
+    radial-gradient(circle at center, rgba(255, 255, 255, 0.03), transparent 35%),
+    linear-gradient(180deg, color-mix(in srgb, var(--bg-b) 90%, black), color-mix(in srgb, var(--bg-a) 92%, black));
+}
+
+.mini-scene::before,
+.mini-scene::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.mini-scene::before {
+  width: 104px;
+  height: 104px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.mini-scene::after {
+  width: 138px;
+  height: 138px;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+}
+
+.mini-glow,
+.mini-shield,
+.mini-planet {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+}
+
+.mini-glow {
+  width: 92px;
+  height: 92px;
+  background: radial-gradient(circle, var(--glow), transparent 70%);
+  filter: blur(10px);
+}
+
+.mini-shield {
+  width: 82px;
+  height: 82px;
+  border: 3px solid var(--shield);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--shield) 40%, transparent);
+}
+
+.mini-planet {
+  width: 62px;
+  height: 62px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 30% 28%, rgba(255, 255, 255, 0.38), transparent 18%),
+    linear-gradient(180deg, var(--planet-a), var(--planet-b));
+  box-shadow: inset -10px -12px 18px rgba(0, 0, 0, 0.24);
+}
+
+.mini-continent {
+  position: absolute;
+  display: block;
+  background: linear-gradient(180deg, var(--continent-a), var(--continent-b));
+}
+
+.mini-continent.c1 {
+  width: 24px;
+  height: 12px;
+  left: 12px;
+  top: 14px;
+  border-radius: 48% 38% 46% 42%;
+  transform: rotate(-16deg);
+}
+
+.mini-continent.c2 {
+  width: 16px;
+  height: 10px;
+  right: 10px;
+  top: 28px;
+  border-radius: 44% 58% 38% 46%;
+  transform: rotate(12deg);
+}
+
+.mini-continent.c3 {
+  width: 13px;
+  height: 8px;
+  left: 26px;
+  bottom: 12px;
+  border-radius: 60% 40% 56% 38%;
+}
+
+.mini-enemy {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
+}
+
+.mini-enemy.e1 {
+  left: 28px;
+  top: 34px;
+  background: var(--enemy-1);
+}
+
+.mini-enemy.e2 {
+  right: 34px;
+  top: 42px;
+  background: var(--enemy-2);
+}
+
+.mini-enemy.e3 {
+  right: 42px;
+  bottom: 30px;
+  background: var(--enemy-3);
+}
+
+.mini-enemy.e4 {
+  left: 36px;
+  bottom: 36px;
+  background: var(--enemy-4);
+}
+
+.swatches {
+  display: flex;
+  gap: 8px;
+}
+
+.swatches span {
+  width: 100%;
+  height: 20px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--swatch);
+}
+
+.solar-gold {
+  --bg-a: #1c1405;
+  --bg-b: #5a430d;
+  --planet-a: #f7d774;
+  --planet-b: #c69214;
+  --continent-a: #fff2b8;
+  --continent-b: #d8a728;
+  --shield: rgba(255, 232, 166, 0.92);
+  --glow: rgba(247, 215, 116, 0.38);
+  --enemy-1: #fff2b8;
+  --enemy-2: #e5be4c;
+  --enemy-3: #f6d56f;
+  --enemy-4: #b98213;
+}
+
+.cold-scifi {
+  --bg-a: #07111f;
+  --bg-b: #12304a;
+  --planet-a: #7fd6ff;
+  --planet-b: #2b6ea6;
+  --continent-a: #d9f5ff;
+  --continent-b: #74b9ff;
+  --shield: rgba(127, 214, 255, 0.92);
+  --glow: rgba(127, 214, 255, 0.32);
+  --enemy-1: #d9f5ff;
+  --enemy-2: #74b9ff;
+  --enemy-3: #57c7ff;
+  --enemy-4: #3a8dcf;
+}
+
+.matrix-grid {
+  --bg-a: #020604;
+  --bg-b: #10351d;
+  --planet-a: #3dff88;
+  --planet-b: #10351d;
+  --continent-a: #c6ffd9;
+  --continent-b: #62ff9f;
+  --shield: rgba(61, 255, 136, 0.95);
+  --glow: rgba(61, 255, 136, 0.32);
+  --enemy-1: #89ffb2;
+  --enemy-2: #c6ffd9;
+  --enemy-3: #54eb84;
+  --enemy-4: #1bc55b;
+}
+
+.code-editor {
+  --bg-a: #0b1020;
+  --bg-b: #334155;
+  --planet-a: #7dd3fc;
+  --planet-b: #334155;
+  --continent-a: #f472b6;
+  --continent-b: #7dd3fc;
+  --shield: rgba(125, 211, 252, 0.92);
+  --glow: rgba(244, 114, 182, 0.24);
+  --enemy-1: #7dd3fc;
+  --enemy-2: #f472b6;
+  --enemy-3: #cbd5e1;
+  --enemy-4: #94a3b8;
+}
+
+.cartoon-candy {
+  --bg-a: #2b1a3a;
+  --bg-b: #5b2c83;
+  --planet-a: #8bf3ff;
+  --planet-b: #ff7ac6;
+  --continent-a: #ffd166;
+  --continent-b: #ff7ac6;
+  --shield: rgba(139, 243, 255, 0.94);
+  --glow: rgba(255, 122, 198, 0.3);
+  --enemy-1: #8bf3ff;
+  --enemy-2: #ffd166;
+  --enemy-3: #ff7ac6;
+  --enemy-4: #fff1b5;
+}
+
+.storybook-horror {
+  --bg-a: #0b0a12;
+  --bg-b: #5b2233;
+  --planet-a: #e8d7e1;
+  --planet-b: #c13c5a;
+  --continent-a: #f3e8ef;
+  --continent-b: #9b304b;
+  --shield: rgba(232, 215, 225, 0.86);
+  --glow: rgba(193, 60, 90, 0.26);
+  --enemy-1: #e8d7e1;
+  --enemy-2: #c13c5a;
+  --enemy-3: #8b2f44;
+  --enemy-4: #f0b8c8;
+}
+
+.funky-neon {
+  --bg-a: #12091f;
+  --bg-b: #2a1250;
+  --planet-a: #00f5d4;
+  --planet-b: #ff4d9d;
+  --continent-a: #f9f871;
+  --continent-b: #00f5d4;
+  --shield: rgba(249, 248, 113, 0.92);
+  --glow: rgba(255, 77, 157, 0.28);
+  --enemy-1: #00f5d4;
+  --enemy-2: #ff4d9d;
+  --enemy-3: #f9f871;
+  --enemy-4: #8c6dff;
+}
+
+.metal-forge {
+  --bg-a: #101418;
+  --bg-b: #2e3a44;
+  --planet-a: #aeb9c4;
+  --planet-b: #6d7b86;
+  --continent-a: #f08a24;
+  --continent-b: #c96914;
+  --shield: rgba(174, 185, 196, 0.9);
+  --glow: rgba(240, 138, 36, 0.24);
+  --enemy-1: #c8d0d8;
+  --enemy-2: #f08a24;
+  --enemy-3: #7b8894;
+  --enemy-4: #d8e0e8;
+}
+
+.paper-craft {
+  color: #2f261c;
+  --bg-a: #f5ebd8;
+  --bg-b: #d9c7a4;
+  --planet-a: #c95f50;
+  --planet-b: #a9845c;
+  --continent-a: #6e9e7b;
+  --continent-b: #4f7b60;
+  --shield: rgba(110, 158, 123, 0.82);
+  --glow: rgba(201, 95, 80, 0.18);
+  --enemy-1: #c95f50;
+  --enemy-2: #6e9e7b;
+  --enemy-3: #a9845c;
+  --enemy-4: #e4d3b6;
+  border-color: rgba(73, 53, 27, 0.12);
+  box-shadow: 0 16px 36px rgba(81, 58, 29, 0.16);
+}
+
+.paper-craft .theme-meta p {
+  color: rgba(47, 38, 28, 0.78);
+}
+
+.paper-craft .mini-scene {
+  border-color: rgba(73, 53, 27, 0.1);
+  background:
+    radial-gradient(circle at 20% 24%, rgba(73, 53, 27, 0.12) 0 1px, transparent 2px),
+    radial-gradient(circle at 72% 18%, rgba(73, 53, 27, 0.12) 0 1px, transparent 2px),
+    linear-gradient(180deg, #efe2ca, #d9c7a4);
+}
+
+.paper-craft .mini-scene::before,
+.paper-craft .mini-scene::after {
+  border-color: rgba(73, 53, 27, 0.14);
+}
+
+.paper-craft .swatches span {
+  border-color: rgba(73, 53, 27, 0.12);
+}
+
+.ocean-pop {
+  --bg-a: #041c32;
+  --bg-b: #064663;
+  --planet-a: #47b5ff;
+  --planet-b: #0aa1dd;
+  --continent-a: #b8fff9;
+  --continent-b: #79ecdf;
+  --shield: rgba(184, 255, 249, 0.92);
+  --glow: rgba(71, 181, 255, 0.26);
+  --enemy-1: #b8fff9;
+  --enemy-2: #47b5ff;
+  --enemy-3: #0aa1dd;
+  --enemy-4: #8cf4ff;
+}
+
+@media (max-width: 720px) {
+  .preview-page {
+    width: min(100vw - 20px, 1400px);
+    padding: 24px 0 36px;
+  }
+
+  .preview-grid {
+    grid-template-columns: 1fr;
+  }
+}

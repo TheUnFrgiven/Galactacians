@@ -100,21 +100,45 @@
           <div class="theme-block">
             <p class="console-label">Theme</p>
             <div class="theme-grid">
-              <button class="theme-button active" data-theme="nebula" type="button">
-                <strong>Nebula Blue</strong>
-                <span>Calm space blues with soft glow.</span>
+              <button class="theme-button active" data-theme="cold-scifi" type="button">
+                <strong>Cold Sci-Fi</strong>
+                <span>Clean blue-tech defense with icy contrast.</span>
               </button>
-              <button class="theme-button" data-theme="sunset" type="button">
-                <strong>Sunset Orbit</strong>
-                <span>Warm gold and coral for cozy energy.</span>
+              <button class="theme-button" data-theme="solar-gold" type="button">
+                <strong>Solar Gold</strong>
+                <span>Warm premium gold tones with a rich reward feel.</span>
               </button>
-              <button class="theme-button" data-theme="mint" type="button">
-                <strong>Mint Nova</strong>
-                <span>Fresh teal and green for a friendly feel.</span>
+              <button class="theme-button" data-theme="matrix-grid" type="button">
+                <strong>Matrix Grid</strong>
+                <span>Dark hacker green with bright terminal energy.</span>
               </button>
-              <button class="theme-button" data-theme="arcade" type="button">
-                <strong>Arcade Pop</strong>
-                <span>Bold contrast built for playful focus.</span>
+              <button class="theme-button" data-theme="code-editor" type="button">
+                <strong>Code Editor</strong>
+                <span>Slate dark UI with cyan and pink coding accents.</span>
+              </button>
+              <button class="theme-button" data-theme="cartoon-candy" type="button">
+                <strong>Cartoon Candy</strong>
+                <span>Bright playful toy colors for a child-first look.</span>
+              </button>
+              <button class="theme-button" data-theme="storybook-horror" type="button">
+                <strong>Storybook Horror</strong>
+                <span>Dusky reds and pale ink with a spooky mood.</span>
+              </button>
+              <button class="theme-button" data-theme="funky-neon" type="button">
+                <strong>Funky Neon</strong>
+                <span>High-energy pop with loud complementary contrast.</span>
+              </button>
+              <button class="theme-button" data-theme="metal-forge" type="button">
+                <strong>Metal Forge</strong>
+                <span>Steel grey and ember orange, industrial and heavy.</span>
+              </button>
+              <button class="theme-button" data-theme="paper-craft" type="button">
+                <strong>Paper Craft</strong>
+                <span>Soft hand-made paper tones with warm balance.</span>
+              </button>
+              <button class="theme-button" data-theme="ocean-pop" type="button">
+                <strong>Ocean Pop</strong>
+                <span>Sea blues and mint foam, fresh and friendly.</span>
               </button>
             </div>
           </div>
@@ -131,19 +155,69 @@
           <button id="layout-edit-btn" class="layout-reset">Move UI</button>
           <p class="settings-copy">Open this and drag boxes to move them. Click a box, then change its size.</p>
           <button id="layout-reset-btn" class="layout-reset">Reset Layout</button>
+          <div class="developer-block">
+            <p class="console-label">Developer</p>
+            <div class="developer-grid">
+              <button id="god-mode-btn" class="developer-button" type="button">God Mode: Off</button>
+              <button id="zombie-mode-btn" class="developer-button" type="button">Zombie Mode: Off</button>
+              <button id="swarm-mode-btn" class="developer-button" type="button">Swarm: 1</button>
+            </div>
+            <p class="settings-copy">God Mode makes the Planet unkillable. Zombie Mode lets the Planet die while the swarm keeps going. Swarm increases enemy count and lowers enemy stats for density testing.</p>
+          </div>
         </section>
 
         <section class="menu-section" data-menu-section="missions">
-          <p class="settings-copy">Missions will be added later.</p>
+          <div class="mission-card">
+            <p class="console-label">First Mission</p>
+            <h3>Train Every Power</h3>
+            <p class="settings-copy">Reach 10 upgrades in Power, Shield, Multishot, and Regen.</p>
+            <div class="tutorial-mission-grid">
+              <div class="effect-chip">
+                <span>Power</span>
+                <strong id="mission-menu-addition">0 / 10</strong>
+              </div>
+              <div class="effect-chip">
+                <span>Shield</span>
+                <strong id="mission-menu-subtraction">0 / 10</strong>
+              </div>
+              <div class="effect-chip">
+                <span>Multishot</span>
+                <strong id="mission-menu-multiplication">0 / 10</strong>
+              </div>
+              <div class="effect-chip">
+                <span>Regen</span>
+                <strong id="mission-menu-division">0 / 10</strong>
+              </div>
+            </div>
+            <p id="mission-status-text" class="mission-status">Mission active.</p>
+          </div>
+          <div class="mission-card">
+            <p class="console-label">Theme Progress</p>
+            <h3>Unlock New Looks</h3>
+            <p id="theme-progress-text" class="settings-copy">Reach level 5 to unlock the next theme reward.</p>
+          </div>
         </section>
 
         <section class="menu-section" data-menu-section="archive">
-          <p class="settings-copy">Archive will be added later.</p>
+          <div class="mission-card">
+            <p class="console-label">Archive</p>
+            <h3>Finished Missions</h3>
+            <p id="archive-status-text" class="settings-copy">Finished missions will appear here.</p>
+          </div>
         </section>
       </div>
     </section>
 
     <div class="system-banner" id="system-banner" data-panel="banner">Planetary defense online. Solve math to power the weapons grid.</div>
+    <div id="tutorial-overlay" class="tutorial-overlay hidden" aria-hidden="true">
+      <div id="tutorial-highlight" class="tutorial-highlight"></div>
+      <div id="tutorial-callout" class="tutorial-callout" role="dialog" aria-live="polite">
+        <p id="tutorial-callout-label" class="console-label">Tutorial</p>
+        <h3 id="tutorial-callout-title">Learn the Planet</h3>
+        <p id="tutorial-callout-copy" class="tutorial-callout-copy">Tap anywhere to continue.</p>
+        <p class="tutorial-callout-hint">Tap anywhere to continue</p>
+      </div>
+    </div>
 
     <main class="arena-view">
       <div id="enemy-field" class="space-arena">
@@ -172,6 +246,10 @@
           <label>Population</label>
           <strong id="population-live-text">100%</strong>
         </div>
+        <div class="status-block">
+          <label>Safety Timer</label>
+          <strong id="survival-timer-text">2:00</strong>
+        </div>
       </section>
 
       <section class="math-console upgrade-console" data-panel="upgrade-console">
@@ -199,6 +277,28 @@
               <strong>Regen</strong>
             </button>
           </div>
+          <div id="tutorial-mission" class="tutorial-mission hidden">
+            <p class="console-label">Urgent Mission</p>
+            <p id="tutorial-mission-copy" class="console-sub">Raise every path to 10 before the next swarm.</p>
+            <div class="tutorial-mission-grid">
+              <div class="effect-chip">
+                <span>Power</span>
+                <strong id="mission-addition">0 / 10</strong>
+              </div>
+              <div class="effect-chip">
+                <span>Shield</span>
+                <strong id="mission-subtraction">0 / 10</strong>
+              </div>
+              <div class="effect-chip">
+                <span>Multishot</span>
+                <strong id="mission-multiplication">0 / 10</strong>
+              </div>
+              <div class="effect-chip">
+                <span>Regen</span>
+                <strong id="mission-division">0 / 10</strong>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -214,9 +314,11 @@
               <p class="question-label">Question</p>
               <h2 id="question-text">2 + 3 = ?</h2>
             </div>
-            <div class="answer-row">
-              <input id="answer-input" type="number" inputmode="numeric" placeholder="Answer">
-              <button id="submit-answer-btn" class="primary-button">Deploy</button>
+            <div id="answer-options" class="answer-options" aria-label="Choose an answer">
+              <button class="answer-option" type="button">4</button>
+              <button class="answer-option" type="button">5</button>
+              <button class="answer-option" type="button">6</button>
+              <button class="answer-option" type="button">7</button>
             </div>
           </div>
         </div>
@@ -228,9 +330,11 @@
       <h2>Planet Needs Repair</h2>
       <p id="repair-copy" class="repair-copy">Answer 3 easy questions to fix the Planet and win your streak back.</p>
       <h3 id="repair-question-text">1 + 1 = ?</h3>
-      <div class="answer-row repair-answer-row">
-        <input id="repair-answer-input" type="number" inputmode="numeric" placeholder="Answer">
-        <button id="repair-submit-btn" class="primary-button">Fix</button>
+      <div id="repair-answer-options" class="answer-options repair-answer-options" aria-label="Choose a repair answer">
+        <button class="repair-answer-option answer-option" type="button">1</button>
+        <button class="repair-answer-option answer-option" type="button">2</button>
+        <button class="repair-answer-option answer-option" type="button">3</button>
+        <button class="repair-answer-option answer-option" type="button">4</button>
       </div>
       <p id="repair-progress-text" class="lesson-feedback">0 of 3 correct</p>
     </section>

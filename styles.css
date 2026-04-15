@@ -56,176 +56,704 @@
   --enemy-hit: rgba(147, 197, 253, 0.95);
   --planet-hit: rgba(252, 165, 165, 0.95);
   --shield-hit: rgba(147, 197, 253, 0.95);
+  --hud-bg-a: rgba(8, 14, 29, 0.86);
+  --hud-bg-b: rgba(5, 10, 21, 0.92);
+  --menu-bg-a: rgba(15, 23, 42, 0.98);
+  --menu-bg-b: rgba(15, 23, 42, 0.94);
+  --menu-body-bg: rgba(255, 255, 255, 0.03);
+  --toggle-bg-a: rgba(30, 41, 59, 0.96);
+  --toggle-bg-b: rgba(15, 23, 42, 0.98);
+  --banner-bg-a: rgba(245, 249, 255, 0.96);
+  --banner-bg-b: rgba(216, 236, 255, 0.94);
+  --banner-ink: #10253d;
+  --menu-tab-active-bg: #e2e8f0;
+  --menu-tab-active-ink: #09111d;
+  --button-bg-a: #63ecff;
+  --button-bg-b: #20c8ff;
+  --button-ink: #06111d;
+  --option-hover-bg: rgba(99, 236, 255, 0.12);
+  --option-hover-border: rgba(99, 236, 255, 0.4);
   --shadow: 0 30px 90px rgba(0, 0, 0, 0.45);
   --radius: 18px;
 }
 
-body[data-theme="sunset"] {
-  --bg-0: #2b1534;
-  --bg-1: #47224b;
-  --bg-2: #6b3150;
-  --bg-top: #170916;
-  --bg-bottom: #11070c;
-  --line: rgba(255, 220, 170, 0.22);
-  --cyan: #f9c46b;
-  --cyan-strong: #ff9f6e;
-  --green: #ffd37a;
-  --gold: #ffe7a8;
-  --orange: #ff9d76;
-  --red: #ff8b8b;
-  --violet: #ffb4d2;
-  --bg-bloom-a: rgba(255, 159, 110, 0.16);
-  --bg-bloom-b: rgba(255, 231, 168, 0.14);
-  --bg-bloom-c: rgba(255, 180, 210, 0.12);
-  --bg-bloom-d: rgba(255, 211, 122, 0.1);
-  --bg-bloom-e: rgba(255, 139, 139, 0.1);
-  --arena-bloom-a: rgba(255, 231, 168, 0.1);
-  --arena-bloom-b: rgba(255, 180, 210, 0.1);
-  --arena-bloom-c: rgba(255, 211, 122, 0.08);
-  --arena-bloom-d: rgba(255, 157, 118, 0.1);
-  --planet-top: #f8b36a;
-  --planet-mid: #f58c68;
-  --planet-bottom: #9b4361;
-  --planet-highlight: rgba(255, 249, 229, 0.45);
-  --continent-top: #ffe48a;
-  --continent-bottom: #ff9f6e;
-  --planet-glow-main: rgba(255, 159, 110, 0.22);
-  --planet-glow-alt: rgba(255, 231, 168, 0.12);
-  --orbit-line: rgba(255, 220, 170, 0.2);
-  --orbit-dashed: rgba(255, 180, 210, 0.16);
-  --shield-edge: rgba(255, 210, 122, 0.5);
-  --shield-fill-a: rgba(255, 210, 122, 0.12);
-  --shield-fill-b: rgba(255, 157, 118, 0.03);
-  --shield-glow: rgba(255, 157, 118, 0.3);
-  --shield-inner: rgba(255, 210, 122, 0.16);
-  --shield-ring-a: rgba(255, 231, 168, 0.18);
-  --shield-ring-b: rgba(255, 180, 210, 0.18);
-  --enemy-card-bg: rgba(255, 223, 202, 0.08);
-  --enemy-card-border: rgba(255, 226, 196, 0.2);
-  --enemy-eye: #431320;
-  --enemy-diver: #ffd7a8;
-  --enemy-breaker: #fff0a8;
-  --enemy-ranger: #ffcf8a;
-  --enemy-melee: #ff9d76;
-  --enemy-boss: #ffb4d2;
-  --friendly-shot: rgba(255, 231, 168, 0.95);
-  --enemy-shot: rgba(255, 141, 141, 0.92);
-  --enemy-laser-shot: rgba(255, 180, 210, 0.95);
-  --enemy-hit: rgba(255, 210, 122, 0.95);
-  --planet-hit: rgba(255, 141, 141, 0.95);
-  --shield-hit: rgba(255, 231, 168, 0.95);
-}
-
-body[data-theme="mint"] {
-  --bg-0: #0d1d25;
-  --bg-1: #16313b;
-  --bg-2: #234a52;
-  --bg-top: #061217;
-  --bg-bottom: #03090b;
-  --line: rgba(164, 243, 230, 0.2);
-  --cyan: #99f6e4;
-  --cyan-strong: #5eead4;
-  --green: #86efac;
-  --gold: #d9f99d;
-  --orange: #67e8f9;
-  --red: #fda4af;
-  --violet: #a7f3d0;
-  --bg-bloom-a: rgba(94, 234, 212, 0.16);
-  --bg-bloom-b: rgba(217, 249, 157, 0.14);
-  --bg-bloom-c: rgba(167, 243, 208, 0.12);
-  --bg-bloom-d: rgba(134, 239, 172, 0.1);
-  --bg-bloom-e: rgba(103, 232, 249, 0.1);
-  --arena-bloom-a: rgba(217, 249, 157, 0.08);
-  --arena-bloom-b: rgba(167, 243, 208, 0.08);
-  --arena-bloom-c: rgba(134, 239, 172, 0.08);
-  --arena-bloom-d: rgba(103, 232, 249, 0.1);
-  --planet-top: #7ee7d3;
-  --planet-mid: #4cc9c0;
-  --planet-bottom: #1f6f86;
-  --planet-highlight: rgba(241, 255, 251, 0.42);
-  --continent-top: #d9f99d;
-  --continent-bottom: #86efac;
-  --planet-glow-main: rgba(94, 234, 212, 0.22);
-  --planet-glow-alt: rgba(217, 249, 157, 0.1);
-  --orbit-line: rgba(164, 243, 230, 0.18);
-  --orbit-dashed: rgba(167, 243, 208, 0.14);
-  --shield-edge: rgba(153, 246, 228, 0.45);
-  --shield-fill-a: rgba(153, 246, 228, 0.1);
-  --shield-fill-b: rgba(94, 234, 212, 0.03);
-  --shield-glow: rgba(94, 234, 212, 0.28);
-  --shield-inner: rgba(153, 246, 228, 0.14);
-  --shield-ring-a: rgba(217, 249, 157, 0.14);
-  --shield-ring-b: rgba(167, 243, 208, 0.16);
-  --enemy-card-bg: rgba(210, 255, 244, 0.06);
-  --enemy-card-border: rgba(210, 255, 244, 0.18);
+body[data-theme="cold-scifi"] {
+  --bg-0: #07111f;
+  --bg-1: #12304a;
+  --bg-2: #1d4b70;
+  --bg-top: #040a13;
+  --bg-bottom: #02050b;
+  --line: rgba(127, 214, 255, 0.2);
+  --cyan: #7fd6ff;
+  --cyan-strong: #2b6ea6;
+  --green: #9fe8ff;
+  --gold: #d9f5ff;
+  --orange: #74b9ff;
+  --red: #fca5a5;
+  --violet: #a5d8ff;
+  --bg-bloom-a: rgba(127, 214, 255, 0.14);
+  --bg-bloom-b: rgba(217, 245, 255, 0.12);
+  --bg-bloom-c: rgba(116, 185, 255, 0.1);
+  --bg-bloom-d: rgba(165, 216, 255, 0.08);
+  --bg-bloom-e: rgba(94, 151, 255, 0.08);
+  --arena-bloom-a: rgba(217, 245, 255, 0.08);
+  --arena-bloom-b: rgba(127, 214, 255, 0.08);
+  --arena-bloom-c: rgba(159, 232, 255, 0.06);
+  --arena-bloom-d: rgba(116, 185, 255, 0.08);
+  --planet-top: #7fd6ff;
+  --planet-mid: #2b6ea6;
+  --planet-bottom: #12304a;
+  --planet-highlight: rgba(217, 245, 255, 0.42);
+  --continent-top: #d9f5ff;
+  --continent-bottom: #74b9ff;
+  --planet-glow-main: rgba(127, 214, 255, 0.2);
+  --planet-glow-alt: rgba(217, 245, 255, 0.08);
+  --orbit-line: rgba(127, 214, 255, 0.16);
+  --orbit-dashed: rgba(165, 216, 255, 0.14);
+  --shield-edge: rgba(127, 214, 255, 0.45);
+  --shield-fill-a: rgba(127, 214, 255, 0.1);
+  --shield-fill-b: rgba(43, 110, 166, 0.03);
+  --shield-glow: rgba(127, 214, 255, 0.26);
+  --shield-inner: rgba(127, 214, 255, 0.14);
+  --shield-ring-a: rgba(217, 245, 255, 0.14);
+  --shield-ring-b: rgba(165, 216, 255, 0.14);
+  --enemy-card-bg: rgba(217, 245, 255, 0.05);
+  --enemy-card-border: rgba(217, 245, 255, 0.16);
   --enemy-eye: #0d2530;
-  --enemy-diver: #99f6e4;
-  --enemy-breaker: #d9f99d;
-  --enemy-ranger: #86efac;
-  --enemy-melee: #67e8f9;
-  --enemy-boss: #a7f3d0;
-  --friendly-shot: rgba(153, 246, 228, 0.95);
-  --enemy-shot: rgba(253, 164, 175, 0.92);
-  --enemy-laser-shot: rgba(103, 232, 249, 0.95);
-  --enemy-hit: rgba(153, 246, 228, 0.95);
-  --planet-hit: rgba(253, 164, 175, 0.95);
-  --shield-hit: rgba(217, 249, 157, 0.95);
+  --enemy-diver: #d9f5ff;
+  --enemy-breaker: #74b9ff;
+  --enemy-ranger: #9fe8ff;
+  --enemy-melee: #93c5fd;
+  --enemy-boss: #a5d8ff;
+  --friendly-shot: rgba(127, 214, 255, 0.95);
+  --enemy-shot: rgba(252, 165, 165, 0.92);
+  --enemy-laser-shot: rgba(165, 216, 255, 0.95);
+  --enemy-hit: rgba(127, 214, 255, 0.95);
+  --planet-hit: rgba(252, 165, 165, 0.95);
+  --shield-hit: rgba(217, 245, 255, 0.95);
 }
 
-body[data-theme="arcade"] {
-  --bg-0: #1a1038;
-  --bg-1: #2a1760;
-  --bg-2: #3f2391;
-  --bg-top: #090315;
-  --bg-bottom: #04020c;
-  --line: rgba(255, 255, 255, 0.18);
-  --cyan: #60a5fa;
+body[data-theme="solar-gold"] {
+  --bg-0: #1c1405;
+  --bg-1: #3c2c08;
+  --bg-2: #5a430d;
+  --bg-top: #100a02;
+  --bg-bottom: #080502;
+  --line: rgba(255, 223, 122, 0.22);
+  --cyan: #f7d774;
+  --cyan-strong: #c69214;
+  --green: #fff2b8;
+  --gold: #f7d774;
+  --orange: #e5be4c;
+  --red: #f2b26b;
+  --violet: #f8e7a2;
+  --bg-bloom-a: rgba(247, 215, 116, 0.14);
+  --bg-bloom-b: rgba(255, 242, 184, 0.12);
+  --bg-bloom-c: rgba(198, 146, 20, 0.12);
+  --bg-bloom-d: rgba(229, 190, 76, 0.08);
+  --bg-bloom-e: rgba(255, 223, 122, 0.08);
+  --arena-bloom-a: rgba(255, 242, 184, 0.08);
+  --arena-bloom-b: rgba(247, 215, 116, 0.08);
+  --arena-bloom-c: rgba(229, 190, 76, 0.06);
+  --arena-bloom-d: rgba(198, 146, 20, 0.08);
+  --planet-top: #fff2b8;
+  --planet-mid: #f7d774;
+  --planet-bottom: #c69214;
+  --planet-highlight: rgba(255, 249, 212, 0.42);
+  --continent-top: #f9e58f;
+  --continent-bottom: #d8a728;
+  --planet-glow-main: rgba(247, 215, 116, 0.22);
+  --planet-glow-alt: rgba(255, 242, 184, 0.08);
+  --orbit-line: rgba(255, 223, 122, 0.16);
+  --orbit-dashed: rgba(248, 231, 162, 0.14);
+  --shield-edge: rgba(255, 232, 166, 0.46);
+  --shield-fill-a: rgba(255, 232, 166, 0.1);
+  --shield-fill-b: rgba(198, 146, 20, 0.03);
+  --shield-glow: rgba(247, 215, 116, 0.28);
+  --shield-inner: rgba(255, 232, 166, 0.14);
+  --shield-ring-a: rgba(255, 242, 184, 0.14);
+  --shield-ring-b: rgba(248, 231, 162, 0.14);
+  --enemy-card-bg: rgba(255, 242, 184, 0.05);
+  --enemy-card-border: rgba(255, 242, 184, 0.16);
+  --enemy-eye: #3d2906;
+  --enemy-diver: #fff2b8;
+  --enemy-breaker: #e5be4c;
+  --enemy-ranger: #f6d56f;
+  --enemy-melee: #d8a728;
+  --enemy-boss: #f8e7a2;
+  --friendly-shot: rgba(255, 232, 166, 0.95);
+  --enemy-shot: rgba(242, 178, 107, 0.92);
+  --enemy-laser-shot: rgba(248, 231, 162, 0.95);
+  --enemy-hit: rgba(247, 215, 116, 0.95);
+  --planet-hit: rgba(242, 178, 107, 0.95);
+  --shield-hit: rgba(255, 242, 184, 0.95);
+  --hud-bg-a: rgba(36, 24, 6, 0.9);
+  --hud-bg-b: rgba(16, 10, 2, 0.94);
+  --menu-bg-a: rgba(42, 28, 8, 0.98);
+  --menu-bg-b: rgba(20, 12, 3, 0.94);
+  --toggle-bg-a: rgba(90, 67, 13, 0.94);
+  --toggle-bg-b: rgba(28, 20, 5, 0.98);
+  --banner-bg-a: rgba(255, 248, 220, 0.96);
+  --banner-bg-b: rgba(255, 232, 166, 0.94);
+  --banner-ink: #4b3208;
+  --menu-tab-active-bg: #fff2b8;
+  --menu-tab-active-ink: #3d2906;
+  --button-bg-a: #fff2b8;
+  --button-bg-b: #f7d774;
+  --button-ink: #3d2906;
+  --option-hover-bg: rgba(255, 232, 166, 0.14);
+  --option-hover-border: rgba(255, 232, 166, 0.45);
+}
+
+body[data-theme="matrix-grid"] {
+  --bg-0: #020604;
+  --bg-1: #0a1a10;
+  --bg-2: #10351d;
+  --bg-top: #010302;
+  --bg-bottom: #000201;
+  --line: rgba(61, 255, 136, 0.2);
+  --ink: #d9ffe6;
+  --muted: #95d8aa;
+  --cyan: #3dff88;
+  --cyan-strong: #1bc55b;
+  --green: #62ff9f;
+  --gold: #c6ffd9;
+  --orange: #54eb84;
+  --red: #ff7f8a;
+  --violet: #89ffb2;
+  --bg-bloom-a: rgba(61, 255, 136, 0.14);
+  --bg-bloom-b: rgba(198, 255, 217, 0.08);
+  --bg-bloom-c: rgba(27, 197, 91, 0.1);
+  --bg-bloom-d: rgba(84, 235, 132, 0.08);
+  --bg-bloom-e: rgba(98, 255, 159, 0.08);
+  --arena-bloom-a: rgba(198, 255, 217, 0.08);
+  --arena-bloom-b: rgba(61, 255, 136, 0.08);
+  --arena-bloom-c: rgba(84, 235, 132, 0.06);
+  --arena-bloom-d: rgba(27, 197, 91, 0.08);
+  --planet-top: #89ffb2;
+  --planet-mid: #3dff88;
+  --planet-bottom: #10351d;
+  --planet-highlight: rgba(198, 255, 217, 0.26);
+  --continent-top: #c6ffd9;
+  --continent-bottom: #62ff9f;
+  --planet-glow-main: rgba(61, 255, 136, 0.18);
+  --planet-glow-alt: rgba(198, 255, 217, 0.06);
+  --orbit-line: rgba(61, 255, 136, 0.14);
+  --orbit-dashed: rgba(137, 255, 178, 0.12);
+  --shield-edge: rgba(61, 255, 136, 0.4);
+  --shield-fill-a: rgba(61, 255, 136, 0.08);
+  --shield-fill-b: rgba(27, 197, 91, 0.02);
+  --shield-glow: rgba(61, 255, 136, 0.2);
+  --shield-inner: rgba(61, 255, 136, 0.12);
+  --shield-ring-a: rgba(198, 255, 217, 0.12);
+  --shield-ring-b: rgba(137, 255, 178, 0.12);
+  --enemy-card-bg: rgba(198, 255, 217, 0.04);
+  --enemy-card-border: rgba(198, 255, 217, 0.12);
+  --enemy-eye: #03150a;
+  --enemy-diver: #89ffb2;
+  --enemy-breaker: #c6ffd9;
+  --enemy-ranger: #54eb84;
+  --enemy-melee: #1bc55b;
+  --enemy-boss: #62ff9f;
+  --friendly-shot: rgba(61, 255, 136, 0.95);
+  --enemy-shot: rgba(255, 127, 138, 0.9);
+  --enemy-laser-shot: rgba(198, 255, 217, 0.95);
+  --enemy-hit: rgba(61, 255, 136, 0.95);
+  --planet-hit: rgba(255, 127, 138, 0.92);
+  --shield-hit: rgba(198, 255, 217, 0.95);
+  --hud-bg-a: rgba(2, 12, 6, 0.9);
+  --hud-bg-b: rgba(1, 6, 3, 0.94);
+  --menu-bg-a: rgba(3, 14, 7, 0.98);
+  --menu-bg-b: rgba(1, 6, 3, 0.95);
+  --toggle-bg-a: rgba(10, 26, 16, 0.96);
+  --toggle-bg-b: rgba(2, 6, 4, 0.98);
+  --banner-bg-a: rgba(199, 255, 218, 0.96);
+  --banner-bg-b: rgba(137, 255, 178, 0.94);
+  --banner-ink: #032313;
+  --menu-tab-active-bg: #89ffb2;
+  --menu-tab-active-ink: #032313;
+  --button-bg-a: #89ffb2;
+  --button-bg-b: #3dff88;
+  --button-ink: #032313;
+  --option-hover-bg: rgba(61, 255, 136, 0.12);
+  --option-hover-border: rgba(61, 255, 136, 0.42);
+}
+
+body[data-theme="code-editor"] {
+  --bg-0: #0b1020;
+  --bg-1: #1e293b;
+  --bg-2: #334155;
+  --bg-top: #060a14;
+  --bg-bottom: #04060c;
+  --line: rgba(125, 211, 252, 0.18);
+  --cyan: #7dd3fc;
   --cyan-strong: #38bdf8;
-  --green: #4ade80;
-  --gold: #facc15;
-  --orange: #fb7185;
-  --red: #f43f5e;
-  --violet: #c084fc;
-  --bg-bloom-a: rgba(96, 165, 250, 0.18);
-  --bg-bloom-b: rgba(250, 204, 21, 0.15);
-  --bg-bloom-c: rgba(192, 132, 252, 0.14);
-  --bg-bloom-d: rgba(74, 222, 128, 0.1);
-  --bg-bloom-e: rgba(251, 113, 133, 0.12);
-  --arena-bloom-a: rgba(250, 204, 21, 0.1);
-  --arena-bloom-b: rgba(192, 132, 252, 0.12);
-  --arena-bloom-c: rgba(74, 222, 128, 0.08);
-  --arena-bloom-d: rgba(251, 113, 133, 0.1);
-  --planet-top: #5da0ff;
-  --planet-mid: #7c3aed;
-  --planet-bottom: #2a1760;
-  --planet-highlight: rgba(255, 255, 255, 0.46);
-  --continent-top: #facc15;
-  --continent-bottom: #fb7185;
-  --planet-glow-main: rgba(96, 165, 250, 0.24);
-  --planet-glow-alt: rgba(250, 204, 21, 0.12);
-  --orbit-line: rgba(255, 255, 255, 0.18);
-  --orbit-dashed: rgba(192, 132, 252, 0.18);
-  --shield-edge: rgba(56, 189, 248, 0.5);
-  --shield-fill-a: rgba(56, 189, 248, 0.12);
-  --shield-fill-b: rgba(192, 132, 252, 0.03);
-  --shield-glow: rgba(56, 189, 248, 0.32);
-  --shield-inner: rgba(56, 189, 248, 0.18);
-  --shield-ring-a: rgba(250, 204, 21, 0.16);
-  --shield-ring-b: rgba(192, 132, 252, 0.18);
-  --enemy-card-bg: rgba(255, 255, 255, 0.07);
-  --enemy-card-border: rgba(255, 255, 255, 0.22);
-  --enemy-eye: #130d2a;
-  --enemy-diver: #60a5fa;
-  --enemy-breaker: #facc15;
-  --enemy-ranger: #4ade80;
-  --enemy-melee: #fb7185;
-  --enemy-boss: #c084fc;
-  --friendly-shot: rgba(56, 189, 248, 0.95);
+  --green: #cbd5e1;
+  --gold: #f472b6;
+  --orange: #7dd3fc;
+  --red: #fb7185;
+  --violet: #f472b6;
+  --bg-bloom-a: rgba(125, 211, 252, 0.12);
+  --bg-bloom-b: rgba(244, 114, 182, 0.1);
+  --bg-bloom-c: rgba(203, 213, 225, 0.08);
+  --bg-bloom-d: rgba(56, 189, 248, 0.08);
+  --bg-bloom-e: rgba(251, 113, 133, 0.08);
+  --arena-bloom-a: rgba(125, 211, 252, 0.08);
+  --arena-bloom-b: rgba(244, 114, 182, 0.08);
+  --arena-bloom-c: rgba(203, 213, 225, 0.06);
+  --arena-bloom-d: rgba(56, 189, 248, 0.08);
+  --planet-top: #7dd3fc;
+  --planet-mid: #475569;
+  --planet-bottom: #1e293b;
+  --planet-highlight: rgba(226, 232, 240, 0.32);
+  --continent-top: #f472b6;
+  --continent-bottom: #7dd3fc;
+  --planet-glow-main: rgba(125, 211, 252, 0.16);
+  --planet-glow-alt: rgba(244, 114, 182, 0.08);
+  --orbit-line: rgba(125, 211, 252, 0.12);
+  --orbit-dashed: rgba(244, 114, 182, 0.12);
+  --shield-edge: rgba(125, 211, 252, 0.38);
+  --shield-fill-a: rgba(125, 211, 252, 0.08);
+  --shield-fill-b: rgba(244, 114, 182, 0.02);
+  --shield-glow: rgba(125, 211, 252, 0.2);
+  --shield-inner: rgba(125, 211, 252, 0.12);
+  --shield-ring-a: rgba(203, 213, 225, 0.12);
+  --shield-ring-b: rgba(244, 114, 182, 0.12);
+  --enemy-card-bg: rgba(226, 232, 240, 0.04);
+  --enemy-card-border: rgba(226, 232, 240, 0.12);
+  --enemy-eye: #111827;
+  --enemy-diver: #7dd3fc;
+  --enemy-breaker: #f472b6;
+  --enemy-ranger: #cbd5e1;
+  --enemy-melee: #94a3b8;
+  --enemy-boss: #fb7185;
+  --friendly-shot: rgba(125, 211, 252, 0.95);
   --enemy-shot: rgba(251, 113, 133, 0.92);
-  --enemy-laser-shot: rgba(192, 132, 252, 0.95);
-  --enemy-hit: rgba(56, 189, 248, 0.95);
+  --enemy-laser-shot: rgba(244, 114, 182, 0.95);
+  --enemy-hit: rgba(125, 211, 252, 0.95);
   --planet-hit: rgba(251, 113, 133, 0.95);
-  --shield-hit: rgba(250, 204, 21, 0.95);
+  --shield-hit: rgba(203, 213, 225, 0.95);
+}
+
+body[data-theme="cartoon-candy"] {
+  --bg-0: #2b1a3a;
+  --bg-1: #5b2c83;
+  --bg-2: #8245b4;
+  --bg-top: #170d22;
+  --bg-bottom: #0d0714;
+  --line: rgba(255, 209, 102, 0.22);
+  --cyan: #8bf3ff;
+  --cyan-strong: #4cd9ee;
+  --green: #fff1b5;
+  --gold: #ffd166;
+  --orange: #ff9cdd;
+  --red: #ff7ac6;
+  --violet: #c69cff;
+  --bg-bloom-a: rgba(139, 243, 255, 0.16);
+  --bg-bloom-b: rgba(255, 209, 102, 0.14);
+  --bg-bloom-c: rgba(255, 122, 198, 0.12);
+  --bg-bloom-d: rgba(255, 241, 181, 0.1);
+  --bg-bloom-e: rgba(198, 156, 255, 0.1);
+  --arena-bloom-a: rgba(255, 209, 102, 0.1);
+  --arena-bloom-b: rgba(139, 243, 255, 0.1);
+  --arena-bloom-c: rgba(255, 122, 198, 0.08);
+  --arena-bloom-d: rgba(198, 156, 255, 0.08);
+  --planet-top: #8bf3ff;
+  --planet-mid: #ff7ac6;
+  --planet-bottom: #5b2c83;
+  --planet-highlight: rgba(255, 255, 255, 0.42);
+  --continent-top: #ffd166;
+  --continent-bottom: #ff7ac6;
+  --planet-glow-main: rgba(139, 243, 255, 0.2);
+  --planet-glow-alt: rgba(255, 122, 198, 0.1);
+  --orbit-line: rgba(255, 209, 102, 0.18);
+  --orbit-dashed: rgba(198, 156, 255, 0.14);
+  --shield-edge: rgba(139, 243, 255, 0.46);
+  --shield-fill-a: rgba(139, 243, 255, 0.12);
+  --shield-fill-b: rgba(255, 122, 198, 0.03);
+  --shield-glow: rgba(139, 243, 255, 0.28);
+  --shield-inner: rgba(255, 209, 102, 0.14);
+  --shield-ring-a: rgba(255, 209, 102, 0.16);
+  --shield-ring-b: rgba(198, 156, 255, 0.16);
+  --enemy-card-bg: rgba(255, 255, 255, 0.06);
+  --enemy-card-border: rgba(255, 255, 255, 0.18);
+  --enemy-eye: #311743;
+  --enemy-diver: #8bf3ff;
+  --enemy-breaker: #ffd166;
+  --enemy-ranger: #ff7ac6;
+  --enemy-melee: #fff1b5;
+  --enemy-boss: #c69cff;
+  --friendly-shot: rgba(139, 243, 255, 0.95);
+  --enemy-shot: rgba(255, 122, 198, 0.95);
+  --enemy-laser-shot: rgba(198, 156, 255, 0.95);
+  --enemy-hit: rgba(139, 243, 255, 0.95);
+  --planet-hit: rgba(255, 122, 198, 0.95);
+  --shield-hit: rgba(255, 209, 102, 0.95);
+  --hud-bg-a: rgba(48, 24, 68, 0.9);
+  --hud-bg-b: rgba(21, 11, 31, 0.94);
+  --menu-bg-a: rgba(57, 28, 82, 0.98);
+  --menu-bg-b: rgba(27, 14, 40, 0.95);
+  --toggle-bg-a: rgba(91, 44, 131, 0.96);
+  --toggle-bg-b: rgba(43, 26, 58, 0.98);
+  --banner-bg-a: rgba(255, 244, 194, 0.96);
+  --banner-bg-b: rgba(255, 211, 102, 0.94);
+  --banner-ink: #4f245c;
+  --menu-tab-active-bg: #fff1b5;
+  --menu-tab-active-ink: #4f245c;
+  --button-bg-a: #8bf3ff;
+  --button-bg-b: #ffd166;
+  --button-ink: #311743;
+  --option-hover-bg: rgba(139, 243, 255, 0.14);
+  --option-hover-border: rgba(139, 243, 255, 0.45);
+}
+
+body[data-theme="storybook-horror"] {
+  --bg-0: #0b0a12;
+  --bg-1: #241626;
+  --bg-2: #5b2233;
+  --bg-top: #05040a;
+  --bg-bottom: #020204;
+  --line: rgba(232, 215, 225, 0.18);
+  --ink: #f1e8ee;
+  --muted: #c7b6c1;
+  --cyan: #e8d7e1;
+  --cyan-strong: #c13c5a;
+  --green: #f0b8c8;
+  --gold: #e8d7e1;
+  --orange: #c13c5a;
+  --red: #f08a9b;
+  --violet: #d9a6bb;
+  --bg-bloom-a: rgba(193, 60, 90, 0.14);
+  --bg-bloom-b: rgba(232, 215, 225, 0.08);
+  --bg-bloom-c: rgba(240, 184, 200, 0.08);
+  --bg-bloom-d: rgba(91, 34, 51, 0.1);
+  --bg-bloom-e: rgba(217, 166, 187, 0.08);
+  --arena-bloom-a: rgba(232, 215, 225, 0.08);
+  --arena-bloom-b: rgba(193, 60, 90, 0.08);
+  --arena-bloom-c: rgba(240, 184, 200, 0.06);
+  --arena-bloom-d: rgba(91, 34, 51, 0.08);
+  --planet-top: #e8d7e1;
+  --planet-mid: #c13c5a;
+  --planet-bottom: #5b2233;
+  --planet-highlight: rgba(255, 240, 245, 0.28);
+  --continent-top: #f3e8ef;
+  --continent-bottom: #9b304b;
+  --planet-glow-main: rgba(193, 60, 90, 0.18);
+  --planet-glow-alt: rgba(232, 215, 225, 0.06);
+  --orbit-line: rgba(232, 215, 225, 0.12);
+  --orbit-dashed: rgba(217, 166, 187, 0.12);
+  --shield-edge: rgba(232, 215, 225, 0.36);
+  --shield-fill-a: rgba(232, 215, 225, 0.08);
+  --shield-fill-b: rgba(193, 60, 90, 0.02);
+  --shield-glow: rgba(193, 60, 90, 0.18);
+  --shield-inner: rgba(232, 215, 225, 0.12);
+  --shield-ring-a: rgba(232, 215, 225, 0.12);
+  --shield-ring-b: rgba(217, 166, 187, 0.12);
+  --enemy-card-bg: rgba(241, 232, 238, 0.04);
+  --enemy-card-border: rgba(241, 232, 238, 0.12);
+  --enemy-eye: #2d1020;
+  --enemy-diver: #e8d7e1;
+  --enemy-breaker: #c13c5a;
+  --enemy-ranger: #8b2f44;
+  --enemy-melee: #f0b8c8;
+  --enemy-boss: #d9a6bb;
+  --friendly-shot: rgba(232, 215, 225, 0.95);
+  --enemy-shot: rgba(240, 138, 155, 0.92);
+  --enemy-laser-shot: rgba(217, 166, 187, 0.95);
+  --enemy-hit: rgba(232, 215, 225, 0.95);
+  --planet-hit: rgba(240, 138, 155, 0.95);
+  --shield-hit: rgba(232, 215, 225, 0.95);
+  --hud-bg-a: rgba(22, 12, 21, 0.9);
+  --hud-bg-b: rgba(10, 7, 11, 0.94);
+  --menu-bg-a: rgba(28, 17, 27, 0.98);
+  --menu-bg-b: rgba(11, 8, 13, 0.95);
+  --toggle-bg-a: rgba(36, 22, 38, 0.96);
+  --toggle-bg-b: rgba(11, 10, 18, 0.98);
+  --banner-bg-a: rgba(241, 232, 238, 0.96);
+  --banner-bg-b: rgba(217, 166, 187, 0.94);
+  --banner-ink: #411624;
+  --menu-tab-active-bg: #e8d7e1;
+  --menu-tab-active-ink: #411624;
+  --button-bg-a: #e8d7e1;
+  --button-bg-b: #d9a6bb;
+  --button-ink: #411624;
+  --option-hover-bg: rgba(232, 215, 225, 0.12);
+  --option-hover-border: rgba(232, 215, 225, 0.4);
+}
+
+body[data-theme="funky-neon"] {
+  --bg-0: #12091f;
+  --bg-1: #2a1250;
+  --bg-2: #4e1e7a;
+  --bg-top: #080411;
+  --bg-bottom: #03020a;
+  --line: rgba(249, 248, 113, 0.18);
+  --cyan: #00f5d4;
+  --cyan-strong: #13c9b0;
+  --green: #f9f871;
+  --gold: #f9f871;
+  --orange: #ff8ee1;
+  --red: #ff4d9d;
+  --violet: #8c6dff;
+  --bg-bloom-a: rgba(0, 245, 212, 0.16);
+  --bg-bloom-b: rgba(255, 77, 157, 0.14);
+  --bg-bloom-c: rgba(249, 248, 113, 0.12);
+  --bg-bloom-d: rgba(140, 109, 255, 0.1);
+  --bg-bloom-e: rgba(255, 142, 225, 0.1);
+  --arena-bloom-a: rgba(249, 248, 113, 0.1);
+  --arena-bloom-b: rgba(0, 245, 212, 0.1);
+  --arena-bloom-c: rgba(255, 77, 157, 0.08);
+  --arena-bloom-d: rgba(140, 109, 255, 0.08);
+  --planet-top: #00f5d4;
+  --planet-mid: #ff4d9d;
+  --planet-bottom: #2a1250;
+  --planet-highlight: rgba(255, 255, 255, 0.38);
+  --continent-top: #f9f871;
+  --continent-bottom: #00f5d4;
+  --planet-glow-main: rgba(0, 245, 212, 0.2);
+  --planet-glow-alt: rgba(255, 77, 157, 0.1);
+  --orbit-line: rgba(249, 248, 113, 0.14);
+  --orbit-dashed: rgba(140, 109, 255, 0.14);
+  --shield-edge: rgba(249, 248, 113, 0.44);
+  --shield-fill-a: rgba(249, 248, 113, 0.1);
+  --shield-fill-b: rgba(255, 77, 157, 0.03);
+  --shield-glow: rgba(0, 245, 212, 0.24);
+  --shield-inner: rgba(249, 248, 113, 0.12);
+  --shield-ring-a: rgba(249, 248, 113, 0.14);
+  --shield-ring-b: rgba(140, 109, 255, 0.16);
+  --enemy-card-bg: rgba(255, 255, 255, 0.05);
+  --enemy-card-border: rgba(255, 255, 255, 0.14);
+  --enemy-eye: #241138;
+  --enemy-diver: #00f5d4;
+  --enemy-breaker: #ff4d9d;
+  --enemy-ranger: #f9f871;
+  --enemy-melee: #8c6dff;
+  --enemy-boss: #ff8ee1;
+  --friendly-shot: rgba(0, 245, 212, 0.95);
+  --enemy-shot: rgba(255, 77, 157, 0.95);
+  --enemy-laser-shot: rgba(140, 109, 255, 0.95);
+  --enemy-hit: rgba(0, 245, 212, 0.95);
+  --planet-hit: rgba(255, 77, 157, 0.95);
+  --shield-hit: rgba(249, 248, 113, 0.95);
+  --hud-bg-a: rgba(24, 10, 40, 0.9);
+  --hud-bg-b: rgba(9, 4, 16, 0.94);
+  --menu-bg-a: rgba(32, 13, 54, 0.98);
+  --menu-bg-b: rgba(12, 6, 20, 0.95);
+  --toggle-bg-a: rgba(42, 18, 80, 0.96);
+  --toggle-bg-b: rgba(18, 9, 31, 0.98);
+  --banner-bg-a: rgba(249, 248, 113, 0.96);
+  --banner-bg-b: rgba(255, 142, 225, 0.94);
+  --banner-ink: #35154d;
+  --menu-tab-active-bg: #f9f871;
+  --menu-tab-active-ink: #35154d;
+  --button-bg-a: #00f5d4;
+  --button-bg-b: #f9f871;
+  --button-ink: #240f38;
+  --option-hover-bg: rgba(0, 245, 212, 0.14);
+  --option-hover-border: rgba(0, 245, 212, 0.42);
+}
+
+body[data-theme="metal-forge"] {
+  --bg-0: #101418;
+  --bg-1: #2e3a44;
+  --bg-2: #4a5660;
+  --bg-top: #090c0f;
+  --bg-bottom: #040506;
+  --line: rgba(174, 185, 196, 0.2);
+  --cyan: #aeb9c4;
+  --cyan-strong: #6d7b86;
+  --green: #d8e0e8;
+  --gold: #f08a24;
+  --orange: #f08a24;
+  --red: #f97316;
+  --violet: #c8d0d8;
+  --bg-bloom-a: rgba(240, 138, 36, 0.14);
+  --bg-bloom-b: rgba(174, 185, 196, 0.12);
+  --bg-bloom-c: rgba(200, 208, 216, 0.1);
+  --bg-bloom-d: rgba(109, 123, 134, 0.08);
+  --bg-bloom-e: rgba(216, 224, 232, 0.08);
+  --arena-bloom-a: rgba(174, 185, 196, 0.08);
+  --arena-bloom-b: rgba(240, 138, 36, 0.08);
+  --arena-bloom-c: rgba(200, 208, 216, 0.06);
+  --arena-bloom-d: rgba(109, 123, 134, 0.08);
+  --planet-top: #c8d0d8;
+  --planet-mid: #aeb9c4;
+  --planet-bottom: #6d7b86;
+  --planet-highlight: rgba(255, 255, 255, 0.26);
+  --continent-top: #f08a24;
+  --continent-bottom: #c96914;
+  --planet-glow-main: rgba(240, 138, 36, 0.16);
+  --planet-glow-alt: rgba(174, 185, 196, 0.08);
+  --orbit-line: rgba(174, 185, 196, 0.14);
+  --orbit-dashed: rgba(200, 208, 216, 0.12);
+  --shield-edge: rgba(174, 185, 196, 0.4);
+  --shield-fill-a: rgba(174, 185, 196, 0.08);
+  --shield-fill-b: rgba(240, 138, 36, 0.02);
+  --shield-glow: rgba(174, 185, 196, 0.18);
+  --shield-inner: rgba(240, 138, 36, 0.1);
+  --shield-ring-a: rgba(216, 224, 232, 0.12);
+  --shield-ring-b: rgba(174, 185, 196, 0.12);
+  --enemy-card-bg: rgba(216, 224, 232, 0.04);
+  --enemy-card-border: rgba(216, 224, 232, 0.14);
+  --enemy-eye: #1b232a;
+  --enemy-diver: #c8d0d8;
+  --enemy-breaker: #f08a24;
+  --enemy-ranger: #7b8894;
+  --enemy-melee: #d8e0e8;
+  --enemy-boss: #aeb9c4;
+  --friendly-shot: rgba(174, 185, 196, 0.95);
+  --enemy-shot: rgba(240, 138, 36, 0.95);
+  --enemy-laser-shot: rgba(200, 208, 216, 0.95);
+  --enemy-hit: rgba(174, 185, 196, 0.95);
+  --planet-hit: rgba(240, 138, 36, 0.95);
+  --shield-hit: rgba(216, 224, 232, 0.95);
+  --hud-bg-a: rgba(18, 22, 26, 0.9);
+  --hud-bg-b: rgba(8, 10, 11, 0.94);
+  --menu-bg-a: rgba(24, 29, 33, 0.98);
+  --menu-bg-b: rgba(10, 12, 14, 0.95);
+  --toggle-bg-a: rgba(46, 58, 68, 0.96);
+  --toggle-bg-b: rgba(16, 20, 24, 0.98);
+  --banner-bg-a: rgba(232, 236, 240, 0.96);
+  --banner-bg-b: rgba(174, 185, 196, 0.94);
+  --banner-ink: #2b3339;
+  --menu-tab-active-bg: #d8e0e8;
+  --menu-tab-active-ink: #2b3339;
+  --button-bg-a: #d8e0e8;
+  --button-bg-b: #f08a24;
+  --button-ink: #2b3339;
+  --option-hover-bg: rgba(174, 185, 196, 0.12);
+  --option-hover-border: rgba(174, 185, 196, 0.4);
+}
+
+body[data-theme="paper-craft"] {
+  --bg-0: #f5ebd8;
+  --bg-1: #e7d8bd;
+  --bg-2: #d9c7a4;
+  --bg-top: #efe2ca;
+  --bg-bottom: #d7c29a;
+  --line: rgba(73, 53, 27, 0.18);
+  --ink: #2f261c;
+  --muted: #6b5742;
+  --cyan: #6e9e7b;
+  --cyan-strong: #567960;
+  --green: #6e9e7b;
+  --gold: #d39b57;
+  --orange: #c95f50;
+  --red: #b54b45;
+  --violet: #a9845c;
+  --bg-bloom-a: rgba(201, 95, 80, 0.12);
+  --bg-bloom-b: rgba(110, 158, 123, 0.12);
+  --bg-bloom-c: rgba(169, 132, 92, 0.1);
+  --bg-bloom-d: rgba(217, 199, 164, 0.08);
+  --bg-bloom-e: rgba(245, 235, 216, 0.08);
+  --arena-bloom-a: rgba(201, 95, 80, 0.08);
+  --arena-bloom-b: rgba(110, 158, 123, 0.08);
+  --arena-bloom-c: rgba(169, 132, 92, 0.06);
+  --arena-bloom-d: rgba(217, 199, 164, 0.08);
+  --planet-top: #e4d3b6;
+  --planet-mid: #c95f50;
+  --planet-bottom: #a9845c;
+  --planet-highlight: rgba(255, 248, 240, 0.34);
+  --continent-top: #6e9e7b;
+  --continent-bottom: #4f7b60;
+  --planet-glow-main: rgba(201, 95, 80, 0.14);
+  --planet-glow-alt: rgba(110, 158, 123, 0.08);
+  --orbit-line: rgba(73, 53, 27, 0.14);
+  --orbit-dashed: rgba(73, 53, 27, 0.12);
+  --shield-edge: rgba(110, 158, 123, 0.4);
+  --shield-fill-a: rgba(110, 158, 123, 0.08);
+  --shield-fill-b: rgba(201, 95, 80, 0.02);
+  --shield-glow: rgba(110, 158, 123, 0.16);
+  --shield-inner: rgba(201, 95, 80, 0.08);
+  --shield-ring-a: rgba(73, 53, 27, 0.1);
+  --shield-ring-b: rgba(73, 53, 27, 0.1);
+  --enemy-card-bg: rgba(255, 248, 240, 0.18);
+  --enemy-card-border: rgba(73, 53, 27, 0.14);
+  --enemy-eye: #3c2b1e;
+  --enemy-diver: #c95f50;
+  --enemy-breaker: #6e9e7b;
+  --enemy-ranger: #a9845c;
+  --enemy-melee: #e4d3b6;
+  --enemy-boss: #d9c7a4;
+  --friendly-shot: rgba(110, 158, 123, 0.95);
+  --enemy-shot: rgba(201, 95, 80, 0.9);
+  --enemy-laser-shot: rgba(169, 132, 92, 0.92);
+  --enemy-hit: rgba(110, 158, 123, 0.95);
+  --planet-hit: rgba(201, 95, 80, 0.95);
+  --shield-hit: rgba(110, 158, 123, 0.95);
+  --hud-bg-a: rgba(245, 235, 216, 0.9);
+  --hud-bg-b: rgba(231, 216, 189, 0.94);
+  --menu-bg-a: rgba(245, 235, 216, 0.98);
+  --menu-bg-b: rgba(217, 199, 164, 0.95);
+  --menu-body-bg: rgba(73, 53, 27, 0.05);
+  --toggle-bg-a: rgba(217, 199, 164, 0.96);
+  --toggle-bg-b: rgba(245, 235, 216, 0.98);
+  --banner-bg-a: rgba(255, 248, 240, 0.96);
+  --banner-bg-b: rgba(228, 211, 182, 0.94);
+  --banner-ink: #4c3827;
+  --menu-tab-active-bg: #6e9e7b;
+  --menu-tab-active-ink: #fffdf8;
+  --button-bg-a: #6e9e7b;
+  --button-bg-b: #c95f50;
+  --button-ink: #fffdf8;
+  --option-hover-bg: rgba(110, 158, 123, 0.12);
+  --option-hover-border: rgba(110, 158, 123, 0.35);
+}
+
+body[data-theme="ocean-pop"] {
+  --bg-0: #041c32;
+  --bg-1: #064663;
+  --bg-2: #0a72a0;
+  --bg-top: #02111f;
+  --bg-bottom: #010912;
+  --line: rgba(184, 255, 249, 0.2);
+  --cyan: #47b5ff;
+  --cyan-strong: #0aa1dd;
+  --green: #b8fff9;
+  --gold: #8cf4ff;
+  --orange: #47b5ff;
+  --red: #ff8fb2;
+  --violet: #7ed7ff;
+  --bg-bloom-a: rgba(71, 181, 255, 0.14);
+  --bg-bloom-b: rgba(184, 255, 249, 0.12);
+  --bg-bloom-c: rgba(10, 161, 221, 0.12);
+  --bg-bloom-d: rgba(140, 244, 255, 0.08);
+  --bg-bloom-e: rgba(126, 215, 255, 0.08);
+  --arena-bloom-a: rgba(184, 255, 249, 0.08);
+  --arena-bloom-b: rgba(71, 181, 255, 0.08);
+  --arena-bloom-c: rgba(140, 244, 255, 0.06);
+  --arena-bloom-d: rgba(10, 161, 221, 0.08);
+  --planet-top: #b8fff9;
+  --planet-mid: #47b5ff;
+  --planet-bottom: #0aa1dd;
+  --planet-highlight: rgba(255, 255, 255, 0.34);
+  --continent-top: #b8fff9;
+  --continent-bottom: #79ecdf;
+  --planet-glow-main: rgba(71, 181, 255, 0.18);
+  --planet-glow-alt: rgba(184, 255, 249, 0.08);
+  --orbit-line: rgba(184, 255, 249, 0.14);
+  --orbit-dashed: rgba(126, 215, 255, 0.12);
+  --shield-edge: rgba(184, 255, 249, 0.42);
+  --shield-fill-a: rgba(184, 255, 249, 0.08);
+  --shield-fill-b: rgba(71, 181, 255, 0.02);
+  --shield-glow: rgba(184, 255, 249, 0.2);
+  --shield-inner: rgba(71, 181, 255, 0.1);
+  --shield-ring-a: rgba(184, 255, 249, 0.12);
+  --shield-ring-b: rgba(126, 215, 255, 0.12);
+  --enemy-card-bg: rgba(184, 255, 249, 0.04);
+  --enemy-card-border: rgba(184, 255, 249, 0.14);
+  --enemy-eye: #07334c;
+  --enemy-diver: #b8fff9;
+  --enemy-breaker: #47b5ff;
+  --enemy-ranger: #0aa1dd;
+  --enemy-melee: #8cf4ff;
+  --enemy-boss: #7ed7ff;
+  --friendly-shot: rgba(184, 255, 249, 0.95);
+  --enemy-shot: rgba(255, 143, 178, 0.92);
+  --enemy-laser-shot: rgba(71, 181, 255, 0.95);
+  --enemy-hit: rgba(184, 255, 249, 0.95);
+  --planet-hit: rgba(255, 143, 178, 0.95);
+  --shield-hit: rgba(184, 255, 249, 0.95);
 }
 
 body[data-theme="nebula"] .planet-core {
@@ -703,6 +1231,140 @@ body[data-theme="arcade"] .projectile::after {
   border-radius: 2px;
 }
 
+body[data-theme] .planet-core {
+  border-radius: 50%;
+  border: 0;
+  box-shadow:
+    0 0 44px rgba(32, 200, 255, 0.2),
+    inset -18px -22px 36px rgba(0, 0, 0, 0.35);
+}
+
+body[data-theme] .planet-core::before {
+  content: "";
+  position: absolute;
+  inset: 16% 10%;
+  border-radius: 50%;
+  background:
+    linear-gradient(115deg, transparent 0 32%, rgba(255, 255, 255, 0.12) 32% 38%, transparent 38% 54%, rgba(255, 255, 255, 0.08) 54% 58%, transparent 58%),
+    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.12), transparent 18%);
+  opacity: 0.95;
+}
+
+body[data-theme] .planet-surface {
+  background:
+    radial-gradient(circle at 62% 36%, rgba(255, 255, 255, 0.08), transparent 12%),
+    radial-gradient(circle at 42% 62%, rgba(255, 255, 255, 0.06), transparent 12%);
+}
+
+body[data-theme] .continent {
+  border-radius: 48% 38% 46% 42%;
+  transform: none;
+  box-shadow: 0 0 18px rgba(76, 255, 119, 0.1);
+}
+
+body[data-theme] .continent-1 {
+  width: 34%;
+  height: 22%;
+  top: 22%;
+  left: 18%;
+  border-radius: 48% 38% 46% 42%;
+  transform: rotate(-16deg);
+}
+
+body[data-theme] .continent-2 {
+  width: 28%;
+  height: 18%;
+  top: 42%;
+  right: 20%;
+  border-radius: 44% 58% 38% 46%;
+  transform: rotate(12deg);
+}
+
+body[data-theme] .continent-3 {
+  width: 22%;
+  height: 14%;
+  bottom: 20%;
+  left: 40%;
+  border-radius: 60% 40% 56% 38%;
+  transform: none;
+}
+
+body[data-theme] .shield-shell {
+  border-width: 4px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, var(--shield-fill-a), var(--shield-fill-b), var(--shield-fill-a));
+  box-shadow:
+    0 0 34px var(--shield-glow),
+    inset 0 0 28px var(--shield-inner);
+  backdrop-filter: blur(6px);
+}
+
+body[data-theme] .shield-shell::before,
+body[data-theme] .shield-shell::after {
+  border-radius: 50%;
+  border-width: 1px;
+  opacity: 1;
+}
+
+body[data-theme] .shield-shell::before {
+  inset: -22px;
+  border-style: solid;
+}
+
+body[data-theme] .shield-shell::after {
+  inset: -40px;
+  border-style: dashed;
+}
+
+body[data-theme] .enemy-card {
+  border-radius: 12px;
+  border-width: 1px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(3px);
+}
+
+body[data-theme] .enemy-body {
+  border-radius: 0;
+  box-shadow: none;
+  filter: none;
+}
+
+body[data-theme] .enemy-diver .enemy-body {
+  clip-path: none;
+  border-radius: 50%;
+}
+
+body[data-theme] .enemy-breaker .enemy-body {
+  clip-path: polygon(22% 0%, 78% 0%, 100% 35%, 82% 100%, 18% 100%, 0% 35%);
+}
+
+body[data-theme] .enemy-ranger .enemy-body {
+  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+}
+
+body[data-theme] .enemy-melee .enemy-body {
+  clip-path: none;
+  border-radius: 5px;
+}
+
+body[data-theme] .enemy-boss .enemy-body {
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 92%, 50% 70%, 21% 92%, 32% 57%, 2% 35%, 39% 35%);
+}
+
+body[data-theme] .projectile.friendly,
+body[data-theme] .projectile.enemy,
+body[data-theme] .projectile.enemy-laser {
+  height: 3px;
+  border-radius: 999px;
+}
+
+body[data-theme] .projectile::after {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transform: translateY(-50%);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -984,17 +1646,15 @@ input {
 .menu-panel {
   position: absolute;
   z-index: 5;
+  --panel-scale: 1;
+  --panel-offset-x: 0px;
+  --panel-offset-y: 0px;
   border: 1px solid var(--line);
-  background: linear-gradient(180deg, rgba(8, 14, 29, 0.86), rgba(5, 10, 21, 0.92));
+  background: linear-gradient(180deg, var(--hud-bg-a), var(--hud-bg-b));
   box-shadow: var(--shadow);
   backdrop-filter: blur(10px);
-}
-
-.planet-status,
-.math-console,
-.system-banner,
-.menu-panel {
   transform-origin: top left;
+  transform: translate(var(--panel-offset-x), var(--panel-offset-y)) scale(var(--panel-scale));
 }
 
 .question-label,
@@ -1028,7 +1688,7 @@ input {
   border: 1px solid rgba(255, 255, 255, 0.08);
   cursor: pointer;
   color: var(--ink);
-  background: linear-gradient(180deg, rgba(30, 41, 59, 0.96), rgba(15, 23, 42, 0.98));
+  background: linear-gradient(180deg, var(--toggle-bg-a), var(--toggle-bg-b));
   box-shadow: var(--shadow);
   font-weight: 800;
   text-transform: uppercase;
@@ -1039,15 +1699,23 @@ input {
   top: 74px;
   z-index: 20;
   width: min(92vw, 440px);
+  max-height: calc(100vh - 92px);
   padding: 16px;
   border-radius: 20px;
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.94));
+  background: linear-gradient(180deg, var(--menu-bg-a), var(--menu-bg-b));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .menu-body {
+  flex: 1;
+  min-height: 0;
   border-radius: 18px;
   padding: 14px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--menu-body-bg);
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .menu-tabs {
@@ -1068,8 +1736,8 @@ input {
 }
 
 .menu-tab.active {
-  background: #e2e8f0;
-  color: #0f172a;
+  background: var(--menu-tab-active-bg);
+  color: var(--menu-tab-active-ink);
 }
 
 .menu-section {
@@ -1090,30 +1758,31 @@ input {
 }
 
 .system-banner {
+  --panel-offset-x: -50%;
+  --banner-float: 0px;
   top: calc(50% - min(24vw, 24vh) - 92px);
   left: 50%;
-  transform: translateX(-50%);
   min-width: 240px;
   max-width: 360px;
   padding: 10px 16px;
   border-radius: 18px;
   text-align: center;
-  color: var(--cyan);
+  color: var(--banner-ink);
   font-weight: 800;
-  background: linear-gradient(180deg, rgba(245, 249, 255, 0.96), rgba(216, 236, 255, 0.94));
+  background: linear-gradient(180deg, var(--banner-bg-a), var(--banner-bg-b));
   border: 1px solid rgba(255, 255, 255, 0.65);
   box-shadow:
     0 14px 32px rgba(0, 0, 0, 0.24),
     0 0 18px rgba(99, 236, 255, 0.08);
-  color: #12304f;
   opacity: 0;
   pointer-events: none;
   transition: opacity 220ms ease, transform 220ms ease;
+  transform: translate(var(--panel-offset-x), calc(var(--panel-offset-y) + var(--banner-float))) scale(var(--panel-scale));
 }
 
 .system-banner.visible {
+  --banner-float: -8px;
   opacity: 1;
-  transform: translateX(-50%) translateY(-8px);
 }
 
 .system-banner::after {
@@ -1124,20 +1793,97 @@ input {
   width: 18px;
   height: 18px;
   transform: translateX(-50%) rotate(45deg);
-  background: linear-gradient(180deg, rgba(216, 236, 255, 0.94), rgba(216, 236, 255, 0.94));
+  background: var(--banner-bg-b);
   border-right: 1px solid rgba(255, 255, 255, 0.65);
   border-bottom: 1px solid rgba(255, 255, 255, 0.65);
 }
 
+.tutorial-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  background: rgba(4, 8, 18, 0.5);
+  backdrop-filter: blur(2px);
+}
+
+.tutorial-highlight {
+  position: absolute;
+  border-radius: 24px;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 0 0 9999px rgba(4, 8, 18, 0.28),
+    0 0 24px rgba(255, 255, 255, 0.2);
+  pointer-events: none;
+}
+
+.tutorial-callout {
+  --tutorial-tail-offset: 28px;
+  --tutorial-tail-rotate: 45deg;
+  position: absolute;
+  width: min(360px, calc(100vw - 32px));
+  padding: 16px 18px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: linear-gradient(180deg, var(--banner-bg-a), var(--banner-bg-b));
+  color: var(--banner-ink);
+  box-shadow:
+    0 18px 36px rgba(0, 0, 0, 0.24),
+    0 0 20px rgba(255, 255, 255, 0.08);
+}
+
+.tutorial-callout::after {
+  content: "";
+  position: absolute;
+  left: var(--tutorial-tail-offset);
+  bottom: -10px;
+  width: 18px;
+  height: 18px;
+  transform: rotate(var(--tutorial-tail-rotate));
+  background: var(--banner-bg-b);
+  border-right: 1px solid rgba(255, 255, 255, 0.3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.tutorial-callout[data-tail-side="top"]::after {
+  top: -10px;
+  bottom: auto;
+  transform: rotate(225deg);
+}
+
+.tutorial-callout h3 {
+  margin: 0 0 6px;
+  font-family: "Baloo 2", cursive;
+  font-size: 1.45rem;
+}
+
+.tutorial-callout-copy,
+.tutorial-callout-hint {
+  margin: 0;
+}
+
+.tutorial-callout-copy {
+  line-height: 1.4;
+}
+
+.tutorial-callout-hint {
+  margin-top: 10px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  opacity: 0.7;
+}
+
 .planet-status {
+  --panel-offset-x: -50%;
   left: 50%;
   top: 22px;
-  transform: translateX(-50%);
   display: flex;
   gap: 10px;
-  width: min(22vw, 320px);
+  width: min(32vw, 460px);
+  max-width: calc(100vw - 36px);
   padding: 10px;
   border-radius: 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .status-block {
@@ -1158,8 +1904,12 @@ input {
 
 .math-console {
   width: min(30vw, 420px);
+  max-width: calc(100vw - 36px);
+  max-height: calc(100vh - 40px);
   padding: 18px;
   border-radius: 24px;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .console-topline {
@@ -1186,19 +1936,25 @@ input {
 }
 
 .upgrade-console {
+  --panel-offset-y: -50%;
   left: 18px;
   top: 50%;
-  transform: translateY(-50%);
 }
 
 .answer-console {
+  --panel-offset-y: -50%;
   right: 18px;
   top: 50%;
-  transform: translateY(-50%);
+}
+
+.answer-console.tutorial-target {
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.9),
+    0 0 26px rgba(99, 236, 255, 0.28),
+    var(--shadow);
 }
 
 .category-grid,
-.answer-row,
 .question-zone {
   display: flex;
   gap: 12px;
@@ -1211,6 +1967,45 @@ input {
 
 .upgrade-deck .category-grid {
   margin-bottom: 12px;
+}
+
+.tutorial-mission {
+  margin-top: 8px;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.mission-card {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.mission-card + .mission-card {
+  margin-top: 12px;
+}
+
+.mission-card h3 {
+  margin: 0;
+  font-family: "Baloo 2", cursive;
+}
+
+.mission-status {
+  margin: 2px 0 0;
+  color: var(--gold);
+  font-weight: 800;
+}
+
+.tutorial-mission-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 10px;
 }
 
 .category-button,
@@ -1266,28 +2061,46 @@ input {
   line-height: 1;
 }
 
-.answer-row {
+.answer-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
   width: 100%;
-}
-
-.answer-row input {
-  flex: 1;
-  min-width: 0;
-  padding: 12px 14px;
-  border: 1px solid rgba(99, 236, 255, 0.16);
-  border-radius: 16px;
-  color: var(--ink);
-  background: rgba(255, 255, 255, 0.05);
 }
 
 .primary-button {
   padding: 12px 16px;
   border-radius: 16px;
-  color: #06111d;
-  background: linear-gradient(180deg, #63ecff, #20c8ff);
+  color: var(--button-ink);
+  background: linear-gradient(180deg, var(--button-bg-a), var(--button-bg-b));
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+.answer-option {
+  min-height: 62px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.05);
+  font-family: "Baloo 2", cursive;
+  font-size: clamp(1.2rem, 2vw, 1.6rem);
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.14s ease, border-color 0.14s ease, background 0.14s ease;
+}
+
+.answer-option:hover,
+.answer-option:focus-visible {
+  border-color: var(--option-hover-border);
+  background: var(--option-hover-bg);
+  transform: translateY(-1px);
+}
+
+.answer-option:active {
+  transform: translateY(0);
 }
 
 .effect-chip {
@@ -1396,6 +2209,33 @@ input {
   margin-bottom: 16px;
 }
 
+.developer-block {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.developer-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.developer-button {
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.developer-button.active {
+  border-color: var(--option-hover-border);
+  background: var(--option-hover-bg);
+}
+
 .theme-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1429,6 +2269,21 @@ input {
   border-color: color-mix(in srgb, var(--cyan) 65%, white 10%);
   background: color-mix(in srgb, var(--cyan) 12%, transparent);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--cyan) 35%, transparent);
+}
+
+.theme-button.locked,
+.theme-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+  filter: grayscale(0.45);
+}
+
+.theme-button.locked strong::after {
+  content: " Locked";
+  display: inline-block;
+  margin-left: 6px;
+  color: var(--gold);
+  font-size: 0.75rem;
 }
 
 .settings-copy {
@@ -1739,7 +2594,7 @@ input {
     align-items: stretch;
   }
 
-  .answer-row {
+  .answer-options {
     width: 100%;
   }
 }
@@ -1845,13 +2700,11 @@ input {
     font-size: clamp(1.6rem, 8vw, 2.4rem);
   }
 
-  .answer-row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 10px;
-    align-items: stretch;
+  .answer-options {
+    gap: 8px;
   }
 
+  .answer-option,
   .answer-row input,
   .primary-button {
     min-height: 48px;
@@ -1957,7 +2810,7 @@ input {
     font-size: 0.84rem;
   }
 
-  .answer-row {
+  .answer-options {
     grid-template-columns: 1fr;
   }
 

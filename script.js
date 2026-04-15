@@ -1,30 +1,47 @@
 const state = {
   baseHp: 100,
   maxBaseHp: 100,
-  shield: 30,
-  maxShield: 30,
-  attack: 8,
-  attackSpeed: 1.05,
-  planetRegen: 0.25,
-  shieldRegen: 0.5,
+  shield: 20,
+  maxShield: 20,
+  attack: 10,
+  attackSpeed: 1,
+  planetRegen: 1,
+  shieldRegen: 1,
   targetCount: 1,
   streak: 0,
   bestStreak: 0,
   population: 100,
   correctSincePopulationGain: 0,
   elapsedSec: 0,
+  survivalClockSec: 120,
   threatMultiplier: 1,
+  godMode: false,
+  zombieMode: false,
+  zombieDead: false,
+  godModeElapsedSec: 0,
+  swarmLevel: 1,
   totalUpgrades: 0,
   level: 1,
   savedStreakAtFailure: 0,
   checkpointSnapshot: null,
   checkpointGuard: false,
   checkpointRecoveryAnswers: 0,
+  repairBoostSec: 0,
   repairMode: false,
   repairAttempts: 0,
   repairCorrect: 0,
   repairTarget: 3,
   repairQuestion: null,
+  safetyModeSec: 0,
+  correctSinceSafetyMode: 0,
+  tutorialActive: true,
+  tutorialPhase: "intro-power",
+  tutorialPauseCombat: true,
+  tutorialCalloutVisible: false,
+  tutorialDismissAction: null,
+  tutorialInputLocked: false,
+  tutorialHighlightAnswer: false,
+  tutorialCalloutTimer: null,
   category: "addition",
   question: null,
   wrongLocks: {
@@ -45,8 +62,14 @@ const state = {
   layoutEditMode: false,
   selectedPanelId: null,
   globalScale: 1,
-  theme: "nebula",
+  theme: "cold-scifi",
   panelScales: {},
+  questionHistory: {
+    addition: [],
+    subtraction: [],
+    multiplication: [],
+    division: []
+  },
   upgrades: {
     addition: 0,
     subtraction: 0,
@@ -60,6 +83,29 @@ const state = {
 const CATEGORY_KEYS = ["addition", "subtraction", "multiplication", "division"];
 const REPAIR_QUESTION_CATEGORIES = ["addition", "subtraction"];
 const OPENING_WAVE_SIZE = 3;
+const BASE_PLANET_HP = 100;
+const BASE_PLANET_SHIELD = 20;
+const BASE_PLANET_DAMAGE = 10;
+const BASE_ATTACK_SPEED = 1;
+const BASE_HEALTH_REGEN = 1;
+const BASE_SHIELD_REGEN = 1;
+const SURVIVAL_BASE_SECONDS = 120;
+const SAFETY_REWARD_SECONDS = 300;
+const TUTORIAL_START_SAFETY_SECONDS = 45;
+const TUTORIAL_BUILD_TARGET = 10;
+const QUESTION_HISTORY_LIMIT = 20;
+const THEME_UNLOCKS = [
+  { theme: "cold-scifi", streak: 0 },
+  { theme: "solar-gold", streak: 5 },
+  { theme: "matrix-grid", streak: 10 },
+  { theme: "code-editor", streak: 15 },
+  { theme: "cartoon-candy", streak: 20 },
+  { theme: "storybook-horror", streak: 25 },
+  { theme: "funky-neon", streak: 30 },
+  { theme: "metal-forge", streak: 35 },
+  { theme: "paper-craft", streak: 40 },
+  { theme: "ocean-pop", streak: 45 }
+];
 
 const planetHints = [
   "Solve math to power the Planet. Each correct answer gives one upgrade.",
@@ -77,9 +123,9 @@ const enemyTemplates = {
     name: "Diver",
     family: "minion",
     className: "enemy-diver",
-    baseHp: 12,
-    speed: 18,
-    contactDamage: 9,
+    baseHp: 20,
+    speed: 16,
+    contactDamage: 6,
     damageMode: "normal",
     holdProgress: null,
     orbitSpeed: 0,
@@ -92,14 +138,14 @@ const enemyTemplates = {
     name: "Shield Breaker",
     family: "minion",
     className: "enemy-breaker",
-    baseHp: 15,
-    speed: 12,
-    contactDamage: 8,
+    baseHp: 22,
+    speed: 11,
+    contactDamage: 5,
     damageMode: "shield_break",
     holdProgress: 74,
     orbitSpeed: 0.38,
-    rangedCooldown: 1.9,
-    rangedDamage: 4,
+    rangedCooldown: 2.2,
+    rangedDamage: 3,
     projectileClass: "enemy",
     targetPriority: 0
   },
@@ -107,14 +153,14 @@ const enemyTemplates = {
     name: "Ranger",
     family: "minion",
     className: "enemy-ranger",
-    baseHp: 11,
-    speed: 9,
+    baseHp: 18,
+    speed: 8,
     contactDamage: 0,
     damageMode: "normal",
     holdProgress: 38,
     orbitSpeed: 0.24,
-    rangedCooldown: 2.5,
-    rangedDamage: 6,
+    rangedCooldown: 2.3,
+    rangedDamage: 4,
     projectileClass: "enemy",
     targetPriority: 2
   },
@@ -122,14 +168,14 @@ const enemyTemplates = {
     name: "Melee",
     family: "minion",
     className: "enemy-melee",
-    baseHp: 13,
-    speed: 13,
+    baseHp: 20,
+    speed: 12,
     contactDamage: 0,
     damageMode: "surface_only",
     holdProgress: 88,
     orbitSpeed: -0.5,
-    rangedCooldown: 1.8,
-    rangedDamage: 5,
+    rangedCooldown: 1.9,
+    rangedDamage: 4,
     projectileClass: "enemy-laser",
     targetPriority: 1
   },
@@ -137,14 +183,14 @@ const enemyTemplates = {
     name: "Boss",
     family: "boss",
     className: "enemy-boss",
-    baseHp: 32,
-    speed: 8,
-    contactDamage: 18,
+    baseHp: 70,
+    speed: 7,
+    contactDamage: 10,
     damageMode: "normal",
     holdProgress: 56,
     orbitSpeed: 0.2,
-    rangedCooldown: 1.6,
-    rangedDamage: 9,
+    rangedCooldown: 1.7,
+    rangedDamage: 6,
     projectileClass: "enemy-laser",
     targetPriority: 4
   }
@@ -171,12 +217,28 @@ const ui = {
   menuCloseBtn: document.getElementById("menu-close-btn"),
   menuTabs: Array.from(document.querySelectorAll(".menu-tab")),
   menuSections: Array.from(document.querySelectorAll(".menu-section")),
+  upgradeConsole: document.querySelector('[data-panel="upgrade-console"]'),
+  answerConsole: document.querySelector('[data-panel="answer-console"]'),
+  tutorialMission: document.getElementById("tutorial-mission"),
+  tutorialMissionCopy: document.getElementById("tutorial-mission-copy"),
+  missionAddition: document.getElementById("mission-addition"),
+  missionSubtraction: document.getElementById("mission-subtraction"),
+  missionMultiplication: document.getElementById("mission-multiplication"),
+  missionDivision: document.getElementById("mission-division"),
+  missionMenuAddition: document.getElementById("mission-menu-addition"),
+  missionMenuSubtraction: document.getElementById("mission-menu-subtraction"),
+  missionMenuMultiplication: document.getElementById("mission-menu-multiplication"),
+  missionMenuDivision: document.getElementById("mission-menu-division"),
+  missionStatusText: document.getElementById("mission-status-text"),
+  themeProgressText: document.getElementById("theme-progress-text"),
+  archiveStatusText: document.getElementById("archive-status-text"),
   level: document.getElementById("level-value"),
   planetState: document.getElementById("planet-state-text"),
   attack: document.getElementById("attack-value"),
   regen: document.getElementById("regen-value"),
   speed: document.getElementById("speed-value"),
   targetCount: document.getElementById("target-count-value"),
+  survivalTimer: document.getElementById("survival-timer-text"),
   maxShieldLive: document.getElementById("max-shield-live"),
   populationLive: document.getElementById("population-live-text"),
   enemyField: document.getElementById("enemy-field"),
@@ -184,18 +246,25 @@ const ui = {
   planetCoreBtn: document.getElementById("planet-core-btn"),
   shieldRing: document.getElementById("shield-ring"),
   systemBanner: document.getElementById("system-banner"),
+  tutorialOverlay: document.getElementById("tutorial-overlay"),
+  tutorialHighlight: document.getElementById("tutorial-highlight"),
+  tutorialCallout: document.getElementById("tutorial-callout"),
+  tutorialCalloutLabel: document.getElementById("tutorial-callout-label"),
+  tutorialCalloutTitle: document.getElementById("tutorial-callout-title"),
+  tutorialCalloutCopy: document.getElementById("tutorial-callout-copy"),
   questionText: document.getElementById("question-text"),
-  answerInput: document.getElementById("answer-input"),
-  submitAnswerBtn: document.getElementById("submit-answer-btn"),
+  answerOptionButtons: Array.from(document.querySelectorAll(".answer-option")),
   globalScaleInput: document.getElementById("global-scale-input"),
   panelScaleInput: document.getElementById("panel-scale-input"),
   layoutEditBtn: document.getElementById("layout-edit-btn"),
   layoutResetBtn: document.getElementById("layout-reset-btn"),
+  godModeBtn: document.getElementById("god-mode-btn"),
+  zombieModeBtn: document.getElementById("zombie-mode-btn"),
+  swarmModeBtn: document.getElementById("swarm-mode-btn"),
   repairPanel: document.getElementById("repair-panel"),
   repairCopy: document.getElementById("repair-copy"),
   repairQuestionText: document.getElementById("repair-question-text"),
-  repairAnswerInput: document.getElementById("repair-answer-input"),
-  repairSubmitBtn: document.getElementById("repair-submit-btn"),
+  repairAnswerOptionButtons: Array.from(document.querySelectorAll(".repair-answer-option")),
   repairProgressText: document.getElementById("repair-progress-text"),
   maxShieldStat: document.getElementById("max-shield-stat"),
   populationStat: document.getElementById("population-stat"),
@@ -210,12 +279,30 @@ const ui = {
   movablePanels: Array.from(document.querySelectorAll("[data-panel]")).filter((node) => node.id !== "menu-toggle")
 };
 
+const enemyNodes = new Map();
+
 function randomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
+}
+
+function formatClock(totalSeconds) {
+  const clamped = Math.max(0, Math.ceil(totalSeconds));
+  const minutes = Math.floor(clamped / 60);
+  const seconds = clamped % 60;
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
+function shuffleArray(values) {
+  const shuffled = [...values];
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swapIndex = randomInt(0, index);
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+  }
+  return shuffled;
 }
 
 function getArenaMetrics() {
@@ -227,16 +314,198 @@ function getArenaMetrics() {
   return { bounds, centerX, centerY, outerRadius, innerRadius };
 }
 
+function getAttackRangeRadius(metrics = getArenaMetrics()) {
+  return Math.min(metrics.outerRadius * 0.88, metrics.innerRadius * 10);
+}
+
+function getTutorialTargetElement(target) {
+  if (target === "addition") {
+    return document.querySelector('[data-category="addition"]');
+  }
+  if (target === "subtraction") {
+    return document.querySelector('[data-category="subtraction"]');
+  }
+  if (target === "multiplication") {
+    return document.querySelector('[data-category="multiplication"]');
+  }
+  if (target === "division") {
+    return document.querySelector('[data-category="division"]');
+  }
+  if (target === "upgrade-console") {
+    return document.querySelector('[data-panel="upgrade-console"]');
+  }
+  if (target === "answer-console") {
+    return document.querySelector('[data-panel="answer-console"]');
+  }
+  if (target === "status") {
+    return document.querySelector('[data-panel="status"]');
+  }
+  if (target === "repair-panel") {
+    return document.getElementById("repair-panel");
+  }
+  return document.getElementById("planet-core-btn");
+}
+
+function positionTutorialCallout(target) {
+  const targetNode = getTutorialTargetElement(target);
+  const shellRect = document.querySelector(".game-shell").getBoundingClientRect();
+  const callout = ui.tutorialCallout;
+
+  if (!targetNode || !callout) {
+    return;
+  }
+
+  const rect = targetNode.getBoundingClientRect();
+  const localLeft = rect.left - shellRect.left;
+  const localTop = rect.top - shellRect.top;
+  const localWidth = rect.width;
+  const localHeight = rect.height;
+
+  ui.tutorialHighlight.style.left = `${Math.max(8, localLeft - 8)}px`;
+  ui.tutorialHighlight.style.top = `${Math.max(8, localTop - 8)}px`;
+  ui.tutorialHighlight.style.width = `${Math.min(shellRect.width - 16, localWidth + 16)}px`;
+  ui.tutorialHighlight.style.height = `${Math.min(shellRect.height - 16, localHeight + 16)}px`;
+
+  const calloutWidth = Math.min(360, shellRect.width - 32);
+  const targetCenterX = localLeft + localWidth / 2;
+  const centeredLeft = localLeft + localWidth / 2 - calloutWidth / 2;
+  const nextLeft = clamp(centeredLeft, 16, Math.max(16, shellRect.width - calloutWidth - 16));
+  let nextTop = localTop + localHeight + 18;
+
+  callout.style.width = `${calloutWidth}px`;
+  callout.style.left = `${nextLeft}px`;
+  callout.style.top = `${Math.min(shellRect.height - callout.offsetHeight - 16, nextTop)}px`;
+
+  const tailOffset = clamp(targetCenterX - nextLeft - 9, 20, calloutWidth - 38);
+  callout.style.setProperty("--tutorial-tail-offset", `${tailOffset}px`);
+
+  if (nextTop + callout.offsetHeight > shellRect.height - 16) {
+    nextTop = Math.max(16, localTop - callout.offsetHeight - 18);
+    callout.style.top = `${nextTop}px`;
+    callout.dataset.tailSide = "top";
+  } else {
+    callout.dataset.tailSide = "bottom";
+  }
+}
+
+function showTutorialCallout({ target, title, message, onDismiss = null, pauseCombat = true, label = "Tutorial" }) {
+  state.tutorialPauseCombat = pauseCombat;
+  state.tutorialCalloutVisible = true;
+  state.tutorialInputLocked = true;
+  state.tutorialDismissAction = onDismiss;
+  ui.tutorialCalloutLabel.textContent = label;
+  ui.tutorialCalloutTitle.textContent = title;
+  ui.tutorialCalloutCopy.textContent = message;
+  ui.tutorialOverlay.classList.remove("hidden");
+  positionTutorialCallout(target);
+}
+
+function clearTutorialCalloutTimer() {
+  if (state.tutorialCalloutTimer) {
+    window.clearTimeout(state.tutorialCalloutTimer);
+    state.tutorialCalloutTimer = null;
+  }
+}
+
+function queueTutorialCallout(config, delayMs = 1000) {
+  clearTutorialCalloutTimer();
+  state.tutorialPauseCombat = false;
+  state.tutorialInputLocked = true;
+  state.tutorialHighlightAnswer = Boolean(config.highlightAnswer);
+  state.tutorialCalloutTimer = window.setTimeout(() => {
+    state.tutorialCalloutTimer = null;
+    showTutorialCallout(config);
+  }, delayMs);
+}
+
+function dismissTutorialCallout() {
+  if (!state.tutorialCalloutVisible) {
+    return;
+  }
+
+  state.tutorialCalloutVisible = false;
+  state.tutorialInputLocked = false;
+  ui.tutorialOverlay.classList.add("hidden");
+  const dismissAction = state.tutorialDismissAction;
+  state.tutorialDismissAction = null;
+  state.tutorialPauseCombat = false;
+
+  if (dismissAction === "complete-tutorial") {
+  } else if (dismissAction === "repair-complete") {
+    if (state.tutorialActive && state.tutorialPhase === "repair-demo") {
+      startTutorialPhase("complete");
+    }
+  } else if (state.tutorialActive && state.tutorialPhase === "power-warning") {
+    startTutorialPhase("unlock-demo");
+  }
+}
+
+function isTutorialLossPhase() {
+  return state.tutorialActive && state.tutorialPhase === "loss-sim";
+}
+
+function isCombatPaused() {
+  return state.repairMode || state.tutorialPauseCombat;
+}
+
+function getForcedTutorialCategory() {
+  if (!state.tutorialActive) {
+    return null;
+  }
+
+  if (state.tutorialPhase === "intro-power" || state.tutorialPhase === "lock-demo") {
+    return "addition";
+  }
+  if (state.tutorialPhase === "power-warning") {
+    return null;
+  }
+  if (state.tutorialPhase === "intro-shield") {
+    return "subtraction";
+  }
+  if (state.tutorialPhase === "intro-multishot") {
+    return "multiplication";
+  }
+  if (state.tutorialPhase === "intro-regen") {
+    return "division";
+  }
+
+  return null;
+}
+
 function getPlanetState() {
+  if (state.zombieDead) {
+    return "Dead";
+  }
   if (state.repairMode || state.baseHp <= 0) {
     return "Needs Repair";
   }
 
-  const requiredForSafety = Math.max(1, Math.floor(state.elapsedSec / 24));
-  if (state.totalUpgrades >= requiredForSafety) {
-    return "Safe";
+  return `Danger ${getDangerLevel()}/5`;
+}
+
+function getDangerLevel() {
+  if (state.godMode || state.safetyModeSec > 0) {
+    return 1;
   }
-  return "In Danger";
+
+  const timerRisk = 1 - clamp(state.survivalClockSec / SURVIVAL_BASE_SECONDS, 0, 1);
+  const populationRisk = 1 - clamp(state.population / 100, 0, 1);
+  const hpRatio = state.maxBaseHp === 0 ? 0 : state.baseHp / state.maxBaseHp;
+  const shieldRatio = state.maxShield === 0 ? 0 : state.shield / state.maxShield;
+  const bodyRisk = 1 - clamp((hpRatio * 0.7) + (shieldRatio * 0.3), 0, 1);
+  const pressureRisk = getPressureRatio();
+  const combinedRisk = Math.max(timerRisk, populationRisk * 0.9, bodyRisk * 0.75, pressureRisk * 0.8);
+  return clamp(1 + Math.floor(combinedRisk * 5), 1, 5);
+}
+
+function getDangerColor(level) {
+  if (level <= 2) {
+    return "var(--green)";
+  }
+  if (level <= 4) {
+    return "var(--gold)";
+  }
+  return "var(--red)";
 }
 
 function getCheckpointLevel() {
@@ -250,8 +519,13 @@ function getCheckpointLevel() {
 function nextRepairQuestion() {
   const kind = REPAIR_QUESTION_CATEGORIES[randomInt(0, REPAIR_QUESTION_CATEGORIES.length - 1)];
   state.repairQuestion = getQuestion(kind);
+  state.repairQuestion.options = buildAnswerOptions(state.repairQuestion.answer);
   ui.repairQuestionText.textContent = state.repairQuestion.prompt;
-  ui.repairAnswerInput.value = "";
+  ui.repairAnswerOptionButtons.forEach((button, index) => {
+    const optionValue = state.repairQuestion.options[index];
+    button.textContent = String(optionValue);
+    button.dataset.value = String(optionValue);
+  });
 }
 
 function cloneUpgrades() {
@@ -263,9 +537,19 @@ function cloneUpgrades() {
   };
 }
 
+function createEmptyQuestionHistory() {
+  return {
+    addition: [],
+    subtraction: [],
+    multiplication: [],
+    division: []
+  };
+}
+
 function captureCheckpointSnapshot() {
   state.checkpointSnapshot = {
     elapsedSec: state.elapsedSec,
+    survivalClockSec: state.survivalClockSec,
     upgrades: cloneUpgrades(),
     bestStreak: state.bestStreak
   };
@@ -303,6 +587,7 @@ function applyCheckpointState(populationPercent, fillRatio, guardActive = true) 
   state.population = populationPercent;
   state.baseHp = Math.round(state.maxBaseHp * fillRatio);
   state.shield = Math.round(state.maxShield * fillRatio);
+  state.zombieDead = false;
   state.streak = Math.floor(state.savedStreakAtFailure * fillRatio);
   state.bestStreak = Math.max(state.bestStreak, state.streak);
   state.correctSincePopulationGain = 0;
@@ -313,6 +598,11 @@ function applyCheckpointState(populationPercent, fillRatio, guardActive = true) 
 function openRepairMode(reason) {
   if (state.repairMode) {
     return;
+  }
+
+  if (state.tutorialActive && state.tutorialPhase === "loss-sim") {
+    state.tutorialPhase = "repair-demo";
+    state.tutorialPauseCombat = true;
   }
 
   state.repairMode = true;
@@ -340,6 +630,29 @@ function resetCategoryLocks() {
   state.focusCount = 0;
 }
 
+function isRepairBoostActive() {
+  return state.repairBoostSec > 0;
+}
+
+function getRepairBoostMultiplier() {
+  return isRepairBoostActive() ? 10 : 1;
+}
+
+function getGodModeMultiplier() {
+  if (!state.godMode) {
+    return 1;
+  }
+  return 50 ** Math.floor(state.godModeElapsedSec / 20);
+}
+
+function getSwarmCountMultiplier() {
+  return state.swarmLevel;
+}
+
+function getSwarmStatMultiplier() {
+  return 1 / state.swarmLevel;
+}
+
 function spawnOpeningWave() {
   for (let i = 0; i < OPENING_WAVE_SIZE; i += 1) {
     spawnEnemy();
@@ -353,6 +666,7 @@ function captureFailureStreak() {
 function resetToCheckpoint() {
   if (state.checkpointSnapshot) {
     state.elapsedSec = state.checkpointSnapshot.elapsedSec;
+    state.survivalClockSec = state.checkpointSnapshot.survivalClockSec;
     state.upgrades = {
       addition: state.checkpointSnapshot.upgrades.addition,
       subtraction: state.checkpointSnapshot.upgrades.subtraction,
@@ -363,33 +677,35 @@ function resetToCheckpoint() {
     state.repairMode = false;
     state.repairAttempts = 0;
     state.repairCorrect = 0;
+    state.zombieDead = false;
     state.question = null;
+    state.questionHistory = createEmptyQuestionHistory();
+    state.safetyModeSec = 0;
+    state.correctSinceSafetyMode = 0;
     resetCategoryLocks();
-    state.enemies = [];
-    state.enemyId = 1;
+    state.repairBoostSec = 0;
     state.lastAttack = 0;
-    state.spawnTimer = 0;
     recalculatePlanetStats();
     applyCheckpointState(40, 0.5);
     setCategory("addition");
-    spawnOpeningWave();
     return;
   }
 
-  state.baseHp = 100;
-  state.maxBaseHp = 100;
-  state.shield = 30;
-  state.maxShield = 30;
-  state.attack = 8;
-  state.attackSpeed = 1.05;
-  state.planetRegen = 0.25;
-  state.shieldRegen = 0.5;
+  state.baseHp = BASE_PLANET_HP;
+  state.maxBaseHp = BASE_PLANET_HP;
+  state.shield = BASE_PLANET_SHIELD;
+  state.maxShield = BASE_PLANET_SHIELD;
+  state.attack = BASE_PLANET_DAMAGE;
+  state.attackSpeed = BASE_ATTACK_SPEED;
+  state.planetRegen = BASE_HEALTH_REGEN;
+  state.shieldRegen = BASE_SHIELD_REGEN;
   state.targetCount = 1;
   state.streak = 0;
   state.bestStreak = 0;
   state.population = 100;
   state.correctSincePopulationGain = 0;
   state.elapsedSec = 0;
+  state.survivalClockSec = SURVIVAL_BASE_SECONDS;
   state.threatMultiplier = 1;
   state.totalUpgrades = 0;
   state.level = 1;
@@ -400,14 +716,18 @@ function resetToCheckpoint() {
   state.repairMode = false;
   state.repairAttempts = 0;
   state.repairCorrect = 0;
+  state.repairBoostSec = 0;
+  state.zombieDead = false;
+  state.godModeElapsedSec = 0;
+  state.swarmLevel = 1;
   state.repairQuestion = null;
+  state.safetyModeSec = 0;
+  state.correctSinceSafetyMode = 0;
   state.category = "addition";
   state.question = null;
+  state.questionHistory = createEmptyQuestionHistory();
   resetCategoryLocks();
-  state.enemies = [];
-  state.enemyId = 1;
   state.lastAttack = 0;
-  state.spawnTimer = 0;
   state.upgrades = {
     addition: 0,
     subtraction: 0,
@@ -417,7 +737,6 @@ function resetToCheckpoint() {
 
   recalculatePlanetStats();
   setCategory("addition");
-  spawnOpeningWave();
 }
 
 function setBanner(message, options = {}) {
@@ -447,14 +766,52 @@ function setMenuTab(tabName) {
 }
 
 function applyTheme(themeName) {
+  if (!isThemeUnlocked(themeName)) {
+    const unlock = getThemeUnlock(themeName);
+    setBanner(`Locked. Reach a best streak of ${unlock.streak} to unlock this theme.`, { remember: false });
+    return false;
+  }
   state.theme = themeName;
   document.body.dataset.theme = themeName;
   ui.themeButtons.forEach((button) => {
     button.classList.toggle("active", button.dataset.theme === themeName);
   });
+  return true;
 }
 
-function getQuestion(category) {
+function getThemeUnlock(themeName) {
+  return THEME_UNLOCKS.find((unlock) => unlock.theme === themeName) || { theme: themeName, streak: 0 };
+}
+
+function isThemeUnlocked(themeName) {
+  return state.bestStreak >= getThemeUnlock(themeName).streak;
+}
+
+function updateThemeLocks() {
+  ui.themeButtons.forEach((button) => {
+    const unlock = getThemeUnlock(button.dataset.theme);
+    const unlocked = state.bestStreak >= unlock.streak;
+    const label = button.querySelector("span");
+    button.disabled = !unlocked;
+    button.classList.toggle("locked", !unlocked);
+    button.dataset.unlockStreak = String(unlock.streak);
+    if (label) {
+      label.textContent = unlocked
+        ? `Unlocked at streak ${unlock.streak}.`
+        : `Locked. Best streak ${unlock.streak} needed.`;
+    }
+  });
+}
+
+function rememberQuestion(category, prompt) {
+  const history = state.questionHistory[category];
+  history.push(prompt);
+  if (history.length > QUESTION_HISTORY_LIMIT) {
+    history.shift();
+  }
+}
+
+function buildQuestion(category) {
   const total = Math.min(state.totalUpgrades, 12);
   let a;
   let b;
@@ -472,8 +829,8 @@ function getQuestion(category) {
     prompt = `${a} - ${b} = ?`;
     answer = a - b;
   } else if (category === "multiplication") {
-    a = randomInt(1, Math.min(6, 2 + Math.ceil(total / 2)));
-    b = randomInt(1, 5 + Math.floor(total / 2));
+    a = randomInt(1, 6);
+    b = randomInt(1, Math.max(6, 4 + Math.floor(total / 2)));
     prompt = `${a} × ${b} = ?`;
     answer = a * b;
   } else {
@@ -486,18 +843,220 @@ function getQuestion(category) {
   return { prompt, answer };
 }
 
+function getQuestion(category) {
+  const recent = state.questionHistory[category];
+  let candidate = buildQuestion(category);
+  let attempts = 0;
+
+  while (recent.includes(candidate.prompt) && attempts < 100) {
+    candidate = buildQuestion(category);
+    attempts += 1;
+  }
+
+  rememberQuestion(category, candidate.prompt);
+  return candidate;
+}
+
+function startTutorialPhase(phase) {
+  state.tutorialPhase = phase;
+
+  if (phase === "intro-power") {
+    setCategory("addition");
+    queueTutorialCallout({
+      target: "addition",
+      title: "Power",
+      message: "This is Power. It helps the Planet hit harder. Tap anywhere, then answer on the right.",
+      highlightAnswer: true,
+      pauseCombat: true
+    });
+  } else if (phase === "intro-shield") {
+    setCategory("subtraction");
+    queueTutorialCallout({
+      target: "subtraction",
+      title: "Shield",
+      message: "This is Shield. It gives the Planet more health and more shield. Tap anywhere, then answer on the right.",
+      highlightAnswer: true,
+      pauseCombat: true
+    });
+  } else if (phase === "intro-multishot") {
+    setCategory("multiplication");
+    queueTutorialCallout({
+      target: "multiplication",
+      title: "Multishot",
+      message: "This is Multishot. It lets the Planet hit more enemies. Tap anywhere, then answer on the right.",
+      highlightAnswer: true,
+      pauseCombat: true
+    });
+  } else if (phase === "intro-regen") {
+    setCategory("division");
+    queueTutorialCallout({
+      target: "division",
+      title: "Regen",
+      message: "This is Regen. It helps the Planet heal over time. Tap anywhere, then answer on the right.",
+      highlightAnswer: true,
+      pauseCombat: true
+    });
+  } else if (phase === "lock-demo") {
+    setCategory("addition");
+    queueTutorialCallout({
+      target: "addition",
+      title: "Resting Path",
+      message: "Use Power more. One path can rest if you use it too much. Tap anywhere, then answer on the right.",
+      highlightAnswer: true,
+      pauseCombat: true
+    });
+  } else if (phase === "power-warning") {
+    queueTutorialCallout({
+      target: "upgrade-console",
+      title: "More Than Power",
+      message: "Power is strong, but the Planet also needs Shield, Multishot, and Regen. Now grow the other paths too.",
+      highlightAnswer: true,
+      pauseCombat: true
+    });
+  } else if (phase === "unlock-demo") {
+    queueTutorialCallout({
+      target: "upgrade-console",
+      title: "Wake It Up",
+      message: "Power is resting now. Answer 2 other paths to wake it up again. Use the answers on the right.",
+      highlightAnswer: true,
+      pauseCombat: true
+    });
+  } else if (phase === "build-all") {
+    ui.tutorialMissionCopy.textContent = "Raise every path to 10 before the next swarm.";
+    queueTutorialCallout({
+      target: "upgrade-console",
+      title: "Urgent Mission",
+      message: "Mission: make every path reach 10. Track it here, then get ready for a huge swarm.",
+      highlightAnswer: true,
+      pauseCombat: true
+    });
+  } else if (phase === "loss-sim") {
+    state.survivalClockSec = 10;
+    state.correctSinceSafetyMode = 0;
+    queueTutorialCallout({
+      target: "status",
+      title: "Big Attack",
+      message: "A big attack is coming. Watch the Planet. Tap anywhere when you are ready.",
+      pauseCombat: true,
+      onDismiss: "resume-combat"
+    });
+  } else if (phase === "repair-demo") {
+    queueTutorialCallout({
+      target: "repair-panel",
+      title: "Repair Time",
+      message: "It is okay to lose. Repair can save your progress. Tap anywhere, then answer the repair questions.",
+      highlightAnswer: true,
+      pauseCombat: true
+    });
+  } else if (phase === "complete") {
+    state.tutorialActive = false;
+    state.tutorialPhase = "complete";
+    state.correctSinceSafetyMode = 0;
+    state.safetyModeSec = TUTORIAL_START_SAFETY_SECONDS;
+    queueTutorialCallout({
+      target: "answer-console",
+      title: "You Are Ready",
+      message: "Great job. You get a short safe start. After this, every 10 right answers gives 5 minutes of safety.",
+      highlightAnswer: true,
+      pauseCombat: true,
+      onDismiss: "complete-tutorial"
+    });
+  }
+
+  updateUi();
+}
+
+function maybeAdvanceTutorial(category, wasCorrect = false) {
+  if (!state.tutorialActive) {
+    return;
+  }
+
+  if (state.tutorialPhase === "intro-power" && state.upgrades.addition >= 1) {
+    startTutorialPhase("intro-shield");
+    return;
+  }
+  if (state.tutorialPhase === "intro-shield" && state.upgrades.subtraction >= 1) {
+    startTutorialPhase("intro-multishot");
+    return;
+  }
+  if (state.tutorialPhase === "intro-multishot" && state.upgrades.multiplication >= 1) {
+    startTutorialPhase("intro-regen");
+    return;
+  }
+  if (state.tutorialPhase === "intro-regen" && state.upgrades.division >= 1) {
+    startTutorialPhase("lock-demo");
+    return;
+  }
+  if (state.tutorialPhase === "lock-demo" && state.spamLockCategory === "addition") {
+    startTutorialPhase("power-warning");
+    return;
+  }
+  if (state.tutorialPhase === "unlock-demo" && !state.spamLockCategory) {
+    startTutorialPhase("build-all");
+    return;
+  }
+  if (state.tutorialPhase === "build-all") {
+    const allReady = getCategories().every((key) => state.upgrades[key] >= TUTORIAL_BUILD_TARGET);
+    if (allReady) {
+      startTutorialPhase("loss-sim");
+      return;
+    }
+
+    if (wasCorrect && state.upgrades[category] === TUTORIAL_BUILD_TARGET) {
+      setBanner(`${category} reached 10. Pick another path now.`);
+    }
+  }
+}
+
+function buildAnswerOptions(answer) {
+  const options = new Set([answer]);
+  const spread = Math.max(3, Math.ceil(Math.abs(answer) * 0.35));
+
+  while (options.size < 4) {
+    const offset = randomInt(-spread, spread);
+    let candidate = answer + offset;
+
+    if (candidate === answer) {
+      candidate = answer + spread + options.size;
+    }
+
+    if (candidate < 0) {
+      candidate = Math.abs(candidate) + 1;
+    }
+
+    options.add(candidate);
+  }
+
+  return shuffleArray(Array.from(options));
+}
+
+function renderAnswerOptions() {
+  ui.answerOptionButtons.forEach((button, index) => {
+    const optionValue = state.question.options[index];
+    button.textContent = String(optionValue);
+    button.dataset.value = String(optionValue);
+  });
+}
+
 function nextQuestion() {
   state.question = getQuestion(state.category);
+  state.question.options = buildAnswerOptions(state.question.answer);
   ui.questionText.textContent = state.question.prompt;
-  ui.answerInput.value = "";
-  ui.answerInput.focus();
+  renderAnswerOptions();
 }
 
 function getCategories() {
   return CATEGORY_KEYS;
 }
 
+function tutorialUsesLockRules() {
+  return state.tutorialActive && (state.tutorialPhase === "lock-demo" || state.tutorialPhase === "unlock-demo");
+}
+
 function isCategoryLocked(category) {
+  if (state.tutorialActive && !tutorialUsesLockRules()) {
+    return false;
+  }
   return state.wrongLocks[category] || state.spamLockCategory === category;
 }
 
@@ -561,23 +1120,27 @@ function recalculatePlanetStats() {
   state.totalUpgrades = add + sub + mul + div;
   state.level = 1 + state.totalUpgrades;
 
-  state.attack = 8 + add * 2;
-  state.maxShield = 30 + sub * 5;
-  state.maxBaseHp = 100 + sub * 6;
-  state.shieldRegen = 0.45 + div * 0.35;
+  state.attack = BASE_PLANET_DAMAGE + add * 2;
+  state.maxShield = BASE_PLANET_SHIELD + sub * 5;
+  state.maxBaseHp = BASE_PLANET_HP + sub * 10;
+  state.shieldRegen = BASE_SHIELD_REGEN + div * 0.4;
   state.targetCount = 1 + Math.floor(mul / 2);
-  state.attackSpeed = 1.05 + mul * 0.05 + state.totalUpgrades * 0.015;
-  state.planetRegen = 0.25 + div * 0.3;
+  state.attackSpeed = BASE_ATTACK_SPEED + state.totalUpgrades * 0.05;
+  state.planetRegen = BASE_HEALTH_REGEN + div * 0.35;
 
   state.baseHp = clamp(state.baseHp, 0, state.maxBaseHp);
   state.shield = clamp(state.shield, 0, state.maxShield);
+}
+
+function getSafetyResetSeconds() {
+  return SURVIVAL_BASE_SECONDS + Math.floor(state.streak / 5) * 5;
 }
 
 function applyCorrectAnswerReward(category) {
   if (state.focusCategory === category) {
     state.focusCount += 1;
   } else {
-    if (state.spamLockCategory && category !== state.spamLockCategory) {
+    if (tutorialUsesLockRules() && state.spamLockCategory && category !== state.spamLockCategory) {
       state.spamUnlockProgress += 1;
       if (state.spamUnlockProgress >= 2) {
         state.spamLockCategory = null;
@@ -591,10 +1154,14 @@ function applyCorrectAnswerReward(category) {
   state.upgrades[category] += 1;
   state.streak += 1;
   state.bestStreak = Math.max(state.bestStreak, state.streak);
+  if (!state.tutorialActive) {
+    state.survivalClockSec = getSafetyResetSeconds();
+  }
   state.correctSincePopulationGain += 1;
   state.wrongLocks[category] = false;
   clearWrongLocks(category);
   recalculatePlanetStats();
+  maybeAdvanceTutorial(category, true);
 
   if (state.checkpointGuard) {
     state.checkpointRecoveryAnswers += 1;
@@ -605,25 +1172,50 @@ function applyCorrectAnswerReward(category) {
     }
   }
 
-  if (state.focusCount >= 5) {
+  if (tutorialUsesLockRules() && state.focusCount >= 5) {
     state.spamLockCategory = category;
     state.spamUnlockProgress = 0;
+    maybeAdvanceTutorial(category, true);
   }
 
   const populationRecovered = state.correctSincePopulationGain >= 5 ? gainPopulationHeart() : false;
+  let safetyRecovered = false;
+
+  if (!state.tutorialActive) {
+    state.correctSinceSafetyMode += 1;
+    if (state.correctSinceSafetyMode >= 10) {
+      state.correctSinceSafetyMode = 0;
+      state.safetyModeSec = SAFETY_REWARD_SECONDS;
+      safetyRecovered = true;
+    }
+  }
 
   if (category === "addition") {
-    setBanner(populationRecovered ? "Great job. Addition made the Planet stronger and saved 20% population." : "Great job. Addition made the Planet stronger.");
+    setBanner(safetyRecovered
+      ? "Great job. Power is up. The Planet is safe for 5 minutes."
+      : populationRecovered ? "Great job. Addition made the Planet stronger and saved 20% population." : "Great job. Addition made the Planet stronger.");
   } else if (category === "subtraction") {
-    setBanner(populationRecovered ? "Great job. Subtraction raised max health and shield and saved 20% population." : "Great job. Subtraction raised the Planet's max shield and health.");
+    setBanner(safetyRecovered
+      ? "Great job. Shield is up. The Planet is safe for 5 minutes."
+      : populationRecovered ? "Great job. Subtraction raised max health and shield and saved 20% population." : "Great job. Subtraction raised the Planet's max shield and health.");
   } else if (category === "multiplication") {
-    setBanner(populationRecovered ? "Great job. Multiplication added more targets and saved 20% population." : "Great job. Multiplication added more targets.");
+    setBanner(safetyRecovered
+      ? "Great job. Multishot is up. The Planet is safe for 5 minutes."
+      : populationRecovered ? "Great job. Multiplication added more targets and saved 20% population." : "Great job. Multiplication added more targets.");
   } else {
-    setBanner(populationRecovered ? "Great job. Division improved regen and saved 20% population." : "Great job. Division made the Planet heal faster.");
+    setBanner(safetyRecovered
+      ? "Great job. Regen is up. The Planet is safe for 5 minutes."
+      : populationRecovered ? "Great job. Division improved regen and saved 20% population." : "Great job. Division made the Planet heal faster.");
   }
 }
 
 function handleWrongAnswer() {
+  if (state.tutorialActive && !tutorialUsesLockRules() && state.tutorialPhase !== "repair-demo" && state.tutorialPhase !== "loss-sim") {
+    state.streak = 0;
+    setBanner("Try again. Pick the best answer on the right.");
+    return;
+  }
+
   state.streak = 0;
   state.wrongLocks[state.category] = true;
   let message = `${state.category} is locked. Answer a different path to unlock it.`;
@@ -637,6 +1229,11 @@ function handleWrongAnswer() {
   if (getCategories().every((category) => state.wrongLocks[category])) {
     applyDowngradeAll(2);
     message = "All 4 paths failed. Every upgrade dropped by 2.";
+  }
+
+  if (state.tutorialActive && state.tutorialPhase !== "repair-demo" && state.tutorialPhase !== "loss-sim") {
+    setBanner(message);
+    return;
   }
 
   if (losePopulation("wrong")) {
@@ -659,21 +1256,47 @@ function handlePlanetClick() {
 }
 
 function getThreatMultiplier() {
-  const timeStage = Math.floor(state.elapsedSec / 10);
-  return 1 + timeStage / 4 + state.totalUpgrades * 0.035;
-}
-
-function getSurvivalDeadline() {
-  return 240 + state.totalUpgrades * 5;
+  const timeStage = Math.floor(state.elapsedSec / 20);
+  const urgency = clamp(1 - state.survivalClockSec / SURVIVAL_BASE_SECONDS, 0, 1);
+  return 1 + timeStage * 0.18 + urgency * 0.6 + state.totalUpgrades * 0.015;
 }
 
 function getDangerWindow() {
-  return Math.max(0, getSurvivalDeadline() - state.elapsedSec);
+  return Math.max(0, state.survivalClockSec);
+}
+
+function getPressureRatio() {
+  if (state.safetyModeSec > 0 && !state.tutorialActive) {
+    return 0;
+  }
+  if (isTutorialLossPhase()) {
+    return 1;
+  }
+  return clamp(1 - getDangerWindow() / SURVIVAL_BASE_SECONDS, 0, 1);
+}
+
+function getEndgamePressure() {
+  if (isTutorialLossPhase()) {
+    return 1;
+  }
+  return clamp(1 - state.survivalClockSec / 20, 0, 1);
+}
+
+function getPlanetSafetyFloor() {
+  if (state.godMode || state.zombieDead || state.repairMode) {
+    return 0;
+  }
+
+  const collapseWindow = 20;
+  const collapseRatio = clamp(state.survivalClockSec / collapseWindow, 0, 1);
+  const protectedRatio = 0.2 * collapseRatio;
+  return Math.round(state.maxBaseHp * protectedRatio);
 }
 
 function getSpawnInterval() {
-  const pressure = clamp(1 - getDangerWindow() / 120, 0, 1);
-  return Math.max(0.55, 1.95 - pressure * 0.65 - Math.min(0.25, state.totalUpgrades * 0.01));
+  const pressure = getPressureRatio();
+  const endgamePressure = getEndgamePressure();
+  return Math.max(0.24, 1.05 - pressure * 0.28 - endgamePressure * 0.2 - Math.min(0.12, state.elapsedSec / 1200));
 }
 
 function getAliveCounts() {
@@ -686,19 +1309,23 @@ function getAliveCounts() {
 
 function getDesiredEnemyCounts() {
   const t = state.elapsedSec;
-  const pressure = clamp(1 - getDangerWindow() / 120, 0, 1);
+  const pressure = getPressureRatio();
+  const endgamePressure = getEndgamePressure();
   const shieldRatio = state.maxShield === 0 ? 0 : state.shield / state.maxShield;
-  const baseMinions = 6 + Math.floor(t / 45) + Math.floor(pressure * 6);
+  const varietyFloor = 1 + Math.min(3, Math.floor(t / 30));
+  const baseMinions = 4 + Math.floor(t / 18) + Math.floor(pressure * 12) + Math.floor(endgamePressure * 10);
   const diversBoost = shieldRatio < 0.2 ? 2 : shieldRatio < 0.45 ? 1 : 0;
   const breakerBoost = shieldRatio > 0.55 ? 2 : shieldRatio > 0.3 ? 1 : 0;
-  const meleeBoost = state.baseHp < state.maxBaseHp * 0.65 ? 1 : 0;
+  const meleeBoost = state.baseHp < state.maxBaseHp * 0.5 ? 1 : 0;
+
+  const swarmMultiplier = getSwarmCountMultiplier();
 
   return {
-    diver: 2 + Math.floor(baseMinions * 0.26) + diversBoost,
-    breaker: t < 15 ? 0 : 1 + Math.floor(baseMinions * 0.22) + breakerBoost,
-    ranger: t < 25 ? 0 : 1 + Math.floor(baseMinions * 0.22),
-    melee: t < 45 ? 0 : 1 + Math.floor(baseMinions * 0.18) + meleeBoost,
-    boss: t < 150 ? 0 : Math.floor(pressure * 1.2)
+    diver: Math.max(varietyFloor, Math.round((1 + Math.floor(baseMinions * 0.3) + diversBoost + Math.floor(endgamePressure * 2)) * swarmMultiplier)),
+    breaker: t < 8 ? 0 : Math.max(varietyFloor, Math.round((Math.floor(baseMinions * 0.23) + breakerBoost) * swarmMultiplier)),
+    ranger: t < 12 ? 0 : Math.max(varietyFloor, Math.round((Math.floor(baseMinions * 0.25) + Math.floor(endgamePressure)) * swarmMultiplier)),
+    melee: t < 20 ? 0 : Math.max(1, Math.round((Math.floor(baseMinions * 0.14) + meleeBoost) * swarmMultiplier)),
+    boss: t < 120 ? 0 : Math.round(Math.floor((pressure + endgamePressure * 0.8) * 1.4) * Math.min(3, swarmMultiplier))
   };
 }
 
@@ -706,24 +1333,26 @@ function chooseEnemyType() {
   const alive = getAliveCounts();
   const desired = getDesiredEnemyCounts();
   const shieldRatio = state.maxShield === 0 ? 0 : state.shield / state.maxShield;
-  const pressure = clamp(1 - getDangerWindow() / 120, 0, 1);
+  const pressure = getPressureRatio();
+  const endgamePressure = getEndgamePressure();
   const scores = {};
   const types = ["diver", "breaker", "ranger", "melee", "boss"];
 
   types.forEach((type) => {
     const template = enemyTemplates[type];
     const missing = Math.max(0, desired[type] - alive[type]);
-    const underrepresented = Math.max(0, 2 - alive[type]);
-    let score = missing * 6 + underrepresented * 2;
+    const underrepresented = Math.max(0, desired[type] > 0 ? 2 - alive[type] : 0);
+    let score = missing * 6 + underrepresented * 5;
 
     if (type === "breaker") {
       score += shieldRatio > 0.55 ? 8 : shieldRatio > 0.3 ? 4 : 0;
     } else if (type === "diver") {
       score += shieldRatio < 0.25 ? 8 : shieldRatio < 0.45 ? 4 : 1;
+      score += Math.floor(endgamePressure * 5);
     } else if (type === "melee") {
-      score += state.baseHp < state.maxBaseHp * 0.7 ? 6 : 2;
+      score += state.baseHp < state.maxBaseHp * 0.5 ? 4 : 1;
     } else if (type === "ranger") {
-      score += 3 + Math.floor(pressure * 3);
+      score += 3 + Math.floor(pressure * 3) + Math.floor(endgamePressure * 2);
     } else if (type === "boss") {
       score += desired.boss > 0 ? 5 + Math.floor(pressure * 6) : -100;
     }
@@ -742,39 +1371,52 @@ function chooseEnemyType() {
 }
 
 function getMaxEnemyCount() {
-  const pressure = clamp(1 - getDangerWindow() / 120, 0, 1);
-  return 8 + Math.floor(state.elapsedSec / 45) + Math.floor(pressure * 8) + Math.min(5, Math.floor(state.totalUpgrades / 3));
+  const pressure = getPressureRatio();
+  const endgamePressure = getEndgamePressure();
+  const baseCap = clamp(3 + Math.floor(state.elapsedSec / 12) + Math.floor(pressure * 18) + Math.floor(endgamePressure * 10), 3, 50);
+  return clamp(Math.round(baseCap * getSwarmCountMultiplier()), 3, 500);
 }
 
 function getUpgradePacePressure() {
-  const expectedUpgrades = Math.floor(state.elapsedSec / 24);
+  const expectedUpgrades = Math.floor(state.elapsedSec / 20);
   return Math.max(0, expectedUpgrades - state.totalUpgrades);
 }
 
 function getSpawnBatchSize() {
-  const pressure = clamp(1 - getDangerWindow() / 120, 0, 1);
+  const pressure = getPressureRatio();
+  const endgamePressure = getEndgamePressure();
   const pacePressure = getUpgradePacePressure();
-  if (pressure > 0.88 || pacePressure >= 4) {
-    return 4;
+  let batchSize = 1;
+  if (endgamePressure > 0.75 || pressure > 0.9 || pacePressure >= 5) {
+    batchSize = 4;
+  } else if (endgamePressure > 0.35 || pressure > 0.55 || pacePressure >= 2) {
+    batchSize = 3;
   }
-  if (pressure > 0.65 || pacePressure >= 2) {
-    return 3;
-  }
-  return 2;
+  return Math.max(1, Math.round(batchSize * (1 + (state.swarmLevel - 1) * 0.4)));
 }
 
 function createEnemyStats(type) {
   const template = enemyTemplates[type];
-  const timeStage = Math.floor(state.elapsedSec / 10);
-  const hpScale = 0.85 + timeStage * 0.04 + state.totalUpgrades * 0.015;
+  const timeStage = Math.floor(state.elapsedSec / 18);
+  const hpScale = 0.5 + timeStage * 0.1 + state.totalUpgrades * 0.015;
   const threat = state.threatMultiplier;
+  const swarmStatMultiplier = getSwarmStatMultiplier();
+  const endgamePressure = getEndgamePressure();
+  const rawHp = Math.max(1, Math.round(template.baseHp * hpScale * swarmStatMultiplier));
+  const cappedHp = type === "melee"
+    ? Math.max(1, Math.min(rawHp, Math.round(state.attack * 1.8)))
+    : rawHp;
+  const holdProgress = template.holdProgress === null
+    ? null
+    : clamp(template.holdProgress + randomInt(-4, 5), 34, 92);
 
   return {
-    maxHp: Math.round(template.baseHp * hpScale),
-    speed: template.speed * (1 + timeStage * 0.035),
-    contactDamage: Math.max(1, Math.round(template.contactDamage * (0.65 + threat * 0.16))),
-    rangedDamage: Math.max(1, Math.round(template.rangedDamage * (0.62 + threat * 0.14))),
-    rangedCooldown: template.rangedCooldown === 0 ? 0 : Math.max(0.9, template.rangedCooldown * (1 - Math.min(0.25, timeStage * 0.012)))
+    maxHp: cappedHp,
+    speed: template.speed * (1 + timeStage * 0.018 + endgamePressure * 0.1),
+    contactDamage: Math.max(1, Math.round(template.contactDamage * (0.55 + threat * 0.08) * swarmStatMultiplier)),
+    rangedDamage: Math.max(1, Math.round(template.rangedDamage * (0.55 + threat * 0.07) * swarmStatMultiplier)),
+    rangedCooldown: template.rangedCooldown === 0 ? 0 : Math.max(1, template.rangedCooldown * (1 - Math.min(0.18, timeStage * 0.01))),
+    holdProgress
   };
 }
 
@@ -798,10 +1440,11 @@ function spawnEnemy() {
     contactDamage: stats.contactDamage,
     rangedDamage: stats.rangedDamage,
     rangedCooldown: stats.rangedCooldown,
-    rangedTimer: randomInt(40, 120) / 100,
-    holdProgress: template.holdProgress,
+    rangedTimer: type === "melee" ? 2 : randomInt(40, 120) / 100,
+    holdProgress: stats.holdProgress,
     orbitSpeed: template.orbitSpeed,
     damageMode: template.damageMode,
+    enteredHold: false,
     lastPoint: null
   });
 
@@ -811,7 +1454,16 @@ function spawnEnemy() {
 }
 
 function dealDamageToPlanet(amount, mode = "normal") {
-  let pending = amount;
+  if (state.godMode) {
+    state.baseHp = state.maxBaseHp;
+    state.shield = state.maxShield;
+    return;
+  }
+  if (state.zombieDead) {
+    return;
+  }
+  const defenseMultiplier = isRepairBoostActive() ? 0.1 : 1;
+  let pending = amount * defenseMultiplier;
 
   if (mode === "surface_only") {
     state.baseHp = Math.max(0, state.baseHp - pending);
@@ -835,6 +1487,11 @@ function dealDamageToPlanet(amount, mode = "normal") {
     state.baseHp = Math.max(0, state.baseHp - pending);
   }
 
+  const safetyFloor = getPlanetSafetyFloor();
+  if (state.baseHp < safetyFloor) {
+    state.baseHp = safetyFloor;
+  }
+
   if (state.baseHp === 0) {
     state.baseHp = 0;
     state.shield = 0;
@@ -845,6 +1502,25 @@ function dealDamageToPlanet(amount, mode = "normal") {
     }
     openRepairMode("planet");
   }
+}
+
+function triggerPlanetFailure(reason) {
+  if (state.godMode) {
+    return;
+  }
+  state.baseHp = 0;
+  state.shield = 0;
+  if (state.zombieMode) {
+    state.zombieDead = true;
+    setBanner("Zombie Mode is on. The Planet is dead, but the swarm keeps moving.");
+    return;
+  }
+  captureFailureStreak();
+  state.streak = 0;
+  if (losePopulation(reason)) {
+    return;
+  }
+  openRepairMode("planet");
 }
 
 function createProjectile(fromX, fromY, toX, toY, className, duration) {
@@ -895,7 +1571,14 @@ function processEnemies(deltaSec) {
 
     if (enemy.holdProgress !== null && enemy.progress >= enemy.holdProgress) {
       enemy.progress = enemy.holdProgress;
-      enemy.angle += enemy.orbitSpeed * deltaSec;
+      if (!enemy.enteredHold) {
+        enemy.enteredHold = true;
+        if (enemy.type === "melee") {
+          enemy.rangedTimer = Math.max(enemy.rangedTimer, 2);
+        }
+      }
+      const orbitSpeed = enemy.type === "melee" ? enemy.orbitSpeed * 0.45 : enemy.orbitSpeed;
+      enemy.angle += orbitSpeed * deltaSec;
     } else {
       enemy.progress += enemy.speed * deltaSec;
     }
@@ -940,26 +1623,48 @@ function processEnemies(deltaSec) {
 }
 
 function autoAttack(timestamp) {
-  const attackInterval = 1000 / state.attackSpeed;
+  if (state.zombieDead) {
+    return;
+  }
+  const boostMultiplier = getRepairBoostMultiplier();
+  const godMultiplier = getGodModeMultiplier();
+  const safetyMultiplier = state.safetyModeSec > 0 && !state.tutorialActive ? 1.5 : 1;
+  const attackInterval = 1000 / (state.attackSpeed * boostMultiplier * godMultiplier * safetyMultiplier);
   if (timestamp - state.lastAttack < attackInterval || state.enemies.length === 0) {
     return;
   }
-  state.lastAttack = timestamp;
 
   const metrics = getArenaMetrics();
-  const targets = [...state.enemies]
+  const attackRange = getAttackRangeRadius(metrics);
+  const boostedTargetCount = state.targetCount * godMultiplier;
+  const targetsInRange = state.enemies
+    .map((enemy) => {
+      const point = enemy.lastPoint || getEnemyPoint(enemy);
+      const distance = Math.hypot(point.x - metrics.centerX, point.y - metrics.centerY);
+      return { enemy, point, distance };
+    })
+    .filter(({ enemy, distance }) => enemy.hp > 0 && distance <= attackRange);
+
+  if (targetsInRange.length === 0) {
+    return;
+  }
+
+  state.lastAttack = timestamp;
+
+  const targetLimit = Math.min(targetsInRange.length, Math.max(1, boostedTargetCount));
+  const targets = targetsInRange
     .sort((a, b) => {
-      const priorityDelta = enemyTemplates[a.type].targetPriority - enemyTemplates[b.type].targetPriority;
+      const priorityDelta = enemyTemplates[a.enemy.type].targetPriority - enemyTemplates[b.enemy.type].targetPriority;
       if (priorityDelta !== 0) {
         return priorityDelta;
       }
-      return b.progress - a.progress;
+      return b.enemy.progress - a.enemy.progress;
     })
-    .slice(0, state.targetCount);
+    .slice(0, targetLimit);
 
-  targets.forEach((enemy, index) => {
-    const point = getEnemyPoint(enemy);
-    const damage = index === 0 ? state.attack : Math.round(state.attack * 0.85);
+  targets.forEach(({ enemy, point }, index) => {
+    const boostedAttack = state.attack * boostMultiplier * godMultiplier * safetyMultiplier;
+    const damage = index === 0 ? boostedAttack : Math.round(boostedAttack * 0.85);
     enemy.hp -= damage;
     enemy.lastPoint = point;
     createProjectile(metrics.centerX, metrics.centerY, point.x, point.y, "friendly", 180);
@@ -970,8 +1675,17 @@ function autoAttack(timestamp) {
 }
 
 function applyPassiveSystems(deltaSec) {
-  state.shield = clamp(state.shield + state.shieldRegen * deltaSec, 0, state.maxShield);
-  state.baseHp = clamp(state.baseHp + state.planetRegen * deltaSec, 0, state.maxBaseHp);
+  if (state.zombieDead) {
+    return;
+  }
+  const boostMultiplier = getRepairBoostMultiplier();
+  const safetyMultiplier = state.safetyModeSec > 0 && !state.tutorialActive ? 1.5 : 1;
+  state.shield = clamp(state.shield + state.shieldRegen * boostMultiplier * safetyMultiplier * deltaSec, 0, state.maxShield);
+  state.baseHp = clamp(state.baseHp + state.planetRegen * boostMultiplier * safetyMultiplier * deltaSec, 0, state.maxBaseHp);
+  if (state.godMode) {
+    state.baseHp = state.maxBaseHp;
+    state.shield = state.maxShield;
+  }
 }
 
 function runSpawning(deltaSec) {
@@ -988,20 +1702,36 @@ function runSpawning(deltaSec) {
 }
 
 function renderEnemies() {
-  ui.enemyField.querySelectorAll(".enemy-card").forEach((node) => node.remove());
-
+  const liveIds = new Set();
   state.enemies.forEach((enemy) => {
     const template = enemyTemplates[enemy.type];
     const point = enemy.lastPoint || getEnemyPoint(enemy);
-    const card = document.createElement("div");
-    card.className = `enemy-card ${template.className}`;
+    let card = enemyNodes.get(enemy.id);
+    liveIds.add(enemy.id);
+
+    if (!card) {
+      card = document.createElement("div");
+      card.className = `enemy-card ${template.className}`;
+      card.innerHTML = `
+        <div class="enemy-body"></div>
+        <div class="enemy-hp"><div></div></div>
+      `;
+      enemyNodes.set(enemy.id, card);
+      ui.enemyField.appendChild(card);
+    } else {
+      card.className = `enemy-card ${template.className}`;
+    }
+
     card.style.left = `${point.x}px`;
     card.style.top = `${point.y}px`;
-    card.innerHTML = `
-      <div class="enemy-body"></div>
-      <div class="enemy-hp"><div style="width:${(enemy.hp / enemy.maxHp) * 100}%"></div></div>
-    `;
-    ui.enemyField.appendChild(card);
+    card.querySelector(".enemy-hp div").style.width = `${clamp(enemy.hp / enemy.maxHp, 0, 1) * 100}%`;
+  });
+
+  enemyNodes.forEach((node, id) => {
+    if (!liveIds.has(id)) {
+      node.remove();
+      enemyNodes.delete(id);
+    }
   });
 }
 
@@ -1016,13 +1746,53 @@ function updateUpgradeTexts() {
   ui.bestStreakStat.textContent = String(state.bestStreak);
 }
 
+function updateMissionTexts() {
+  const progress = {
+    addition: Math.min(TUTORIAL_BUILD_TARGET, state.upgrades.addition),
+    subtraction: Math.min(TUTORIAL_BUILD_TARGET, state.upgrades.subtraction),
+    multiplication: Math.min(TUTORIAL_BUILD_TARGET, state.upgrades.multiplication),
+    division: Math.min(TUTORIAL_BUILD_TARGET, state.upgrades.division)
+  };
+  const firstMissionDone = getCategories().every((key) => state.upgrades[key] >= TUTORIAL_BUILD_TARGET);
+  const unlockedThemeCount = THEME_UNLOCKS.filter((unlock) => state.bestStreak >= unlock.streak).length;
+  const nextTheme = THEME_UNLOCKS.find((unlock) => state.bestStreak < unlock.streak);
+
+  ui.missionMenuAddition.textContent = `${progress.addition} / ${TUTORIAL_BUILD_TARGET}`;
+  ui.missionMenuSubtraction.textContent = `${progress.subtraction} / ${TUTORIAL_BUILD_TARGET}`;
+  ui.missionMenuMultiplication.textContent = `${progress.multiplication} / ${TUTORIAL_BUILD_TARGET}`;
+  ui.missionMenuDivision.textContent = `${progress.division} / ${TUTORIAL_BUILD_TARGET}`;
+  ui.missionStatusText.textContent = firstMissionDone
+    ? "Mission complete. Saved to Archive."
+    : "Mission active. Keep training every power.";
+  ui.archiveStatusText.textContent = firstMissionDone
+    ? "Finished: Train Every Power."
+    : "No finished missions yet.";
+  ui.themeProgressText.textContent = !nextTheme
+    ? "All theme milestones are unlocked."
+    : `Next theme unlocks at best streak ${nextTheme.streak}. Unlocked ${unlockedThemeCount} of ${THEME_UNLOCKS.length}.`;
+}
+
+function showRepairCompletePopup(message) {
+  showTutorialCallout({
+    target: "status",
+    title: "Repair Complete",
+    message,
+    label: "Repair",
+    pauseCombat: true,
+    onDismiss: "repair-complete"
+  });
+}
+
 function updateUi() {
   const planetState = getPlanetState();
+  const dangerLevel = getDangerLevel();
   ui.level.textContent = String(state.level);
   ui.planetState.textContent = planetState;
-  ui.planetState.style.color = state.repairMode ? "var(--red)" : planetState === "Safe" ? "var(--green)" : "var(--gold)";
+  ui.planetState.style.color = state.zombieDead || state.repairMode ? "var(--red)" : getDangerColor(dangerLevel);
   ui.populationLive.textContent = `${state.population}%`;
   ui.populationLive.style.color = state.population > 60 ? "var(--green)" : state.population > 20 ? "var(--gold)" : "var(--red)";
+  ui.survivalTimer.textContent = formatClock(state.survivalClockSec);
+  ui.survivalTimer.style.color = state.survivalClockSec > 60 ? "var(--green)" : state.survivalClockSec > 20 ? "var(--gold)" : "var(--red)";
   ui.attack.textContent = String(state.attack);
   ui.regen.textContent = `+${state.planetRegen.toFixed(1)}/s`;
   ui.speed.textContent = `${state.attackSpeed.toFixed(1)}/s`;
@@ -1040,17 +1810,52 @@ function updateUi() {
     button.classList.toggle("locked", locked);
   });
 
+  ui.godModeBtn.classList.toggle("active", state.godMode);
+  ui.godModeBtn.textContent = `God Mode: ${state.godMode ? "On" : "Off"}`;
+  ui.zombieModeBtn.classList.toggle("active", state.zombieMode);
+  ui.zombieModeBtn.textContent = `Zombie Mode: ${state.zombieMode ? "On" : "Off"}`;
+  ui.swarmModeBtn.classList.toggle("active", state.swarmLevel > 1);
+  ui.swarmModeBtn.textContent = `Swarm: ${state.swarmLevel}`;
+  ui.answerConsole.classList.toggle("tutorial-target", state.tutorialHighlightAnswer && (state.tutorialCalloutVisible || state.tutorialInputLocked));
+  const missionVisible = state.tutorialActive && state.tutorialPhase === "build-all";
+  ui.tutorialMission.classList.toggle("hidden", !missionVisible);
+  if (missionVisible) {
+    ui.missionAddition.textContent = `${Math.min(TUTORIAL_BUILD_TARGET, state.upgrades.addition)} / ${TUTORIAL_BUILD_TARGET}`;
+    ui.missionSubtraction.textContent = `${Math.min(TUTORIAL_BUILD_TARGET, state.upgrades.subtraction)} / ${TUTORIAL_BUILD_TARGET}`;
+    ui.missionMultiplication.textContent = `${Math.min(TUTORIAL_BUILD_TARGET, state.upgrades.multiplication)} / ${TUTORIAL_BUILD_TARGET}`;
+    ui.missionDivision.textContent = `${Math.min(TUTORIAL_BUILD_TARGET, state.upgrades.division)} / ${TUTORIAL_BUILD_TARGET}`;
+  }
+
+  if (state.tutorialCalloutVisible) {
+    const targetMap = {
+      "intro-power": "addition",
+      "intro-shield": "subtraction",
+      "intro-multishot": "multiplication",
+      "intro-regen": "division",
+      "lock-demo": "addition",
+      "power-warning": "upgrade-console",
+      "unlock-demo": "upgrade-console",
+      "build-all": "upgrade-console",
+      "loss-sim": "status",
+      "repair-demo": "repair-panel",
+      "complete": "answer-console"
+    };
+    positionTutorialCallout(targetMap[state.tutorialPhase] || "planet");
+  }
+
   updateUpgradeTexts();
+  updateMissionTexts();
+  updateThemeLocks();
   renderEnemies();
 }
 
-function submitAnswer() {
-  if (state.repairMode) {
+function submitAnswer(selectedValue) {
+  if (state.repairMode || state.tutorialCalloutVisible || state.tutorialInputLocked) {
     return;
   }
-  const typed = Number(ui.answerInput.value);
-  if (ui.answerInput.value.trim() === "") {
-    setBanner("Type an answer first.");
+
+  if (state.tutorialActive && state.tutorialPhase === "loss-sim") {
+    setBanner("Watch the big attack. The Planet will need repair soon.");
     return;
   }
 
@@ -1059,7 +1864,7 @@ function submitAnswer() {
     return;
   }
 
-  if (typed === state.question.answer) {
+  if (Number(selectedValue) === state.question.answer) {
     applyCorrectAnswerReward(state.category);
   } else {
     handleWrongAnswer();
@@ -1068,15 +1873,13 @@ function submitAnswer() {
   nextQuestion();
 }
 
-function submitRepairAnswer() {
-  const typed = Number(ui.repairAnswerInput.value);
-  if (ui.repairAnswerInput.value.trim() === "") {
-    ui.repairProgressText.textContent = "Type an answer first.";
+function submitRepairAnswer(selectedValue) {
+  if (state.tutorialCalloutVisible || state.tutorialInputLocked) {
     return;
   }
 
   state.repairAttempts += 1;
-  if (typed === state.repairQuestion.answer) {
+  if (Number(selectedValue) === state.repairQuestion.answer) {
     state.repairCorrect += 1;
   }
 
@@ -1092,19 +1895,26 @@ function submitRepairAnswer() {
       state.bestStreak = Math.max(state.bestStreak, state.streak);
       state.checkpointRecoveryAnswers = 0;
       state.savedStreakAtFailure = 0;
-      setBanner("Perfect repair. Full health, full shield, full population.");
+      state.repairBoostSec = 10;
+      state.lastAttack = 0;
+      showRepairCompletePopup("Perfect repair. The Planet gets a 10 second boost. Tap anywhere when you are ready.");
       nextQuestion();
       return;
     }
 
     if (state.repairCorrect > 0) {
       applyCheckpointState(50, 0.5);
-      setBanner("Partial repair. Half health, half shield, half population.");
+      state.repairBoostSec = 10;
+      state.lastAttack = 0;
+      showRepairCompletePopup("Partial repair. The Planet gets a 10 second boost. Tap anywhere when you are ready.");
       nextQuestion();
       return;
     }
 
     resetToCheckpoint();
+    if (state.tutorialActive && state.tutorialPhase === "repair-demo") {
+      startTutorialPhase("complete");
+    }
     setBanner("Repair failed. The Planet returned to checkpoint.");
     return;
   }
@@ -1113,6 +1923,11 @@ function submitRepairAnswer() {
 }
 
 function setCategory(category) {
+  const forcedCategory = getForcedTutorialCategory();
+  if (forcedCategory && category !== forcedCategory) {
+    setBanner(`Try ${forcedCategory} first. It is the lesson right now.`);
+    return;
+  }
   if (isCategoryLocked(category)) {
     if (state.wrongLocks[category]) {
       setBanner(`${category} is locked until you answer another path.`);
@@ -1132,7 +1947,7 @@ function setCategory(category) {
 function applyPanelScale(panel) {
   const panelId = panel.dataset.panel;
   const scale = (state.panelScales[panelId] || 1) * state.globalScale;
-  panel.style.scale = String(scale);
+  panel.style.setProperty("--panel-scale", String(scale));
 }
 
 function applyAllPanelScales() {
@@ -1151,7 +1966,8 @@ function primeLayoutPositions() {
     panel.style.top = `${rect.top - shellRect.top}px`;
     panel.style.right = "auto";
     panel.style.bottom = "auto";
-    panel.style.transform = "none";
+    panel.style.setProperty("--panel-offset-x", "0px");
+    panel.style.setProperty("--panel-offset-y", "0px");
   });
 
   state.layoutPrimed = true;
@@ -1195,8 +2011,9 @@ function resetLayout() {
     panel.style.top = "";
     panel.style.right = "";
     panel.style.bottom = "";
-    panel.style.transform = "";
-    panel.style.scale = "";
+    panel.style.removeProperty("--panel-offset-x");
+    panel.style.removeProperty("--panel-offset-y");
+    panel.style.removeProperty("--panel-scale");
   });
 
   if (state.layoutEditMode) {
@@ -1263,10 +2080,38 @@ function initLayoutEditor() {
   });
   ui.layoutEditBtn.addEventListener("click", () => toggleLayoutEdit());
   ui.layoutResetBtn.addEventListener("click", resetLayout);
+  ui.godModeBtn.addEventListener("click", () => {
+    state.godMode = !state.godMode;
+    state.godModeElapsedSec = 0;
+    if (state.godMode) {
+      state.zombieDead = false;
+      state.baseHp = state.maxBaseHp;
+      state.shield = state.maxShield;
+      setBanner("God Mode on. The Planet cannot die.");
+    } else {
+      setBanner("God Mode off.");
+    }
+    updateUi();
+  });
+  ui.zombieModeBtn.addEventListener("click", () => {
+    state.zombieMode = !state.zombieMode;
+    if (!state.zombieMode && state.zombieDead) {
+      setBanner("Zombie Mode off. The Planet stays dead until repaired or reset.");
+    } else {
+      setBanner(`Zombie Mode ${state.zombieMode ? "on" : "off"}.`);
+    }
+    updateUi();
+  });
+  ui.swarmModeBtn.addEventListener("click", () => {
+    state.swarmLevel = state.swarmLevel >= 10 ? 1 : state.swarmLevel + 1;
+    setBanner(`Swarm level ${state.swarmLevel}. More enemies, weaker stats.`);
+    updateUi();
+  });
   ui.themeButtons.forEach((button) => {
     button.addEventListener("click", () => {
-      applyTheme(button.dataset.theme);
-      setBanner(`${button.querySelector("strong").textContent} is ready.`, { remember: false });
+      if (applyTheme(button.dataset.theme)) {
+        setBanner(`${button.querySelector("strong").textContent} is ready.`, { remember: false });
+      }
     });
   });
 
@@ -1287,21 +2132,25 @@ function initLayoutEditor() {
   });
 }
 
-ui.submitAnswerBtn.addEventListener("click", submitAnswer);
-ui.answerInput.addEventListener("keydown", (event) => {
-  if (event.key === "Enter") {
-    submitAnswer();
-  }
+ui.answerOptionButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    submitAnswer(button.dataset.value);
+  });
 });
-ui.repairSubmitBtn.addEventListener("click", submitRepairAnswer);
-ui.repairAnswerInput.addEventListener("keydown", (event) => {
-  if (event.key === "Enter") {
-    submitRepairAnswer();
-  }
+ui.repairAnswerOptionButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    submitRepairAnswer(button.dataset.value);
+  });
 });
 ui.planetCoreBtn.addEventListener("click", handlePlanetClick);
 ui.categoryButtons.forEach((button) => {
   button.addEventListener("click", () => setCategory(button.dataset.category));
+});
+ui.tutorialOverlay.addEventListener("click", dismissTutorialCallout);
+window.addEventListener("resize", () => {
+  if (state.tutorialCalloutVisible) {
+    updateUi();
+  }
 });
 
 let lastFrame = performance.now();
@@ -1309,13 +2158,30 @@ function gameLoop(timestamp) {
   const deltaSec = (timestamp - lastFrame) / 1000;
   lastFrame = timestamp;
 
-  if (!state.repairMode) {
+  if (!isCombatPaused()) {
+    if (state.godMode) {
+      state.godModeElapsedSec += deltaSec;
+    }
+    state.repairBoostSec = Math.max(0, state.repairBoostSec - deltaSec);
+    if (state.safetyModeSec > 0 && !state.tutorialActive) {
+      state.safetyModeSec = Math.max(0, state.safetyModeSec - deltaSec);
+    } else {
+      state.survivalClockSec = Math.max(0, state.survivalClockSec - deltaSec);
+    }
     state.elapsedSec += deltaSec;
     state.threatMultiplier = getThreatMultiplier();
     runSpawning(deltaSec);
     processEnemies(deltaSec);
     autoAttack(timestamp);
     applyPassiveSystems(deltaSec);
+    if (state.survivalClockSec <= 0 && state.baseHp > 0) {
+      triggerPlanetFailure("attack");
+    }
+  } else if (!state.repairMode) {
+    state.repairBoostSec = Math.max(0, state.repairBoostSec - deltaSec);
+    if (state.safetyModeSec > 0 && !state.tutorialActive && !state.tutorialCalloutVisible) {
+      state.safetyModeSec = Math.max(0, state.safetyModeSec - deltaSec);
+    }
   }
   updateUi();
 
@@ -1325,9 +2191,8 @@ function gameLoop(timestamp) {
 recalculatePlanetStats();
 initLayoutEditor();
 applyTheme(state.theme);
-setCategory("addition");
 setMenuTab("overview");
 spawnOpeningWave();
-setBanner("Help the Planet. Answer math questions to stop the swarm.");
+startTutorialPhase("intro-power");
 updateUi();
 requestAnimationFrame(gameLoop);
