@@ -39,6 +39,7 @@ const state = {
   tutorialPauseCombat: true,
   tutorialCalloutVisible: false,
   tutorialDismissAction: null,
+  tutorialRequiresAnswer: false,
   tutorialInputLocked: false,
   tutorialHighlightAnswer: false,
   tutorialCalloutTimer: null,
@@ -64,6 +65,7 @@ const state = {
   globalScale: 1,
   theme: "cold-scifi",
   panelScales: {},
+  unlockedThemes: ["cold-scifi"],
   questionHistory: {
     addition: [],
     subtraction: [],
@@ -81,7 +83,7 @@ const state = {
 };
 
 const CATEGORY_KEYS = ["addition", "subtraction", "multiplication", "division"];
-const REPAIR_QUESTION_CATEGORIES = ["addition", "subtraction"];
+const REPAIR_QUESTION_CATEGORIES = CATEGORY_KEYS;
 const OPENING_WAVE_SIZE = 3;
 const BASE_PLANET_HP = 100;
 const BASE_PLANET_SHIELD = 20;
@@ -93,7 +95,9 @@ const SURVIVAL_BASE_SECONDS = 120;
 const SAFETY_REWARD_SECONDS = 300;
 const TUTORIAL_START_SAFETY_SECONDS = 45;
 const TUTORIAL_BUILD_TARGET = 10;
+const FIRST_MISSION_TARGET = 50;
 const QUESTION_HISTORY_LIMIT = 20;
+const GOD_MODE_MULTIPLIER = 50;
 const THEME_UNLOCKS = [
   { theme: "cold-scifi", streak: 0 },
   { theme: "solar-gold", streak: 5 },
@@ -211,6 +215,123 @@ const categoryEffects = {
   }
 };
 
+const tutorialPhases = {
+  "intro-power": {
+    category: "addition",
+    forcedCategory: "addition",
+    target: "addition",
+    title: "Power",
+    message: "This is Power. It helps the Planet hit harder. Tap anywhere, then answer on the right.",
+    highlightAnswer: true,
+    requireAnswer: true,
+    nextWhen: () => state.upgrades.addition >= 1,
+    next: "intro-shield"
+  },
+  "intro-shield": {
+    category: "subtraction",
+    forcedCategory: "subtraction",
+    target: "subtraction",
+    title: "Shield",
+    message: "This is Shield. It gives the Planet more health and more shield. Tap anywhere, then answer on the right.",
+    highlightAnswer: true,
+    requireAnswer: true,
+    nextWhen: () => state.upgrades.subtraction >= 1,
+    next: "intro-multishot"
+  },
+  "intro-multishot": {
+    category: "multiplication",
+    forcedCategory: "multiplication",
+    target: "multiplication",
+    title: "Multishot",
+    message: "This is Multishot. It lets the Planet hit more enemies. Tap anywhere, then answer on the right.",
+    highlightAnswer: true,
+    requireAnswer: true,
+    nextWhen: () => state.upgrades.multiplication >= 1,
+    next: "intro-regen"
+  },
+  "intro-regen": {
+    category: "division",
+    forcedCategory: "division",
+    target: "division",
+    title: "Regen",
+    message: "This is Regen. It helps the Planet heal over time. Tap anywhere, then answer on the right.",
+    highlightAnswer: true,
+    requireAnswer: true,
+    nextWhen: () => state.upgrades.division >= 1,
+    next: "lock-demo"
+  },
+  "lock-demo": {
+    category: "addition",
+    forcedCategory: "addition",
+    target: "addition",
+    title: "Resting Path",
+    message: "Use Power more. One path can rest if you use it too much. Tap anywhere, then answer on the right.",
+    highlightAnswer: true,
+    requireAnswer: true,
+    nextWhen: () => state.spamLockCategory === "addition",
+    next: "power-warning"
+  },
+  "power-warning": {
+    target: "upgrade-console",
+    title: "More Than Power",
+    message: "Power is strong, but the Planet also needs Shield, Multishot, and Regen. Now grow the other paths too.",
+    highlightAnswer: true,
+    requireAnswer: true,
+    nextWhen: (category, wasCorrect) => wasCorrect,
+    next: "unlock-demo"
+  },
+  "unlock-demo": {
+    target: "upgrade-console",
+    title: "Wake It Up",
+    message: "Power is resting now. Answer 2 other paths to wake it up again. Use the answers on the right.",
+    highlightAnswer: true,
+    requireAnswer: true,
+    nextWhen: () => !state.spamLockCategory,
+    next: "build-all"
+  },
+  "build-all": {
+    target: "upgrade-console",
+    title: "Urgent Mission",
+    message: "Mission: make every path reach 10. Track it here, then get ready for a huge swarm.",
+    highlightAnswer: true,
+    requireAnswer: true,
+    onStart: () => {
+      ui.tutorialMissionCopy.textContent = "Raise every path to 10 before the next swarm.";
+    },
+    nextWhen: () => getCategories().every((key) => state.upgrades[key] >= TUTORIAL_BUILD_TARGET),
+    next: "loss-sim"
+  },
+  "loss-sim": {
+    target: "status",
+    title: "Big Attack",
+    message: "A big attack is coming. Watch the Planet. Tap anywhere when you are ready.",
+    onStart: () => {
+      state.survivalClockSec = 10;
+      state.correctSinceSafetyMode = 0;
+    },
+    onDismiss: "resume-combat"
+  },
+  "repair-demo": {
+    target: "repair-panel",
+    title: "Repair Time",
+    message: "It is okay to lose. Repair can save your progress. Tap anywhere, then answer the repair questions.",
+    highlightAnswer: true,
+    requireAnswer: true
+  },
+  complete: {
+    target: "answer-console",
+    title: "You Are Ready",
+    message: "Great job. You get a short safe start. After this, every 10 right answers gives 5 minutes of Eureka Boost.",
+    onStart: () => {
+      state.tutorialActive = false;
+      state.tutorialPhase = "complete";
+      state.correctSinceSafetyMode = 0;
+      state.safetyModeSec = TUTORIAL_START_SAFETY_SECONDS;
+    },
+    onDismiss: "complete-tutorial"
+  }
+};
+
 const ui = {
   menuToggleBtn: document.getElementById("menu-toggle-btn"),
   menuPanel: document.getElementById("menu-panel"),
@@ -253,7 +374,7 @@ const ui = {
   tutorialCalloutTitle: document.getElementById("tutorial-callout-title"),
   tutorialCalloutCopy: document.getElementById("tutorial-callout-copy"),
   questionText: document.getElementById("question-text"),
-  answerOptionButtons: Array.from(document.querySelectorAll(".answer-option")),
+  answerOptionButtons: Array.from(document.querySelectorAll("#answer-options .answer-option")),
   globalScaleInput: document.getElementById("global-scale-input"),
   panelScaleInput: document.getElementById("panel-scale-input"),
   layoutEditBtn: document.getElementById("layout-edit-btn"),
@@ -280,6 +401,7 @@ const ui = {
 };
 
 const enemyNodes = new Map();
+const SAVE_KEY = "planet-math-defense-save";
 
 function randomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -303,6 +425,51 @@ function shuffleArray(values) {
     [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
   }
   return shuffled;
+}
+
+function loadProgress() {
+  try {
+    const raw = window.localStorage.getItem(SAVE_KEY);
+    if (!raw) {
+      return;
+    }
+    const saved = JSON.parse(raw);
+    if (Number.isFinite(saved.bestStreak)) {
+      state.bestStreak = Math.max(state.bestStreak, saved.bestStreak);
+    }
+    if (Array.isArray(saved.unlockedThemes)) {
+      const knownThemes = THEME_UNLOCKS.map((unlock) => unlock.theme);
+      state.unlockedThemes = Array.from(new Set(["cold-scifi", ...saved.unlockedThemes.filter((theme) => knownThemes.includes(theme))]));
+    }
+    if (saved.theme && state.unlockedThemes.includes(saved.theme)) {
+      state.theme = saved.theme;
+    }
+  } catch {
+    state.unlockedThemes = ["cold-scifi"];
+  }
+}
+
+function saveProgress() {
+  try {
+    window.localStorage.setItem(SAVE_KEY, JSON.stringify({
+      bestStreak: state.bestStreak,
+      unlockedThemes: state.unlockedThemes,
+      theme: state.theme
+    }));
+  } catch {
+    // Progress saving is optional in this browser prototype.
+  }
+}
+
+function syncThemeUnlocks() {
+  const unlocked = new Set(state.unlockedThemes);
+  THEME_UNLOCKS.forEach((unlock) => {
+    if (state.bestStreak >= unlock.streak) {
+      unlocked.add(unlock.theme);
+    }
+  });
+  state.unlockedThemes = Array.from(unlocked);
+  saveProgress();
 }
 
 function getArenaMetrics() {
@@ -388,11 +555,12 @@ function positionTutorialCallout(target) {
   }
 }
 
-function showTutorialCallout({ target, title, message, onDismiss = null, pauseCombat = true, label = "Tutorial" }) {
+function showTutorialCallout({ target, title, message, onDismiss = null, pauseCombat = true, label = "Tutorial", requireAnswer = false }) {
   state.tutorialPauseCombat = pauseCombat;
   state.tutorialCalloutVisible = true;
   state.tutorialInputLocked = true;
   state.tutorialDismissAction = onDismiss;
+  state.tutorialRequiresAnswer = requireAnswer;
   ui.tutorialCalloutLabel.textContent = label;
   ui.tutorialCalloutTitle.textContent = title;
   ui.tutorialCalloutCopy.textContent = message;
@@ -412,6 +580,7 @@ function queueTutorialCallout(config, delayMs = 1000) {
   state.tutorialPauseCombat = false;
   state.tutorialInputLocked = true;
   state.tutorialHighlightAnswer = Boolean(config.highlightAnswer);
+  state.tutorialRequiresAnswer = Boolean(config.requireAnswer);
   state.tutorialCalloutTimer = window.setTimeout(() => {
     state.tutorialCalloutTimer = null;
     showTutorialCallout(config);
@@ -423,20 +592,34 @@ function dismissTutorialCallout() {
     return;
   }
 
+  if (state.tutorialRequiresAnswer) {
+    state.tutorialCalloutVisible = false;
+    state.tutorialInputLocked = false;
+    ui.tutorialOverlay.classList.add("hidden");
+    state.tutorialPauseCombat = false;
+    updateUi();
+    return;
+  }
+
   state.tutorialCalloutVisible = false;
   state.tutorialInputLocked = false;
   ui.tutorialOverlay.classList.add("hidden");
   const dismissAction = state.tutorialDismissAction;
   state.tutorialDismissAction = null;
   state.tutorialPauseCombat = false;
+  state.tutorialRequiresAnswer = false;
 
-  if (dismissAction === "complete-tutorial") {
+  if (dismissAction?.startsWith("next:")) {
+    startTutorialPhase(dismissAction.slice(5));
+  } else if (dismissAction === "complete-tutorial") {
   } else if (dismissAction === "repair-complete") {
     if (state.tutorialActive && state.tutorialPhase === "repair-demo") {
       startTutorialPhase("complete");
     }
-  } else if (state.tutorialActive && state.tutorialPhase === "power-warning") {
-    startTutorialPhase("unlock-demo");
+  } else if (dismissAction === "repair-failed") {
+    if (state.tutorialActive && state.tutorialPhase === "repair-demo") {
+      startTutorialPhase("complete");
+    }
   }
 }
 
@@ -449,27 +632,7 @@ function isCombatPaused() {
 }
 
 function getForcedTutorialCategory() {
-  if (!state.tutorialActive) {
-    return null;
-  }
-
-  if (state.tutorialPhase === "intro-power" || state.tutorialPhase === "lock-demo") {
-    return "addition";
-  }
-  if (state.tutorialPhase === "power-warning") {
-    return null;
-  }
-  if (state.tutorialPhase === "intro-shield") {
-    return "subtraction";
-  }
-  if (state.tutorialPhase === "intro-multishot") {
-    return "multiplication";
-  }
-  if (state.tutorialPhase === "intro-regen") {
-    return "division";
-  }
-
-  return null;
+  return state.tutorialActive ? tutorialPhases[state.tutorialPhase]?.forcedCategory || null : null;
 }
 
 function getPlanetState() {
@@ -484,11 +647,11 @@ function getPlanetState() {
 }
 
 function getDangerLevel() {
-  if (state.godMode || state.safetyModeSec > 0) {
+  if (state.godMode) {
     return 1;
   }
 
-  const timerRisk = 1 - clamp(state.survivalClockSec / SURVIVAL_BASE_SECONDS, 0, 1);
+  const timerRisk = state.safetyModeSec > 0 ? 0 : 1 - clamp(state.survivalClockSec / SURVIVAL_BASE_SECONDS, 0, 1);
   const populationRisk = 1 - clamp(state.population / 100, 0, 1);
   const hpRatio = state.maxBaseHp === 0 ? 0 : state.baseHp / state.maxBaseHp;
   const shieldRatio = state.maxShield === 0 ? 0 : state.shield / state.maxShield;
@@ -518,13 +681,15 @@ function getCheckpointLevel() {
 
 function nextRepairQuestion() {
   const kind = REPAIR_QUESTION_CATEGORIES[randomInt(0, REPAIR_QUESTION_CATEGORIES.length - 1)];
-  state.repairQuestion = getQuestion(kind);
+  state.repairQuestion = getQuestion(kind, { easy: true });
   state.repairQuestion.options = buildAnswerOptions(state.repairQuestion.answer);
   ui.repairQuestionText.textContent = state.repairQuestion.prompt;
   ui.repairAnswerOptionButtons.forEach((button, index) => {
     const optionValue = state.repairQuestion.options[index];
     button.textContent = String(optionValue);
     button.dataset.value = String(optionValue);
+    button.disabled = false;
+    button.classList.remove("guided-correct", "guided-locked");
   });
 }
 
@@ -642,7 +807,7 @@ function getGodModeMultiplier() {
   if (!state.godMode) {
     return 1;
   }
-  return 50 ** Math.floor(state.godModeElapsedSec / 20);
+  return GOD_MODE_MULTIPLIER;
 }
 
 function getSwarmCountMultiplier() {
@@ -701,7 +866,7 @@ function resetToCheckpoint() {
   state.shieldRegen = BASE_SHIELD_REGEN;
   state.targetCount = 1;
   state.streak = 0;
-  state.bestStreak = 0;
+  state.bestStreak = Math.max(state.bestStreak, 0);
   state.population = 100;
   state.correctSincePopulationGain = 0;
   state.elapsedSec = 0;
@@ -776,6 +941,7 @@ function applyTheme(themeName) {
   ui.themeButtons.forEach((button) => {
     button.classList.toggle("active", button.dataset.theme === themeName);
   });
+  saveProgress();
   return true;
 }
 
@@ -784,21 +950,22 @@ function getThemeUnlock(themeName) {
 }
 
 function isThemeUnlocked(themeName) {
-  return state.bestStreak >= getThemeUnlock(themeName).streak;
+  return state.unlockedThemes.includes(themeName);
 }
 
 function updateThemeLocks() {
+  syncThemeUnlocks();
   ui.themeButtons.forEach((button) => {
     const unlock = getThemeUnlock(button.dataset.theme);
-    const unlocked = state.bestStreak >= unlock.streak;
-    const label = button.querySelector("span");
+    const unlocked = isThemeUnlocked(button.dataset.theme);
+    const label = button.querySelector(".theme-unlock-text");
     button.disabled = !unlocked;
     button.classList.toggle("locked", !unlocked);
     button.dataset.unlockStreak = String(unlock.streak);
     if (label) {
       label.textContent = unlocked
-        ? `Unlocked at streak ${unlock.streak}.`
-        : `Locked. Best streak ${unlock.streak} needed.`;
+        ? `Unlocked at streak ${unlock.streak}`
+        : `Locked: best streak ${unlock.streak}`;
     }
   });
 }
@@ -811,7 +978,8 @@ function rememberQuestion(category, prompt) {
   }
 }
 
-function buildQuestion(category) {
+function buildQuestion(category, options = {}) {
+  const { easy = false } = options;
   const total = Math.min(state.totalUpgrades, 12);
   let a;
   let b;
@@ -819,23 +987,23 @@ function buildQuestion(category) {
   let answer;
 
   if (category === "addition") {
-    a = randomInt(1, 5 + total);
-    b = randomInt(1, 5 + total);
+    a = randomInt(1, easy ? 6 : 5 + total);
+    b = randomInt(1, easy ? 6 : 5 + total);
     prompt = `${a} + ${b} = ?`;
     answer = a + b;
   } else if (category === "subtraction") {
-    a = randomInt(4, 10 + total);
+    a = randomInt(4, easy ? 10 : 10 + total);
     b = randomInt(1, a);
     prompt = `${a} - ${b} = ?`;
     answer = a - b;
   } else if (category === "multiplication") {
-    a = randomInt(1, 6);
-    b = randomInt(1, Math.max(6, 4 + Math.floor(total / 2)));
+    a = randomInt(1, easy ? 4 : 6);
+    b = randomInt(1, easy ? 4 : Math.max(6, 4 + Math.floor(total / 2)));
     prompt = `${a} × ${b} = ?`;
     answer = a * b;
   } else {
-    b = randomInt(1, Math.min(6, 2 + Math.ceil(total / 2)));
-    answer = randomInt(1, 5 + Math.floor(total / 2));
+    b = randomInt(1, easy ? 4 : Math.min(6, 2 + Math.ceil(total / 2)));
+    answer = randomInt(1, easy ? 4 : 5 + Math.floor(total / 2));
     a = b * answer;
     prompt = `${a} ÷ ${b} = ?`;
   }
@@ -843,13 +1011,13 @@ function buildQuestion(category) {
   return { prompt, answer };
 }
 
-function getQuestion(category) {
+function getQuestion(category, options = {}) {
   const recent = state.questionHistory[category];
-  let candidate = buildQuestion(category);
+  let candidate = buildQuestion(category, options);
   let attempts = 0;
 
   while (recent.includes(candidate.prompt) && attempts < 100) {
-    candidate = buildQuestion(category);
+    candidate = buildQuestion(category, options);
     attempts += 1;
   }
 
@@ -859,109 +1027,24 @@ function getQuestion(category) {
 
 function startTutorialPhase(phase) {
   state.tutorialPhase = phase;
-
-  if (phase === "intro-power") {
-    setCategory("addition");
-    queueTutorialCallout({
-      target: "addition",
-      title: "Power",
-      message: "This is Power. It helps the Planet hit harder. Tap anywhere, then answer on the right.",
-      highlightAnswer: true,
-      pauseCombat: true
-    });
-  } else if (phase === "intro-shield") {
-    setCategory("subtraction");
-    queueTutorialCallout({
-      target: "subtraction",
-      title: "Shield",
-      message: "This is Shield. It gives the Planet more health and more shield. Tap anywhere, then answer on the right.",
-      highlightAnswer: true,
-      pauseCombat: true
-    });
-  } else if (phase === "intro-multishot") {
-    setCategory("multiplication");
-    queueTutorialCallout({
-      target: "multiplication",
-      title: "Multishot",
-      message: "This is Multishot. It lets the Planet hit more enemies. Tap anywhere, then answer on the right.",
-      highlightAnswer: true,
-      pauseCombat: true
-    });
-  } else if (phase === "intro-regen") {
-    setCategory("division");
-    queueTutorialCallout({
-      target: "division",
-      title: "Regen",
-      message: "This is Regen. It helps the Planet heal over time. Tap anywhere, then answer on the right.",
-      highlightAnswer: true,
-      pauseCombat: true
-    });
-  } else if (phase === "lock-demo") {
-    setCategory("addition");
-    queueTutorialCallout({
-      target: "addition",
-      title: "Resting Path",
-      message: "Use Power more. One path can rest if you use it too much. Tap anywhere, then answer on the right.",
-      highlightAnswer: true,
-      pauseCombat: true
-    });
-  } else if (phase === "power-warning") {
-    queueTutorialCallout({
-      target: "upgrade-console",
-      title: "More Than Power",
-      message: "Power is strong, but the Planet also needs Shield, Multishot, and Regen. Now grow the other paths too.",
-      highlightAnswer: true,
-      pauseCombat: true
-    });
-  } else if (phase === "unlock-demo") {
-    queueTutorialCallout({
-      target: "upgrade-console",
-      title: "Wake It Up",
-      message: "Power is resting now. Answer 2 other paths to wake it up again. Use the answers on the right.",
-      highlightAnswer: true,
-      pauseCombat: true
-    });
-  } else if (phase === "build-all") {
-    ui.tutorialMissionCopy.textContent = "Raise every path to 10 before the next swarm.";
-    queueTutorialCallout({
-      target: "upgrade-console",
-      title: "Urgent Mission",
-      message: "Mission: make every path reach 10. Track it here, then get ready for a huge swarm.",
-      highlightAnswer: true,
-      pauseCombat: true
-    });
-  } else if (phase === "loss-sim") {
-    state.survivalClockSec = 10;
-    state.correctSinceSafetyMode = 0;
-    queueTutorialCallout({
-      target: "status",
-      title: "Big Attack",
-      message: "A big attack is coming. Watch the Planet. Tap anywhere when you are ready.",
-      pauseCombat: true,
-      onDismiss: "resume-combat"
-    });
-  } else if (phase === "repair-demo") {
-    queueTutorialCallout({
-      target: "repair-panel",
-      title: "Repair Time",
-      message: "It is okay to lose. Repair can save your progress. Tap anywhere, then answer the repair questions.",
-      highlightAnswer: true,
-      pauseCombat: true
-    });
-  } else if (phase === "complete") {
-    state.tutorialActive = false;
-    state.tutorialPhase = "complete";
-    state.correctSinceSafetyMode = 0;
-    state.safetyModeSec = TUTORIAL_START_SAFETY_SECONDS;
-    queueTutorialCallout({
-      target: "answer-console",
-      title: "You Are Ready",
-      message: "Great job. You get a short safe start. After this, every 10 right answers gives 5 minutes of safety.",
-      highlightAnswer: true,
-      pauseCombat: true,
-      onDismiss: "complete-tutorial"
-    });
+  const config = tutorialPhases[phase];
+  if (!config) {
+    return;
   }
+
+  config.onStart?.();
+  if (config.category) {
+    setCategory(config.category);
+  }
+  queueTutorialCallout({
+    target: config.target,
+    title: config.title,
+    message: config.message,
+    highlightAnswer: Boolean(config.highlightAnswer),
+    requireAnswer: Boolean(config.requireAnswer),
+    pauseCombat: config.pauseCombat ?? true,
+    onDismiss: config.onDismiss || null
+  });
 
   updateUi();
 }
@@ -971,37 +1054,13 @@ function maybeAdvanceTutorial(category, wasCorrect = false) {
     return;
   }
 
-  if (state.tutorialPhase === "intro-power" && state.upgrades.addition >= 1) {
-    startTutorialPhase("intro-shield");
+  const config = tutorialPhases[state.tutorialPhase];
+  if (config?.nextWhen?.(category, wasCorrect)) {
+    startTutorialPhase(config.next);
     return;
   }
-  if (state.tutorialPhase === "intro-shield" && state.upgrades.subtraction >= 1) {
-    startTutorialPhase("intro-multishot");
-    return;
-  }
-  if (state.tutorialPhase === "intro-multishot" && state.upgrades.multiplication >= 1) {
-    startTutorialPhase("intro-regen");
-    return;
-  }
-  if (state.tutorialPhase === "intro-regen" && state.upgrades.division >= 1) {
-    startTutorialPhase("lock-demo");
-    return;
-  }
-  if (state.tutorialPhase === "lock-demo" && state.spamLockCategory === "addition") {
-    startTutorialPhase("power-warning");
-    return;
-  }
-  if (state.tutorialPhase === "unlock-demo" && !state.spamLockCategory) {
-    startTutorialPhase("build-all");
-    return;
-  }
-  if (state.tutorialPhase === "build-all") {
-    const allReady = getCategories().every((key) => state.upgrades[key] >= TUTORIAL_BUILD_TARGET);
-    if (allReady) {
-      startTutorialPhase("loss-sim");
-      return;
-    }
 
+  if (state.tutorialPhase === "build-all") {
     if (wasCorrect && state.upgrades[category] === TUTORIAL_BUILD_TARGET) {
       setBanner(`${category} reached 10. Pick another path now.`);
     }
@@ -1035,6 +1094,44 @@ function renderAnswerOptions() {
     const optionValue = state.question.options[index];
     button.textContent = String(optionValue);
     button.dataset.value = String(optionValue);
+    button.disabled = false;
+    button.classList.remove("guided-correct", "guided-locked");
+  });
+}
+
+function shouldGuideMainAnswer() {
+  return state.tutorialActive
+    && state.tutorialHighlightAnswer
+    && !state.tutorialCalloutVisible
+    && !state.tutorialInputLocked
+    && !state.repairMode
+    && state.tutorialPhase !== "loss-sim";
+}
+
+function shouldGuideRepairAnswer() {
+  return state.repairMode
+    && state.tutorialActive
+    && state.tutorialPhase === "repair-demo"
+    && state.tutorialHighlightAnswer
+    && !state.tutorialCalloutVisible
+    && !state.tutorialInputLocked;
+}
+
+function updateGuidedAnswerOptions() {
+  const guideMain = shouldGuideMainAnswer();
+  ui.answerOptionButtons.forEach((button) => {
+    const isCorrect = state.question && Number(button.dataset.value) === state.question.answer;
+    button.disabled = guideMain && !isCorrect;
+    button.classList.toggle("guided-correct", guideMain && isCorrect);
+    button.classList.toggle("guided-locked", guideMain && !isCorrect);
+  });
+
+  const guideRepair = shouldGuideRepairAnswer();
+  ui.repairAnswerOptionButtons.forEach((button) => {
+    const isCorrect = state.repairQuestion && Number(button.dataset.value) === state.repairQuestion.answer;
+    button.disabled = guideRepair && !isCorrect;
+    button.classList.toggle("guided-correct", guideRepair && isCorrect);
+    button.classList.toggle("guided-locked", guideRepair && !isCorrect);
   });
 }
 
@@ -1154,6 +1251,7 @@ function applyCorrectAnswerReward(category) {
   state.upgrades[category] += 1;
   state.streak += 1;
   state.bestStreak = Math.max(state.bestStreak, state.streak);
+  syncThemeUnlocks();
   if (!state.tutorialActive) {
     state.survivalClockSec = getSafetyResetSeconds();
   }
@@ -1192,19 +1290,19 @@ function applyCorrectAnswerReward(category) {
 
   if (category === "addition") {
     setBanner(safetyRecovered
-      ? "Great job. Power is up. The Planet is safe for 5 minutes."
+      ? "Eureka Boost is on. The Planet is stronger for 5 minutes."
       : populationRecovered ? "Great job. Addition made the Planet stronger and saved 20% population." : "Great job. Addition made the Planet stronger.");
   } else if (category === "subtraction") {
     setBanner(safetyRecovered
-      ? "Great job. Shield is up. The Planet is safe for 5 minutes."
+      ? "Eureka Boost is on. The Planet is stronger for 5 minutes."
       : populationRecovered ? "Great job. Subtraction raised max health and shield and saved 20% population." : "Great job. Subtraction raised the Planet's max shield and health.");
   } else if (category === "multiplication") {
     setBanner(safetyRecovered
-      ? "Great job. Multishot is up. The Planet is safe for 5 minutes."
+      ? "Eureka Boost is on. The Planet is stronger for 5 minutes."
       : populationRecovered ? "Great job. Multiplication added more targets and saved 20% population." : "Great job. Multiplication added more targets.");
   } else {
     setBanner(safetyRecovered
-      ? "Great job. Regen is up. The Planet is safe for 5 minutes."
+      ? "Eureka Boost is on. The Planet is stronger for 5 minutes."
       : populationRecovered ? "Great job. Division improved regen and saved 20% population." : "Great job. Division made the Planet heal faster.");
   }
 }
@@ -1374,7 +1472,8 @@ function getMaxEnemyCount() {
   const pressure = getPressureRatio();
   const endgamePressure = getEndgamePressure();
   const baseCap = clamp(3 + Math.floor(state.elapsedSec / 12) + Math.floor(pressure * 18) + Math.floor(endgamePressure * 10), 3, 50);
-  return clamp(Math.round(baseCap * getSwarmCountMultiplier()), 3, 500);
+  const deviceCap = window.innerWidth <= 760 || window.matchMedia("(pointer: coarse)").matches ? 180 : 260;
+  return clamp(Math.round(baseCap * getSwarmCountMultiplier()), 3, deviceCap);
 }
 
 function getUpgradePacePressure() {
@@ -1748,19 +1847,19 @@ function updateUpgradeTexts() {
 
 function updateMissionTexts() {
   const progress = {
-    addition: Math.min(TUTORIAL_BUILD_TARGET, state.upgrades.addition),
-    subtraction: Math.min(TUTORIAL_BUILD_TARGET, state.upgrades.subtraction),
-    multiplication: Math.min(TUTORIAL_BUILD_TARGET, state.upgrades.multiplication),
-    division: Math.min(TUTORIAL_BUILD_TARGET, state.upgrades.division)
+    addition: Math.min(FIRST_MISSION_TARGET, state.upgrades.addition),
+    subtraction: Math.min(FIRST_MISSION_TARGET, state.upgrades.subtraction),
+    multiplication: Math.min(FIRST_MISSION_TARGET, state.upgrades.multiplication),
+    division: Math.min(FIRST_MISSION_TARGET, state.upgrades.division)
   };
-  const firstMissionDone = getCategories().every((key) => state.upgrades[key] >= TUTORIAL_BUILD_TARGET);
-  const unlockedThemeCount = THEME_UNLOCKS.filter((unlock) => state.bestStreak >= unlock.streak).length;
-  const nextTheme = THEME_UNLOCKS.find((unlock) => state.bestStreak < unlock.streak);
+  const firstMissionDone = getCategories().every((key) => state.upgrades[key] >= FIRST_MISSION_TARGET);
+  const unlockedThemeCount = THEME_UNLOCKS.filter((unlock) => isThemeUnlocked(unlock.theme)).length;
+  const nextTheme = THEME_UNLOCKS.find((unlock) => !isThemeUnlocked(unlock.theme));
 
-  ui.missionMenuAddition.textContent = `${progress.addition} / ${TUTORIAL_BUILD_TARGET}`;
-  ui.missionMenuSubtraction.textContent = `${progress.subtraction} / ${TUTORIAL_BUILD_TARGET}`;
-  ui.missionMenuMultiplication.textContent = `${progress.multiplication} / ${TUTORIAL_BUILD_TARGET}`;
-  ui.missionMenuDivision.textContent = `${progress.division} / ${TUTORIAL_BUILD_TARGET}`;
+  ui.missionMenuAddition.textContent = `${progress.addition} / ${FIRST_MISSION_TARGET}`;
+  ui.missionMenuSubtraction.textContent = `${progress.subtraction} / ${FIRST_MISSION_TARGET}`;
+  ui.missionMenuMultiplication.textContent = `${progress.multiplication} / ${FIRST_MISSION_TARGET}`;
+  ui.missionMenuDivision.textContent = `${progress.division} / ${FIRST_MISSION_TARGET}`;
   ui.missionStatusText.textContent = firstMissionDone
     ? "Mission complete. Saved to Archive."
     : "Mission active. Keep training every power.";
@@ -1780,6 +1879,17 @@ function showRepairCompletePopup(message) {
     label: "Repair",
     pauseCombat: true,
     onDismiss: "repair-complete"
+  });
+}
+
+function showRepairFailedPopup() {
+  showTutorialCallout({
+    target: "repair-panel",
+    title: "Repair Failed",
+    message: "No worries. The Planet returned to the checkpoint. Tap anywhere to try again.",
+    label: "Repair",
+    pauseCombat: true,
+    onDismiss: "repair-failed"
   });
 }
 
@@ -1817,6 +1927,7 @@ function updateUi() {
   ui.swarmModeBtn.classList.toggle("active", state.swarmLevel > 1);
   ui.swarmModeBtn.textContent = `Swarm: ${state.swarmLevel}`;
   ui.answerConsole.classList.toggle("tutorial-target", state.tutorialHighlightAnswer && (state.tutorialCalloutVisible || state.tutorialInputLocked));
+  updateGuidedAnswerOptions();
   const missionVisible = state.tutorialActive && state.tutorialPhase === "build-all";
   ui.tutorialMission.classList.toggle("hidden", !missionVisible);
   if (missionVisible) {
@@ -1827,20 +1938,7 @@ function updateUi() {
   }
 
   if (state.tutorialCalloutVisible) {
-    const targetMap = {
-      "intro-power": "addition",
-      "intro-shield": "subtraction",
-      "intro-multishot": "multiplication",
-      "intro-regen": "division",
-      "lock-demo": "addition",
-      "power-warning": "upgrade-console",
-      "unlock-demo": "upgrade-console",
-      "build-all": "upgrade-console",
-      "loss-sim": "status",
-      "repair-demo": "repair-panel",
-      "complete": "answer-console"
-    };
-    positionTutorialCallout(targetMap[state.tutorialPhase] || "planet");
+    positionTutorialCallout(tutorialPhases[state.tutorialPhase]?.target || "planet");
   }
 
   updateUpgradeTexts();
@@ -1912,10 +2010,7 @@ function submitRepairAnswer(selectedValue) {
     }
 
     resetToCheckpoint();
-    if (state.tutorialActive && state.tutorialPhase === "repair-demo") {
-      startTutorialPhase("complete");
-    }
-    setBanner("Repair failed. The Planet returned to checkpoint.");
+    showRepairFailedPopup();
     return;
   }
 
@@ -2162,7 +2257,9 @@ function gameLoop(timestamp) {
     if (state.godMode) {
       state.godModeElapsedSec += deltaSec;
     }
-    state.repairBoostSec = Math.max(0, state.repairBoostSec - deltaSec);
+    if (!state.tutorialCalloutVisible || state.tutorialDismissAction !== "repair-complete") {
+      state.repairBoostSec = Math.max(0, state.repairBoostSec - deltaSec);
+    }
     if (state.safetyModeSec > 0 && !state.tutorialActive) {
       state.safetyModeSec = Math.max(0, state.safetyModeSec - deltaSec);
     } else {
@@ -2188,6 +2285,8 @@ function gameLoop(timestamp) {
   requestAnimationFrame(gameLoop);
 }
 
+loadProgress();
+syncThemeUnlocks();
 recalculatePlanetStats();
 initLayoutEditor();
 applyTheme(state.theme);

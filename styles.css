@@ -2103,6 +2103,23 @@ input {
   transform: translateY(0);
 }
 
+.answer-option.guided-correct {
+  border-color: var(--green);
+  background: color-mix(in srgb, var(--green) 26%, rgba(255, 255, 255, 0.08));
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--green) 45%, transparent),
+    0 0 22px color-mix(in srgb, var(--green) 30%, transparent);
+  transform: translateY(-1px) scale(1.03);
+}
+
+.answer-option.guided-locked,
+.answer-option:disabled {
+  cursor: not-allowed;
+  opacity: 0.38;
+  filter: grayscale(0.35);
+  transform: none;
+}
+
 .effect-chip {
   flex: 1;
   min-width: 170px;
@@ -2263,6 +2280,13 @@ input {
   color: var(--muted);
   font-size: 0.8rem;
   line-height: 1.35;
+}
+
+.theme-unlock-text {
+  color: var(--gold);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.03em;
 }
 
 .theme-button.active {
