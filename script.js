@@ -950,7 +950,7 @@ function getThemeUnlock(themeName) {
 }
 
 function isThemeUnlocked(themeName) {
-  return state.unlockedThemes.includes(themeName);
+  return state.godMode || state.unlockedThemes.includes(themeName);
 }
 
 function updateThemeLocks() {
