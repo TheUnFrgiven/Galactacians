@@ -575,6 +575,20 @@ function clearTutorialCalloutTimer() {
   }
 }
 
+function skipTutorialForGodMode() {
+  clearTutorialCalloutTimer();
+  state.tutorialActive = false;
+  state.tutorialPhase = "complete";
+  state.tutorialPauseCombat = false;
+  state.tutorialCalloutVisible = false;
+  state.tutorialDismissAction = null;
+  state.tutorialRequiresAnswer = false;
+  state.tutorialInputLocked = false;
+  state.tutorialHighlightAnswer = false;
+  ui.tutorialOverlay.classList.add("hidden");
+  ui.tutorialMission.classList.add("hidden");
+}
+
 function queueTutorialCallout(config, delayMs = 1000) {
   clearTutorialCalloutTimer();
   state.tutorialPauseCombat = false;
@@ -2179,10 +2193,13 @@ function initLayoutEditor() {
     state.godMode = !state.godMode;
     state.godModeElapsedSec = 0;
     if (state.godMode) {
+      skipTutorialForGodMode();
       state.zombieDead = false;
+      state.repairMode = false;
+      ui.repairPanel.classList.add("hidden");
       state.baseHp = state.maxBaseHp;
       state.shield = state.maxShield;
-      setBanner("God Mode on. The Planet cannot die.");
+      setBanner("God Mode on. Tutorial skipped and the Planet cannot die.");
     } else {
       setBanner("God Mode off.");
     }
