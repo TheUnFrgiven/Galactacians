@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Galactacians - Sign Up</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900;1000&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="src/account/account.css">
+</head>
+<body>
+  <div class="account-shell">
+    <header class="account-nav">
+      <a class="brand-lockup" href="game-menu.html" aria-label="Galactacians main menu">
+        <span class="brand-mark">G</span>
+        <span>Galactacians</span>
+      </a>
+      <nav class="nav-links" aria-label="Account navigation">
+        <a class="nav-link" href="game-menu.html">Main Menu</a>
+        <a class="nav-link" href="profile.html">Profile</a>
+      </nav>
+    </header>
+
+    <main class="account-layout">
+      <section class="signup-visual" aria-label="Account benefits">
+        <div class="visual-copy">
+          <p class="eyebrow">Planet Math Defense</p>
+          <h1>Create your pilot account</h1>
+          <p>Save mission progress, protect streaks, and keep a verified account ready for synced play.</p>
+        </div>
+
+        <div class="planet-illustration" aria-hidden="true">
+          <div class="orbit-track"></div>
+          <div class="planet-disc"></div>
+          <div class="ship-dot"></div>
+        </div>
+
+        <div class="visual-bottom">
+          <div class="visual-stats" aria-label="Saved profile data">
+            <div class="visual-stat">
+              <span>Progress</span>
+              <strong>Lessons</strong>
+            </div>
+            <div class="visual-stat">
+              <span>Streak</span>
+              <strong>Repairs</strong>
+            </div>
+            <div class="visual-stat">
+              <span>Login</span>
+              <strong>Secure</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="auth-panel" aria-labelledby="auth-title">
+        <div class="auth-header">
+          <p class="section-kicker">Account Access</p>
+          <h1 id="auth-title">Sign up or sign in</h1>
+          <p>Use a verified email account, Gmail, or iCloud to connect your Galactacians profile.</p>
+        </div>
+
+        <div class="provider-grid" aria-label="Connected account options">
+          <button class="provider-button" type="button" data-provider="gmail" id="gmail-connect">
+            <span class="provider-icon">G</span>
+            <span>Continue with Gmail</span>
+          </button>
+          <button class="provider-button" type="button" data-provider="icloud" id="icloud-connect">
+            <span class="provider-icon">i</span>
+            <span>Continue with iCloud</span>
+          </button>
+        </div>
+
+        <form id="provider-panel" class="provider-panel hidden" novalidate>
+          <div class="form-row">
+            <label for="provider-email" id="provider-email-label">Provider email</label>
+            <input id="provider-email" name="providerEmail" type="email" autocomplete="email">
+            <p id="provider-hint" class="field-hint">Use the email address attached to that provider.</p>
+          </div>
+          <div class="button-row">
+            <button class="primary-button" type="submit">Connect Account</button>
+            <button class="ghost-button" type="button" id="provider-cancel">Cancel</button>
+          </div>
+        </form>
+
+        <div class="auth-divider"><span>Email</span></div>
+
+        <div class="auth-tabs" role="tablist" aria-label="Email authentication">
+          <button class="auth-tab active" type="button" id="signup-tab" role="tab" aria-selected="true" aria-controls="signup-form">Sign Up</button>
+          <button class="auth-tab" type="button" id="signin-tab" role="tab" aria-selected="false" aria-controls="signin-form">Sign In</button>
+        </div>
+
+        <form id="signup-form" class="auth-form" novalidate>
+          <div class="form-grid">
+            <div class="form-row">
+              <label for="signup-display-name">Player name</label>
+              <input id="signup-display-name" name="displayName" type="text" autocomplete="name" required>
+            </div>
+            <div class="form-row">
+              <label for="signup-username">Username</label>
+              <input id="signup-username" name="username" type="text" autocomplete="username" minlength="3" maxlength="18" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label for="signup-email">Email address</label>
+            <input id="signup-email" name="email" type="email" autocomplete="email" required>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-row">
+              <label for="signup-birth-date">Date of birth</label>
+              <input id="signup-birth-date" name="birthDate" type="date" required>
+            </div>
+            <div class="form-row hidden" id="guardian-row">
+              <label for="guardian-email">Parent or guardian email</label>
+              <input id="guardian-email" name="guardianEmail" type="email" autocomplete="email">
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-row">
+              <label for="signup-password">Password</label>
+              <input id="signup-password" name="password" type="password" autocomplete="new-password" required>
+              <p class="field-hint">Use 8+ characters with uppercase, lowercase, and a number.</p>
+            </div>
+            <div class="form-row">
+              <label for="signup-confirm-password">Confirm password</label>
+              <input id="signup-confirm-password" name="confirmPassword" type="password" autocomplete="new-password" required>
+            </div>
+          </div>
+
+          <label class="checkbox-row" for="terms-check">
+            <input id="terms-check" name="terms" type="checkbox" required>
+            <span>I agree to the Terms, Privacy Notice, and age-appropriate learning account rules.</span>
+          </label>
+
+          <button class="primary-button" type="submit">Create Account</button>
+        </form>
+
+        <form id="signin-form" class="auth-form hidden" novalidate>
+          <div class="form-row">
+            <label for="signin-email">Email address</label>
+            <input id="signin-email" name="email" type="email" autocomplete="email" required>
+          </div>
+          <div class="form-row">
+            <label for="signin-password">Password</label>
+            <input id="signin-password" name="password" type="password" autocomplete="current-password" required>
+          </div>
+          <button class="primary-button" type="submit">Sign In</button>
+        </form>
+
+        <form id="verification-panel" class="verification-panel hidden" novalidate>
+          <div>
+            <p class="section-kicker">Email Verification</p>
+            <h2>Enter your 6-digit code</h2>
+            <p class="section-copy">The local verification code is shown here until a backend email service is connected.</p>
+          </div>
+          <strong class="verification-code" id="verification-demo-code" aria-label="Local verification code"></strong>
+          <div class="form-row">
+            <label for="verification-code">Verification code</label>
+            <input id="verification-code" name="verificationCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required>
+          </div>
+          <div class="button-row">
+            <button class="primary-button" type="submit">Verify Email</button>
+            <button class="secondary-button" type="button" id="resend-code">Resend Code</button>
+          </div>
+        </form>
+
+        <p id="auth-message" class="message" role="status" aria-live="polite"></p>
+        <p class="legal-line">Authentication data is stored locally for this static prototype.</p>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="src/account/auth.js"></script>
+</body>
+</html>

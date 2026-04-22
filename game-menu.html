@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Galactacians - Main Menu</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Swap this font link later if you move to custom game fonts or bundled assets. -->
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="src/menu/menu.css">
+</head>
+<body>
+  <main class="menu-scene" aria-label="Main menu">
+    <!-- Replace this background layer with painted art, a canvas, or video later. -->
+    <div class="menu-backdrop" aria-hidden="true"></div>
+
+    <section class="menu-card" aria-labelledby="menu-title">
+      <p class="menu-eyebrow">Planet Math Defense</p>
+      <h1 id="menu-title" class="menu-title">Galactacians</h1>
+      <p class="menu-subtitle">Choose Campaign, Infinite Galaxy, or targeted practice.</p>
+
+      <nav id="main-menu-actions" class="menu-actions" aria-label="Main actions"></nav>
+    </section>
+
+    <aside id="settings-panel" class="settings-panel" aria-label="Settings" aria-hidden="true"></aside>
+
+    <div id="menu-hint" class="menu-hint">
+      Use ↑ ↓ / WASD / controller D-pad. Press Enter, Space, or A to select.
+    </div>
+  </main>
+
+  <div id="fade-overlay" class="fade-overlay" aria-hidden="true"></div>
+
+  <script type="module" src="src/menu/main-menu.js"></script>
+</body>
+</html>
