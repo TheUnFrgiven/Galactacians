@@ -229,26 +229,9 @@ Theme unlock order in current code:
 
 ## Current Repo State
 
-The project has uncommitted local work.
+The durable game source, project memory, and design docs are committed to GitHub.
 
-Known status from recovery:
-
-- Modified: `index.html`, `script.js`, `styles.css`
-- Untracked: `PROJECT_SEPARATION.md`, `game-menu.html`, `playwright.config.js`, `src/`, `test-results/`, `tests/`, `recovered-chat-data/`, `PROJECT_MEMORY.md`
-
-## Recovered Chat Data
-
-Readable exports and raw backups are in:
-
-```text
-/Users/theunfrgiven/Documents/Galactacians/recovered-chat-data/all-exports
-```
-
-The long Galactacians thread is:
-
-```text
-rollout-2026-04-06T11-42-44-019d61f5-60f6-7831-a0fd-db1a3904e64e.cleaned.md
-```
+Raw recovered chat exports were intentionally removed from the repository after the useful project decisions were organized into this file and the `docs/` directory. Keep future transcript dumps out of Git with `.gitignore`.
 
 ## How To Continue
 
