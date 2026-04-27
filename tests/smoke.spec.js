@@ -18,6 +18,7 @@ test("main menu panels and game modes are connected", async ({ page }) => {
 
   await page.goto("/game-menu.html");
   await expect(page.getByRole("button", { name: "Campaign" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Planet Campaign" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Infinite Galaxy" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Practice Lab" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Sign Up" })).toBeVisible();
@@ -34,7 +35,7 @@ test("main menu panels and game modes are connected", async ({ page }) => {
   await expect(page.getByRole("button", { name: /Division/ })).toBeVisible();
   await page.getByRole("button", { name: "Close" }).click();
 
-  await page.goto("/index.html?mode=campaign");
+  await page.goto("/play.html?mode=campaign");
   await expect(page.locator(".mode-exit-link")).toBeVisible();
   await expect(page.locator("#campaign-map")).toBeVisible();
   await expect(page.locator(".campaign-map-node")).toHaveCount(55);
@@ -48,11 +49,23 @@ test("main menu panels and game modes are connected", async ({ page }) => {
   await expect(page.locator("#campaign-mastery-evidence")).toContainText("Mastery");
   await expect(page.locator("#question-text")).toBeVisible();
 
-  await page.goto("/index.html?mode=infinite");
+  await page.goto("/play.html?mode=planet-campaign&age=8");
+  await expect(page.locator(".mode-exit-link")).toBeVisible();
+  await expect(page.locator("#campaign-map")).toBeVisible();
+  await expect(page.locator(".campaign-map-node").first()).toContainText("1");
+  await page.locator(".campaign-map-node").first().click();
+  await expect(page.locator("#campaign-map")).toHaveClass(/hidden/);
+  await expect(page.locator("body")).toHaveAttribute("data-game-mode", "planet-campaign");
+  await expect(page.locator("#lesson-panel-label")).toContainText("Planet Campaign");
+  await expect(page.locator("#campaign-age-tag")).toContainText("Age 8 planet route");
+  await expect(page.locator(".planet-campaign-hud")).toBeVisible();
+  await expect(page.locator("#question-text")).toBeVisible();
+
+  await page.goto("/play.html?mode=infinite");
   await expect(page.locator("#lesson-panel-label")).toContainText("Infinite Galaxy");
   await expect(page.locator(".category-button")).toHaveCount(4);
 
-  await page.goto("/index.html?mode=practice&skill=division");
+  await page.goto("/play.html?mode=practice&skill=division");
   await expect(page.locator("#lesson-panel-label")).toContainText("Practice Lab");
   await expect(page.locator("#campaign-lesson-title")).toContainText("Division Practice");
   await expect(page.locator("#question-text")).toBeVisible();

@@ -1,7 +1,7 @@
 const startupParams = new URLSearchParams(window.location.search);
-const startupMode = ["campaign", "infinite", "practice"].includes(startupParams.get("mode"))
+const startupMode = ["campaign", "planet-campaign", "infinite", "practice"].includes(startupParams.get("mode"))
   ? startupParams.get("mode")
-  : "campaign";
+  : "planet-campaign";
 const startupSkill = ["addition", "subtraction", "multiplication", "division"].includes(startupParams.get("skill"))
   ? startupParams.get("skill")
   : "addition";
@@ -16,7 +16,7 @@ const state = {
   campaignCorrect: 0,
   campaignMistakes: 0,
   campaignComplete: false,
-  campaignMapOpen: startupMode === "campaign",
+  campaignMapOpen: startupMode === "campaign" || startupMode === "planet-campaign",
   campaignResultOpen: false,
   campaignStars: {},
   campaignStageStats: {
@@ -174,6 +174,28 @@ const MODE_RULES = {
     repairTrustFloor: 60,
     repairTarget: 2
   },
+  "planet-campaign": {
+    label: "Planet Campaign",
+    subtitle: "Planet-first missions where every answer commands the defense grid.",
+    planetStateLabel: "Planet Mood",
+    populationLabel: "Colony",
+    timerLabel: "Mission Charge",
+    countdown: false,
+    timerFailure: false,
+    combatCanTriggerRepair: false,
+    spawnEnemies: true,
+    enemyPressureScale: 0.28,
+    maxEnemyCap: 10,
+    enemyDamageMultiplier: 0.12,
+    safetyBaseSeconds: CAMPAIGN_SURVIVAL_SECONDS,
+    streakBonusSeconds: 0,
+    correctTrustGain: 0,
+    lessonTrustGain: 14,
+    wrongTrustPenalty: 14,
+    repeatedWrongPenalty: 18,
+    repairTrustFloor: 65,
+    repairTarget: 2
+  },
   infinite: {
     label: "Infinite Galaxy",
     subtitle: "Endless survival sandbox using mastered, review-due, or generated questions.",
@@ -232,7 +254,11 @@ function getModeRules(mode = state.gameMode) {
 }
 
 function isCampaignMode() {
-  return state.gameMode === "campaign";
+  return state.gameMode === "campaign" || state.gameMode === "planet-campaign";
+}
+
+function isPlanetCampaignMode() {
+  return state.gameMode === "planet-campaign";
 }
 
 function isInfiniteMode() {
@@ -843,6 +869,8 @@ const ui = {
   lessonPanelLabel: document.getElementById("lesson-panel-label"),
   lessonPanelSubtitle: document.getElementById("lesson-panel-subtitle"),
   campaignPanel: document.getElementById("campaign-panel"),
+  planetCampaignRoute: document.getElementById("planet-campaign-route"),
+  planetCampaignCommand: document.getElementById("planet-campaign-command"),
   campaignGalaxyLabel: document.getElementById("campaign-galaxy-label"),
   campaignLessonTitle: document.getElementById("campaign-lesson-title"),
   campaignLessonGoal: document.getElementById("campaign-lesson-goal"),
@@ -890,6 +918,7 @@ const ui = {
   enemyField: document.getElementById("enemy-field"),
   projectileLayer: document.getElementById("projectile-layer"),
   planetCoreBtn: document.getElementById("planet-core-btn"),
+  rewardTowerArt: document.getElementById("reward-tower-art"),
   shieldRing: document.getElementById("shield-ring"),
   systemBanner: document.getElementById("system-banner"),
   tutorialOverlay: document.getElementById("tutorial-overlay"),
@@ -925,6 +954,7 @@ const ui = {
   themeButtons: Array.from(document.querySelectorAll(".theme-button")),
   categoryButtons: Array.from(document.querySelectorAll(".category-button")),
   campaignMap: document.getElementById("campaign-map"),
+  campaignMapTitle: document.querySelector(".campaign-map-head h1"),
   campaignMapSummary: document.getElementById("campaign-map-summary"),
   campaignMapTrack: document.getElementById("campaign-map-track"),
   campaignMapRoute: document.getElementById("campaign-map-route"),
@@ -973,9 +1003,12 @@ function shuffleArray(values) {
 
 function sanitizePlacement(savedPlacement) {
   const placement = savedPlacement && typeof savedPlacement === "object" ? savedPlacement : {};
-  const targetAge = Number.isInteger(placement.targetAge) && placement.targetAge >= 7 && placement.targetAge <= 12
-    ? placement.targetAge
-    : state.placement.targetAge;
+  const startupTargetAge = Number.isInteger(startupAge) && startupAge >= 7 && startupAge <= 12 ? startupAge : null;
+  const targetAge = startupTargetAge || (
+    Number.isInteger(placement.targetAge) && placement.targetAge >= 7 && placement.targetAge <= 12
+      ? placement.targetAge
+      : state.placement.targetAge
+  );
 
   return {
     completed: placement.completed === true,
@@ -1079,7 +1112,7 @@ function loadProgress() {
 function saveProgress() {
   try {
     const existing = JSON.parse(window.localStorage.getItem(SAVE_KEY) || "{}");
-    const saveLessonIndex = state.gameMode === "campaign"
+    const saveLessonIndex = isCampaignMode()
       ? Math.max(state.campaignProgressIndex, state.campaignComplete ? campaignLessons.length - 1 : 0)
       : state.campaignLessonIndex;
     window.localStorage.setItem(SAVE_KEY, JSON.stringify({
@@ -1221,7 +1254,7 @@ function finishTutorial() {
   state.correctSinceSafetyMode = 0;
   state.safetyModeSec = TUTORIAL_START_SAFETY_SECONDS;
   state.survivalClockSec = Math.max(state.survivalClockSec, getSafetyResetSeconds());
-  setBanner(state.gameMode === "campaign"
+  setBanner(isCampaignMode()
     ? "Start the mission. Correct answers fill the lesson meter."
     : "Start with any math path. Correct answers upgrade the Planet.");
   updateUi();
@@ -1342,7 +1375,7 @@ function getCheckpointLevel() {
 }
 
 function nextRepairQuestion() {
-  if (state.gameMode === "campaign") {
+  if (isCampaignMode()) {
     state.repairQuestion = buildCampaignQuestion(getCurrentLesson());
   } else {
     const kind = REPAIR_QUESTION_CATEGORIES[randomInt(0, REPAIR_QUESTION_CATEGORIES.length - 1)];
@@ -1512,17 +1545,77 @@ function getCampaignPlanetName(lesson, index) {
 }
 
 function getCampaignUnlockedIndex() {
+  if (isPlanetCampaignMode()) {
+    const entries = getCampaignMapEntries();
+    const firstUnsaved = entries.find((entry) => {
+      const lessonId = getLessonSkillId(entry.lesson);
+      return !state.campaignStars[lessonId];
+    });
+    return firstUnsaved ? firstUnsaved.index : entries[entries.length - 1]?.index || 0;
+  }
   if (state.campaignComplete) {
     return campaignLessons.length - 1;
   }
   return clamp(state.campaignProgressIndex, 0, campaignLessons.length - 1);
 }
 
-function getCampaignNodePoints() {
-  const xCycle = [12, 34, 66, 86, 58, 28];
-  return campaignLessons.map((lesson, index) => ({
+function getSelectedCampaignAge() {
+  const age = state.placement.targetAge;
+  return Number.isInteger(age) && age >= 7 && age <= 12 ? age : null;
+}
+
+function lessonMatchesSelectedAge(lesson, age = getSelectedCampaignAge()) {
+  if (!age || !Array.isArray(lesson.ageRange) || lesson.ageRange.length !== 2) {
+    return true;
+  }
+  return lesson.ageRange[0] <= age && age <= lesson.ageRange[1];
+}
+
+function getCampaignMapEntries() {
+  const allEntries = campaignLessons.map((lesson, index) => ({ lesson, index }));
+  if (!isPlanetCampaignMode()) {
+    return allEntries;
+  }
+  const compiler = window.GALACTACIANS_CURRICULUM_COMPILER;
+  if (compiler && typeof compiler.getPlanetCampaignLessons === "function") {
+    const orderedLessons = compiler.getPlanetCampaignLessons(campaignLessons, getSelectedCampaignAge());
+    const orderedEntries = orderedLessons
+      .map((lesson) => ({ lesson, index: campaignLessons.indexOf(lesson) }))
+      .filter((entry) => entry.index >= 0);
+    return orderedEntries.length > 0 ? orderedEntries : allEntries;
+  }
+  const ageEntries = allEntries.filter((entry) => lessonMatchesSelectedAge(entry.lesson));
+  return ageEntries.length > 0 ? ageEntries : allEntries;
+}
+
+function getPlanetCampaignPathLabel() {
+  const age = getSelectedCampaignAge();
+  return age ? `Age ${age} planet route` : "Planet-first route";
+}
+
+function isCampaignLessonUnlocked(index) {
+  if (!isPlanetCampaignMode()) {
+    const lesson = campaignLessons[index];
+    const lessonId = lesson ? getLessonSkillId(lesson) : null;
+    return lesson && (index <= getCampaignUnlockedIndex() || state.campaignStars[lessonId] > 0);
+  }
+
+  const entries = getCampaignMapEntries();
+  const displayIndex = entries.findIndex((entry) => entry.index === index);
+  if (displayIndex === -1) {
+    return false;
+  }
+  const firstUnsavedIndex = entries.findIndex((entry) => !state.campaignStars[getLessonSkillId(entry.lesson)]);
+  return firstUnsavedIndex === -1 || displayIndex <= firstUnsavedIndex || state.campaignStars[getLessonSkillId(entries[displayIndex].lesson)] > 0;
+}
+
+function getCampaignNodePoints(entries = getCampaignMapEntries()) {
+  const xCycle = isPlanetCampaignMode() ? [22, 42, 64, 78, 56, 34] : [12, 34, 66, 86, 58, 28];
+  const startY = isPlanetCampaignMode() ? 120 : 92;
+  const gapY = isPlanetCampaignMode() ? 132 : 92;
+  return entries.map((entry, index) => ({
     x: xCycle[index % xCycle.length],
-    y: 92 + index * 92
+    y: startY + index * gapY
   }));
 }
 
@@ -1638,8 +1731,9 @@ function renderCampaignMap() {
     return;
   }
 
+  const entries = getCampaignMapEntries();
   const unlockedIndex = getCampaignUnlockedIndex();
-  const points = getCampaignNodePoints();
+  const points = getCampaignNodePoints(entries);
   const mapHeight = points.length === 0 ? 320 : points[points.length - 1].y + 120;
   const secureCount = Object.values(state.campaignStars).filter((stars) => stars > 0).length;
 
@@ -1651,32 +1745,39 @@ function renderCampaignMap() {
   route.setAttribute("d", buildCampaignRoutePath(points));
   ui.campaignMapRoute.appendChild(route);
   ui.campaignMapNodes.innerHTML = "";
+  if (ui.campaignMapTitle) {
+    ui.campaignMapTitle.textContent = isPlanetCampaignMode() ? "Planet Campaign" : "Save The Math Galaxy";
+  }
+  const unlockedDisplayIndex = Math.max(0, entries.findIndex((entry) => entry.index === unlockedIndex));
   ui.campaignMapSummary.textContent = state.campaignComplete
     ? `All ${campaignLessons.length} planets saved. Replay any planet for stars.`
-    : `Planet ${unlockedIndex + 1} of ${campaignLessons.length} is ready. ${secureCount} planets saved.`;
+    : isPlanetCampaignMode()
+      ? `${getPlanetCampaignPathLabel()}: planet ${unlockedDisplayIndex + 1} of ${entries.length} is ready. ${secureCount} planets saved.`
+      : `Planet ${unlockedIndex + 1} of ${campaignLessons.length} is ready. ${secureCount} planets saved.`;
 
-  campaignLessons.forEach((lesson, index) => {
-    const point = points[index];
+  entries.forEach(({ lesson, index }, displayIndex) => {
     const lessonId = getLessonSkillId(lesson);
     const stars = state.campaignStars[lessonId] || 0;
-    const isUnlocked = index <= unlockedIndex || stars > 0;
+    const isUnlocked = isCampaignLessonUnlocked(index);
     const isCurrent = !state.campaignComplete && index === unlockedIndex;
     const button = document.createElement("button");
-    button.className = "campaign-map-node";
+    button.className = `campaign-map-node planet-art-${displayIndex % 6}`;
     button.type = "button";
     button.disabled = !isUnlocked;
     button.classList.toggle("is-current", isCurrent);
     button.classList.toggle("is-saved", stars > 0);
     button.classList.toggle("is-locked", !isUnlocked);
-    button.style.left = `${point.x}%`;
-    button.style.top = `${point.y}px`;
+    button.style.left = `${points[displayIndex].x}%`;
+    button.style.top = `${points[displayIndex].y}px`;
     button.dataset.lessonIndex = String(index);
     button.setAttribute("aria-label", `${lesson.title}, ${formatAgeRange(lesson.ageRange)}, ${isUnlocked ? "available" : "locked"}`);
+    button.style.setProperty("--node-hue", `${(displayIndex * 47 + 190) % 360}deg`);
     button.innerHTML = `
       <span class="map-planet-orb"></span>
-      <span class="map-node-index">${index + 1}</span>
+      <span class="map-node-index">${isPlanetCampaignMode() ? displayIndex + 1 : index + 1}</span>
       <strong>${getCampaignPlanetName(lesson, index)}</strong>
       <small>${lesson.title}</small>
+      ${isPlanetCampaignMode() ? `<em>${lesson.reward}</em>` : ""}
       <span class="map-stars" aria-hidden="true">${getCampaignStarText(stars)}</span>
     `;
     button.addEventListener("click", () => startCampaignMapLesson(index));
@@ -1719,13 +1820,15 @@ function startCampaignMapLesson(index) {
   const unlockedIndex = getCampaignUnlockedIndex();
   const lesson = campaignLessons[index];
   const lessonId = lesson ? getLessonSkillId(lesson) : null;
-  const isUnlocked = lesson && (index <= unlockedIndex || state.campaignStars[lessonId] > 0);
+  const isUnlocked = lesson && isCampaignLessonUnlocked(index);
   if (!isUnlocked) {
     ui.campaignMapSummary.textContent = "Save the connected planets before jumping ahead.";
     return;
   }
 
-  state.campaignProgressIndex = Math.max(state.campaignProgressIndex, unlockedIndex);
+  state.campaignProgressIndex = isPlanetCampaignMode()
+    ? Math.max(state.campaignProgressIndex, index)
+    : Math.max(state.campaignProgressIndex, unlockedIndex);
   state.campaignLessonIndex = index;
   state.campaignCorrect = 0;
   state.campaignMistakes = 0;
@@ -2328,7 +2431,7 @@ function updateGuidedAnswerOptions() {
 }
 
 function nextQuestion() {
-  if (state.gameMode === "campaign") {
+  if (isCampaignMode()) {
     state.question = getCampaignQuestion();
   } else if (state.gameMode === "practice") {
     state.question = getPracticeQuestion();
@@ -2497,6 +2600,37 @@ function getCampaignRewardMessage(lesson) {
   return `${lesson.reward} increased. Repair logistics improved.`;
 }
 
+function getPlanetCampaignActionLabel(category) {
+  if (category === "addition") {
+    return "Power shot";
+  }
+  if (category === "subtraction") {
+    return "Shield pulse";
+  }
+  if (category === "multiplication") {
+    return "Drone launch";
+  }
+  return "Repair beam";
+}
+
+function showPlanetCampaignAction(kind, message) {
+  if (!isPlanetCampaignMode() || !ui.enemyField) {
+    return;
+  }
+
+  const effect = document.createElement("div");
+  effect.className = `planet-action-pop planet-action-${kind}`;
+  effect.textContent = message;
+  ui.enemyField.appendChild(effect);
+  ui.planetCoreBtn?.classList.remove("planet-command-correct", "planet-command-wrong");
+  ui.planetCoreBtn?.classList.add(kind === "wrong" ? "planet-command-wrong" : "planet-command-correct");
+
+  window.setTimeout(() => {
+    effect.remove();
+    ui.planetCoreBtn?.classList.remove("planet-command-correct", "planet-command-wrong");
+  }, 900);
+}
+
 function completeCampaignLesson() {
   const lesson = getCurrentLesson();
   const completedIndex = state.campaignLessonIndex;
@@ -2512,8 +2646,11 @@ function completeCampaignLesson() {
   state.campaignCorrect = 0;
   state.campaignMistakes = 0;
 
-  if (completedIndex >= campaignLessons.length - 1) {
-    state.campaignComplete = true;
+  const nextPlanetCampaignIndex = isPlanetCampaignMode() ? getCampaignUnlockedIndex() : null;
+  const planetCampaignDone = isPlanetCampaignMode() && nextPlanetCampaignIndex === completedIndex;
+
+  if (completedIndex >= campaignLessons.length - 1 || planetCampaignDone) {
+    state.campaignComplete = !isPlanetCampaignMode();
     state.campaignProgressIndex = campaignLessons.length - 1;
     state.safetyModeSec = SAFETY_REWARD_SECONDS;
     saveProgress();
@@ -2521,7 +2658,8 @@ function completeCampaignLesson() {
     return;
   }
 
-  state.campaignProgressIndex = Math.max(state.campaignProgressIndex, completedIndex + 1);
+  const nextIndex = isPlanetCampaignMode() ? nextPlanetCampaignIndex : completedIndex + 1;
+  state.campaignProgressIndex = Math.max(state.campaignProgressIndex, nextIndex);
   state.campaignLessonIndex = state.campaignProgressIndex;
   saveProgress();
   const nextLesson = getCurrentLesson();
@@ -2550,6 +2688,7 @@ function applyCampaignCorrectAnswer() {
   state.survivalClockSec = getSafetyResetSeconds();
   addUpgradeReward(lesson.rewardCategory, 1);
   const clearedEnemies = destroyCampaignEnemiesForCorrect(lesson);
+  showPlanetCampaignAction("correct", getPlanetCampaignActionLabel(lesson.rewardCategory));
 
   const colonyBoosted = state.correctSincePopulationGain >= 5;
   if (colonyBoosted) {
@@ -2581,6 +2720,7 @@ function handleCampaignWrongAnswer() {
     ? getModeRules().repeatedWrongPenalty
     : getModeRules().wrongTrustPenalty;
   const repairOpened = losePopulation("wrong", penalty);
+  showPlanetCampaignAction("wrong", "Try with a hint");
 
   const record = ensureSkillMastery(lesson);
   if (state.campaignMistakes >= 2 || state.population <= 40) {
@@ -3225,6 +3365,7 @@ function renderEnemies() {
       card = document.createElement("div");
       card.className = `enemy-card ${template.className}`;
       card.innerHTML = `
+        <div class="enemy-sprite"></div>
         <div class="enemy-body"></div>
         <div class="enemy-hp"><div></div></div>
       `;
@@ -3279,11 +3420,13 @@ function updateMissionTexts() {
     return;
   }
 
-  if (state.gameMode === "campaign") {
+  if (isCampaignMode()) {
     const completedLessons = state.campaignComplete ? campaignLessons.length : getSecureSkillCount();
     const currentLesson = getCurrentLesson();
-    ui.missionTitleText.textContent = "Campaign";
-    ui.missionCopyText.textContent = "Answer from one mission deck, protect population, and return for scheduled review.";
+    ui.missionTitleText.textContent = isPlanetCampaignMode() ? "Planet Campaign" : "Campaign";
+    ui.missionCopyText.textContent = isPlanetCampaignMode()
+      ? "Answer with defense commands, keep the planet visible, and restore each route."
+      : "Answer from one mission deck, protect population, and return for scheduled review.";
     ui.missionMenuLabelA.textContent = "Progress";
     ui.missionMenuLabelB.textContent = "Galaxy";
     ui.missionMenuLabelC.textContent = "Mission";
@@ -3338,23 +3481,27 @@ function updateMissionTexts() {
 function updateModeUi() {
   document.body.dataset.gameMode = state.gameMode;
 
-  if (state.gameMode === "campaign") {
+  if (isCampaignMode()) {
     const lesson = getCurrentLesson();
     const skillRecord = ensureSkillMastery(lesson);
     const progressRatio = state.campaignComplete ? 1 : clamp(state.campaignCorrect / lesson.targetCorrect, 0, 1);
-    ui.lessonPanelLabel.textContent = "Campaign";
-    ui.lessonPanelSubtitle.textContent = "One mission deck teaches, checks, and repairs the current skill.";
-    ui.answerPanelLabel.textContent = "Campaign Deck";
+    ui.lessonPanelLabel.textContent = isPlanetCampaignMode() ? "Planet Campaign" : "Campaign";
+    ui.lessonPanelSubtitle.textContent = isPlanetCampaignMode()
+      ? "Protect the planet with quick math commands."
+      : "One mission deck teaches, checks, and repairs the current skill.";
+    ui.answerPanelLabel.textContent = isPlanetCampaignMode() ? "Defense Commands" : "Campaign Deck";
     ui.answerPanelSubtitle.textContent = state.campaignComplete
       ? "Campaign complete. Keep practicing or open Infinite Galaxy."
-      : "Correct answers clear attackers. Wrong answers cost population and reveal a hint.";
+      : isPlanetCampaignMode()
+        ? "Tap the right command to fire, shield, repair, or launch drones."
+        : "Correct answers clear attackers. Wrong answers cost population and reveal a hint.";
     ui.campaignPanel.classList.remove("hidden");
     ui.campaignGalaxyLabel.textContent = lesson.galaxy;
     ui.campaignLessonTitle.textContent = state.campaignComplete ? "Campaign Complete" : lesson.title;
     ui.campaignLessonGoal.textContent = state.campaignComplete
       ? "You finished the current learning path."
       : lesson.goal;
-    ui.campaignAgeTag.textContent = formatAgeRange(lesson.ageRange);
+    ui.campaignAgeTag.textContent = isPlanetCampaignMode() ? getPlanetCampaignPathLabel() : formatAgeRange(lesson.ageRange);
     ui.campaignStandardTag.textContent = state.campaignComplete ? "Review path" : formatStandardTag(lesson);
     ui.campaignSupportTag.textContent = state.campaignComplete ? "Spaced review" : formatSupportTag(lesson);
     ui.campaignLessonMeter.style.width = `${progressRatio * 100}%`;
@@ -3370,6 +3517,15 @@ function updateModeUi() {
       ? "Evidence: all campaign planets saved, with review still available."
       : getMasteryEvidenceText(lesson);
     ui.campaignRewardText.textContent = lesson.reward;
+    if (ui.planetCampaignRoute) {
+      ui.planetCampaignRoute.textContent = `${getPlanetCampaignPathLabel()} · ${lesson.galaxy}`;
+    }
+    if (ui.planetCampaignCommand) {
+      ui.planetCampaignCommand.textContent = `${lesson.reward} command ready`;
+    }
+    if (ui.rewardTowerArt) {
+      ui.rewardTowerArt.className = `reward-tower-art reward-tower-${lesson.rewardCategory}`;
+    }
     return;
   }
 
@@ -3509,7 +3665,7 @@ function submitAnswer(selectedValue) {
     return;
   }
 
-  if (state.gameMode === "campaign") {
+  if (isCampaignMode()) {
     if (isAnswerCorrect(selectedValue, state.question)) {
       applyCampaignCorrectAnswer();
       nextQuestion();
@@ -3634,7 +3790,7 @@ function setActiveCategoryButton(category) {
 }
 
 function setCategory(category) {
-  if (state.gameMode === "campaign") {
+  if (isCampaignMode()) {
     const lesson = getCurrentLesson();
     state.category = lesson.rewardCategory;
     setActiveCategoryButton(state.category);
