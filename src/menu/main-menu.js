@@ -372,7 +372,7 @@ function startPlayTransition(mode) {
   showHint(mode === "infinite" ? "Opening Infinite Galaxy..." : "Opening Campaign map...");
 
   window.setTimeout(() => {
-    window.location.href = `index.html?mode=${mode}`;
+    window.location.href = `play.html?mode=${mode}`;
   }, 560);
 }
 
@@ -402,7 +402,7 @@ function startPracticeTransition(skill) {
   ui.fadeOverlay.classList.add("is-fading");
   showHint(`Opening ${capitalize(skill)} Practice Lab...`);
   window.setTimeout(() => {
-    window.location.href = `index.html?mode=practice&skill=${skill}`;
+    window.location.href = `play.html?mode=practice&skill=${skill}`;
   }, 560);
 }
 

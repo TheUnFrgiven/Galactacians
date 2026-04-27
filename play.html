@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Planet Math Defense</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="game-shell">
+    <a class="mode-exit-link" href="index.html" aria-label="Return to main menu">Main Menu</a>
+
+    <section id="campaign-map" class="campaign-map hidden" aria-label="Campaign planet map">
+      <div class="campaign-map-shell">
+        <div class="campaign-map-head">
+          <div>
+            <p class="console-label">Campaign Map</p>
+            <h1>Save The Math Galaxy</h1>
+          </div>
+          <p id="campaign-map-summary" class="campaign-map-summary">Choose a planet to begin.</p>
+        </div>
+        <div class="campaign-map-scroll">
+          <div id="campaign-map-track" class="campaign-map-track">
+            <svg id="campaign-map-route" class="campaign-map-route" aria-hidden="true"></svg>
+            <div id="campaign-map-nodes" class="campaign-map-nodes"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="system-banner" id="system-banner" data-panel="banner">Planetary defense online. Solve math to power the weapons grid.</div>
+    <div id="tutorial-overlay" class="tutorial-overlay hidden" aria-hidden="true">
+      <div id="tutorial-highlight" class="tutorial-highlight"></div>
+      <div id="tutorial-callout" class="tutorial-callout" role="dialog" aria-live="polite">
+        <p id="tutorial-callout-label" class="console-label">Tutorial</p>
+        <h3 id="tutorial-callout-title">Learn the Planet</h3>
+        <p id="tutorial-callout-copy" class="tutorial-callout-copy">Tap anywhere to continue.</p>
+        <p class="tutorial-callout-hint">Tap anywhere to continue</p>
+      </div>
+    </div>
+
+    <main class="arena-view">
+      <div id="enemy-field" class="space-arena">
+        <div id="projectile-layer" class="projectile-layer"></div>
+
+        <div class="planet-anchor">
+          <div class="shield-shell" id="shield-ring"></div>
+          <div class="planet-glow"></div>
+          <button id="planet-core-btn" class="planet-core" type="button" aria-label="Planet help">
+            <div class="planet-surface">
+              <span class="continent continent-1"></span>
+              <span class="continent continent-2"></span>
+              <span class="continent continent-3"></span>
+            </div>
+            <div class="planet-lights"></div>
+          </button>
+        </div>
+      </div>
+
+      <section class="planet-status" data-panel="status">
+        <div class="status-block">
+          <label id="planet-state-label">Planet State</label>
+          <strong id="planet-state-text">Safe</strong>
+        </div>
+        <div class="status-block">
+          <label id="population-status-label">Population</label>
+          <strong id="population-live-text">100%</strong>
+        </div>
+        <div class="status-block">
+          <label id="timer-status-label">Safety Timer</label>
+          <strong id="survival-timer-text">2:00</strong>
+        </div>
+      </section>
+
+      <section class="math-console upgrade-console" data-panel="upgrade-console">
+        <div class="console-topline">
+          <p id="lesson-panel-label" class="console-label">Lesson Path</p>
+          <p id="lesson-panel-subtitle" class="console-sub">Follow the mission and power the Planet.</p>
+        </div>
+
+        <div class="upgrade-deck">
+          <div class="category-grid">
+            <button class="category-button active" data-category="addition">
+              <span>Addition</span>
+              <strong>Power</strong>
+            </button>
+            <button class="category-button" data-category="subtraction">
+              <span>Subtraction</span>
+              <strong>Shield</strong>
+            </button>
+            <button class="category-button" data-category="multiplication">
+              <span>Multiplication</span>
+              <strong>Multishot</strong>
+            </button>
+            <button class="category-button" data-category="division">
+              <span>Division</span>
+              <strong>Regen</strong>
+            </button>
+          </div>
+          <div id="tutorial-mission" class="tutorial-mission hidden">
+            <p class="console-label">Urgent Mission</p>
+            <p id="tutorial-mission-copy" class="console-sub">Raise every path to 10 before the next swarm.</p>
+            <div class="tutorial-mission-grid">
+              <div class="effect-chip">
+                <span>Power</span>
+                <strong id="mission-addition">0 / 10</strong>
+              </div>
+              <div class="effect-chip">
+                <span>Shield</span>
+                <strong id="mission-subtraction">0 / 10</strong>
+              </div>
+              <div class="effect-chip">
+                <span>Multishot</span>
+                <strong id="mission-multiplication">0 / 10</strong>
+              </div>
+              <div class="effect-chip">
+                <span>Regen</span>
+                <strong id="mission-division">0 / 10</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="math-console answer-console" data-panel="answer-console">
+        <div class="console-topline">
+          <p id="answer-panel-label" class="console-label">Answer To Help Planet</p>
+          <p id="answer-panel-subtitle" class="console-sub">A right answer makes the Planet stronger.</p>
+        </div>
+
+        <div class="answer-platform">
+          <div id="campaign-panel" class="campaign-panel hidden">
+            <p id="campaign-galaxy-label" class="console-label">Addition Galaxy</p>
+            <h3 id="campaign-lesson-title">Mission 1</h3>
+            <p id="campaign-lesson-goal" class="campaign-goal">Learn the idea, answer questions, and fill the lesson meter.</p>
+            <div class="campaign-learning-tags" aria-label="Learning alignment">
+              <span id="campaign-age-tag">Ages 7-12</span>
+              <span id="campaign-standard-tag">Standard path</span>
+              <span id="campaign-support-tag">Scaffold ready</span>
+            </div>
+            <div class="lesson-meter" aria-label="Lesson progress">
+              <div id="campaign-lesson-meter"></div>
+            </div>
+            <p id="campaign-lesson-progress" class="lesson-feedback">0 / 6 correct</p>
+            <p id="campaign-teaching-hint" class="campaign-hint">Hint appears after a wrong answer.</p>
+            <p id="campaign-mastery-evidence" class="campaign-mastery-evidence">Mastery evidence appears here.</p>
+            <div class="campaign-reward">
+              <span>Reward</span>
+              <strong id="campaign-reward-text">Planet Power</strong>
+            </div>
+          </div>
+          <div class="question-zone">
+            <div class="question-copy">
+              <p class="question-label">Question</p>
+              <h2 id="question-text">2 + 3 = ?</h2>
+            </div>
+            <div id="answer-options" class="answer-options" aria-label="Choose an answer">
+              <button class="answer-option" type="button">4</button>
+              <button class="answer-option" type="button">5</button>
+              <button class="answer-option" type="button">6</button>
+              <button class="answer-option" type="button">7</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <section id="repair-panel" class="repair-panel hidden">
+      <p class="console-label">Repair Time</p>
+      <h2>Planet Needs Repair</h2>
+      <p id="repair-copy" class="repair-copy">Answer 3 easy questions to fix the Planet and win your streak back.</p>
+      <h3 id="repair-question-text">1 + 1 = ?</h3>
+      <div id="repair-answer-options" class="answer-options repair-answer-options" aria-label="Choose a repair answer">
+        <button class="repair-answer-option answer-option" type="button">1</button>
+        <button class="repair-answer-option answer-option" type="button">2</button>
+        <button class="repair-answer-option answer-option" type="button">3</button>
+        <button class="repair-answer-option answer-option" type="button">4</button>
+      </div>
+      <p id="repair-progress-text" class="lesson-feedback">0 of 3 correct</p>
+    </section>
+
+    <section id="campaign-result-panel" class="campaign-result-panel hidden" role="dialog" aria-live="polite" aria-labelledby="campaign-result-title">
+      <div class="campaign-result-card">
+        <p class="console-label">Planet Saved</p>
+        <h2 id="campaign-result-title">You saved a planet</h2>
+        <div id="campaign-result-stars" class="campaign-result-stars" aria-label="Mission stars">☆ ☆ ☆</div>
+        <p id="campaign-result-feedback" class="campaign-result-feedback">Mission complete.</p>
+        <p id="campaign-result-learning" class="campaign-result-learning">Learning evidence recorded.</p>
+        <div class="campaign-result-grid">
+          <div>
+            <span>Correct</span>
+            <strong id="campaign-result-correct">0</strong>
+          </div>
+          <div>
+            <span>Wrong</span>
+            <strong id="campaign-result-wrong">0</strong>
+          </div>
+          <div>
+            <span>Population</span>
+            <strong id="campaign-result-population">100%</strong>
+          </div>
+        </div>
+        <div class="campaign-result-actions">
+          <button id="campaign-result-map-btn" class="primary-button" type="button">Map</button>
+          <button id="campaign-result-next-btn" class="primary-button" type="button">Next Planet</button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script src="src/curriculum/learning-system.js"></script>
+  <script src="src/curriculum/curriculum-compiler.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
