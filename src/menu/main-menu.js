@@ -5,6 +5,7 @@ const accountSummary = loadAccountSummary();
 
 const menuItems = [
   { label: "Campaign", action: "campaign" },
+  { label: "Planet Campaign", action: "planet-campaign" },
   { label: "Infinite Galaxy", action: "infinite" },
   { label: "Practice Lab", action: "practice" },
   { label: accountSummary.signedIn ? "Profile" : "Sign Up", action: "account" },
@@ -321,6 +322,11 @@ function runAction(action) {
     return;
   }
 
+  if (action === "planet-campaign") {
+    startPlayTransition("planet-campaign");
+    return;
+  }
+
   if (action === "infinite") {
     startPlayTransition("infinite");
     return;
@@ -369,7 +375,11 @@ function runAction(action) {
 
 function startPlayTransition(mode) {
   ui.fadeOverlay.classList.add("is-fading");
-  showHint(mode === "infinite" ? "Opening Infinite Galaxy..." : "Opening Campaign map...");
+  showHint(mode === "infinite"
+    ? "Opening Infinite Galaxy..."
+    : mode === "planet-campaign"
+      ? "Opening Planet Campaign..."
+      : "Opening Campaign map...");
 
   window.setTimeout(() => {
     window.location.href = `play.html?mode=${mode}`;

@@ -2,7 +2,7 @@
 
 const assert = require("node:assert/strict");
 const learningSystem = require("../src/curriculum/learning-system.js");
-const { compileLearningSystemToLessons } = require("../src/curriculum/curriculum-compiler.js");
+const { compileLearningSystemToLessons, getPlanetCampaignLessons } = require("../src/curriculum/curriculum-compiler.js");
 
 const requiredMissionFields = [
   "id",
@@ -147,6 +147,28 @@ for (const lesson of compiledLessons) {
 
 assert(twoChoiceQuestionCount > 0, "expected at least one two-choice campaign question");
 assert(threeChoiceQuestionCount > 0, "expected at least one three-choice campaign question");
+
+const age7PlanetPath = getPlanetCampaignLessons(playableLessons, 7);
+assert.deepEqual(
+  age7PlanetPath.slice(0, 3).map((lesson) => lesson.id),
+  ["operation-count-all-join", "operation-make-ten", "operation-subtract-take-away"],
+  "age 7 Planet Campaign must start with concrete add/subtract missions"
+);
+
+const age8PlanetPath = getPlanetCampaignLessons(playableLessons, 8);
+assert.deepEqual(
+  age8PlanetPath.slice(0, 4).map((lesson) => lesson.id),
+  ["operation-count-all-join", "operation-make-ten", "operation-subtract-take-away", "number-ones-tens-hundreds"],
+  "age 8 Planet Campaign must start gently before 3-digit place value"
+);
+
+const earlyAgeLessons = playableLessons.filter((lesson) => Array.isArray(lesson.ageRange) && lesson.ageRange[0] <= 7 && lesson.ageRange[1] <= 8);
+for (const lesson of earlyAgeLessons) {
+  for (const question of lesson.questionPool) {
+    assert(!/[0-9]\.[0-9]/.test(question.prompt), `${lesson.id} should not use decimals in early age missions: ${question.prompt}`);
+    assert(!question.prompt.includes("/"), `${lesson.id} should not use fractions in early age missions: ${question.prompt}`);
+  }
+}
 
 console.log(
   `curriculum-ok version=${learningSystem.version} galaxies=${learningSystem.galaxies.length} missions=${missionCount} playable=${playableLessons.length} compiled=${compiledLessons.length}`

@@ -1,5 +1,7 @@
 .DS_Store
+*.swp
 node_modules/
 test-results/
 playwright-report/
 recovered-chat-data/
+.superpowers/

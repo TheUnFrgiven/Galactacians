@@ -86,8 +86,53 @@
   function familyQuestions(familyId, mission) {
     const family = familyId.toLowerCase();
     const missionId = mission.id.toLowerCase();
+    const ageRange = Array.isArray(mission.ageRange) ? mission.ageRange : [7, 12];
+    const isEarlyAgeMission = ageRange[1] <= 8;
+
+    if (missionId.includes("operation-count-all-join")) {
+      return [
+        q("● + ● = ?", 2),
+        q("●● + ● = ?", 3),
+        q("● + ●● = ?", 3),
+        q("●● + ●● = ?", 4),
+        q("3 + 2 = ?", 5),
+        q("4 + 3 = ?", 7)
+      ];
+    }
+
+    if (missionId.includes("operation-make-ten")) {
+      return [
+        q("1 + ? = 10", 9),
+        q("2 + ? = 10", 8),
+        q("3 + ? = 10", 7),
+        q("4 + ? = 10", 6),
+        q("5 + ? = 10", 5),
+        q("8 + ? = 10", 2)
+      ];
+    }
+
+    if (missionId.includes("operation-subtract-take-away")) {
+      return [
+        q("3 - 1 = ?", 2),
+        q("4 - 2 = ?", 2),
+        q("5 - 1 = ?", 4),
+        q("6 - 3 = ?", 3),
+        q("8 - 2 = ?", 6),
+        q("10 - 4 = ?", 6)
+      ];
+    }
 
     if (includesAny(family, ["base-ten", "expanded", "digit-value", "place-value", "decimal-read"])) {
+      if (isEarlyAgeMission) {
+        return [
+          q("What is the value of the 7 in 70?", 70),
+          q("40 + 8 = ?", 48),
+          q("What is 10 more than 36?", 46),
+          q("Which digit is in the tens place in 58?", 5),
+          q("60 + 5 = ?", 65),
+          q("What is 10 less than 91?", 81)
+        ];
+      }
       return [
         q("What is the value of the 7 in 472?", 70),
         q("300 + 40 + 8 = ?", 348),
@@ -99,6 +144,15 @@
     }
 
     if (includesAny(family, ["compare", "order", "greatest", "least", "priority"])) {
+      if (ageRange[1] <= 9) {
+        return [
+          q("Which is greater: 42 or 24?", 42),
+          q("Smallest of 30, 35, 53?", 30),
+          q("Which is greater: 68 or 86?", 86),
+          q("Greatest of 18, 81, 58?", 81),
+          q("Smallest of 47, 74, 44?", 44)
+        ];
+      }
       return [
         q("Which is greater: 426 or 462?", 462),
         q("Smallest of 305, 350, 503?", 305),
@@ -109,6 +163,15 @@
     }
 
     if (includesAny(family, ["number-line", "line-location", "missing-tick", "jump", "round", "estimate"])) {
+      if (ageRange[1] <= 9) {
+        return [
+          q("On a 0 to 20 line, halfway is ?", 10),
+          q("10 + 5 on a number line lands at ?", 15),
+          q("20 - 4 on a number line lands at ?", 16),
+          q("What number is missing: 10, 20, ?, 40", 30),
+          q("What comes after 49?", 50)
+        ];
+      }
       return [
         q("On a 0 to 100 line, halfway is ?", 50),
         q("30 + 40 on a number line lands at ?", 70),
@@ -119,6 +182,16 @@
     }
 
     if (includesAny(family, ["join", "visual-addition", "small-sums", "make-10", "number-bond"])) {
+      if (isEarlyAgeMission) {
+        return [
+          q("2 + 1 = ?", 3),
+          q("2 + 2 = ?", 4),
+          q("3 + 2 = ?", 5),
+          q("4 + 3 = ?", 7),
+          q("6 + ? = 10", 4),
+          q("8 + ? = 10", 2)
+        ];
+      }
       return [
         q("4 + 3 = ?", 7),
         q("8 + ? = 10", 2),
@@ -130,6 +203,15 @@
     }
 
     if (includesAny(family, ["take-away", "subtract", "remaining", "missing-subtrahend"])) {
+      if (isEarlyAgeMission) {
+        return [
+          q("5 - 2 = ?", 3),
+          q("6 - 1 = ?", 5),
+          q("7 - 3 = ?", 4),
+          q("9 - 4 = ?", 5),
+          q("10 - 6 = ?", 4)
+        ];
+      }
       return [
         q("9 - 4 = ?", 5),
         q("13 - 5 = ?", 8),
@@ -414,7 +496,54 @@
     }));
   }
 
-  const api = { compileLearningSystemToLessons };
+  const PLANET_CAMPAIGN_PRIORITY_BY_AGE = {
+    7: [
+      "operation-count-all-join",
+      "operation-make-ten",
+      "operation-subtract-take-away",
+      "number-ones-tens-hundreds",
+      "number-compare-and-order",
+      "number-line-jumps"
+    ],
+    8: [
+      "operation-count-all-join",
+      "operation-make-ten",
+      "operation-subtract-take-away",
+      "number-ones-tens-hundreds",
+      "number-compare-and-order",
+      "number-line-jumps",
+      "array-equal-groups",
+      "division-fair-sharing",
+      "fraction-equal-parts"
+    ]
+  };
+
+  function lessonMatchesAge(lesson, age) {
+    if (!Number.isInteger(age) || age < 7 || age > 12) {
+      return true;
+    }
+    return Array.isArray(lesson.ageRange) && lesson.ageRange[0] <= age && age <= lesson.ageRange[1];
+  }
+
+  function getPlanetCampaignLessons(lessons, age) {
+    const playable = lessons.filter((lesson) => lesson.strand !== "placement" && lessonMatchesAge(lesson, age));
+    const priority = PLANET_CAMPAIGN_PRIORITY_BY_AGE[age] || [];
+    const priorityRank = new Map(priority.map((id, index) => [id, index]));
+
+    return playable
+      .map((lesson, index) => ({ lesson, index }))
+      .sort((a, b) => {
+        const aRank = priorityRank.has(a.lesson.id) ? priorityRank.get(a.lesson.id) : Number.POSITIVE_INFINITY;
+        const bRank = priorityRank.has(b.lesson.id) ? priorityRank.get(b.lesson.id) : Number.POSITIVE_INFINITY;
+        if (aRank !== bRank) {
+          return aRank - bRank;
+        }
+        return a.index - b.index;
+      })
+      .map((entry) => entry.lesson);
+  }
+
+  const api = { compileLearningSystemToLessons, getPlanetCampaignLessons };
 
   if (typeof module !== "undefined") {
     module.exports = api;
