@@ -1726,6 +1726,14 @@ function buildCampaignRoutePath(points) {
   }, "");
 }
 
+function getCampaignRoutePoints(points, mapWidth) {
+  const safeWidth = Number.isFinite(mapWidth) && mapWidth > 0 ? mapWidth : 1000;
+  return points.map((point) => ({
+    x: (point.x / 100) * safeWidth,
+    y: point.y
+  }));
+}
+
 function renderCampaignMap() {
   if (!ui.campaignMapNodes || !ui.campaignMapRoute || !ui.campaignMapTrack) {
     return;
@@ -1735,15 +1743,21 @@ function renderCampaignMap() {
   const unlockedIndex = getCampaignUnlockedIndex();
   const points = getCampaignNodePoints(entries);
   const mapHeight = points.length === 0 ? 320 : points[points.length - 1].y + 120;
+  const mapWidth = Math.max(320, Math.round(ui.campaignMapTrack.clientWidth || ui.campaignMapTrack.getBoundingClientRect().width || 1000));
+  const routePoints = getCampaignRoutePoints(points, mapWidth);
   const secureCount = Object.values(state.campaignStars).filter((stars) => stars > 0).length;
 
   ui.campaignMapTrack.style.height = `${mapHeight}px`;
-  ui.campaignMapRoute.setAttribute("viewBox", `0 0 100 ${mapHeight}`);
-  ui.campaignMapRoute.setAttribute("preserveAspectRatio", "none");
+  ui.campaignMapRoute.setAttribute("viewBox", `0 0 ${mapWidth} ${mapHeight}`);
+  ui.campaignMapRoute.setAttribute("preserveAspectRatio", "xMidYMin meet");
   ui.campaignMapRoute.innerHTML = "";
-  const route = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  route.setAttribute("d", buildCampaignRoutePath(points));
-  ui.campaignMapRoute.appendChild(route);
+  const routePath = buildCampaignRoutePath(routePoints);
+  ["route-glow", "route-ribbon", "route-stripe", "route-sparkle"].forEach((className) => {
+    const route = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    route.setAttribute("class", className);
+    route.setAttribute("d", routePath);
+    ui.campaignMapRoute.appendChild(route);
+  });
   ui.campaignMapNodes.innerHTML = "";
   if (ui.campaignMapTitle) {
     ui.campaignMapTitle.textContent = isPlanetCampaignMode() ? "Planet Campaign" : "Save The Math Galaxy";
@@ -4056,6 +4070,9 @@ ui.tutorialOverlay.addEventListener("click", dismissTutorialCallout);
 window.addEventListener("resize", () => {
   if (state.tutorialCalloutVisible) {
     updateUi();
+  }
+  if (state.campaignMapOpen) {
+    renderCampaignMap();
   }
 });
 

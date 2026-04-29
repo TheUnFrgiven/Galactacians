@@ -1787,6 +1787,7 @@ input {
 .campaign-map-track {
   position: relative;
   min-height: 620px;
+  isolation: isolate;
 }
 
 .campaign-map-route,
@@ -1796,10 +1797,15 @@ input {
 }
 
 .campaign-map-route {
+  z-index: 0;
   width: 100%;
   height: 100%;
   overflow: visible;
   pointer-events: none;
+}
+
+.campaign-map-nodes {
+  z-index: 2;
 }
 
 .campaign-map-route path {
@@ -2821,38 +2827,64 @@ body[data-game-mode="planet-campaign"] .planet-campaign-map-legend span {
 }
 
 body[data-game-mode="planet-campaign"] .campaign-map-route path {
-  stroke: rgba(255, 246, 168, 0.9);
-  stroke-width: 3;
-  stroke-dasharray: 1 8;
-  filter: drop-shadow(0 0 10px rgba(255, 246, 168, 0.38));
+  fill: none;
+  stroke-dasharray: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: none;
+  vector-effect: non-scaling-stroke;
+}
+
+body[data-game-mode="planet-campaign"] .campaign-map-route .route-glow {
+  stroke: rgba(99, 236, 255, 0.22);
+  stroke-width: 44;
+  filter: drop-shadow(0 0 24px rgba(99, 236, 255, 0.34));
+}
+
+body[data-game-mode="planet-campaign"] .campaign-map-route .route-ribbon {
+  stroke: rgba(255, 251, 224, 0.97);
+  stroke-width: 25;
+  stroke-dasharray: none;
+  filter: drop-shadow(0 10px 10px rgba(0, 0, 0, 0.22));
+}
+
+body[data-game-mode="planet-campaign"] .campaign-map-route .route-stripe {
+  stroke: rgba(246, 195, 91, 0.9);
+  stroke-width: 25;
+  stroke-dasharray: 10 18;
+}
+
+body[data-game-mode="planet-campaign"] .campaign-map-route .route-sparkle {
+  stroke: rgba(139, 233, 255, 0.88);
+  stroke-width: 4;
+  stroke-dasharray: 1 32;
+  filter: drop-shadow(0 0 8px rgba(139, 233, 255, 0.64));
 }
 
 body[data-game-mode="planet-campaign"] .campaign-map-node {
-  width: 138px;
-  min-height: 148px;
-  margin-left: -69px;
-  margin-top: -66px;
-  padding: 10px 10px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 24px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.055));
-  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.22);
-  backdrop-filter: blur(10px);
+  width: 120px;
+  min-height: 126px;
+  margin-left: -60px;
+  margin-top: -56px;
+  padding: 0 5px 8px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
   transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
 }
 
 body[data-game-mode="planet-campaign"] .campaign-map-node:hover,
 body[data-game-mode="planet-campaign"] .campaign-map-node:focus-visible {
-  transform: translateY(-3px);
-  border-color: rgba(255, 246, 168, 0.55);
+  transform: translateY(-4px) scale(1.03);
   outline: none;
 }
 
 body[data-game-mode="planet-campaign"] .map-planet-orb {
-  width: 74px;
-  height: 74px;
-  border: 3px solid rgba(255, 255, 255, 0.86);
+  width: 84px;
+  height: 84px;
+  border: 5px solid rgba(255, 255, 255, 0.88);
   background-color: #101b38;
   background-position: center;
   background-repeat: no-repeat;
@@ -2864,8 +2896,9 @@ body[data-game-mode="planet-campaign"] .map-planet-orb {
     linear-gradient(140deg, hsl(var(--node-hue) 85% 64%), hsl(calc(var(--node-hue) + 42deg) 72% 42%));
   box-shadow:
     inset -13px -13px 0 rgba(0, 0, 0, 0.16),
-    0 0 0 8px rgba(255, 255, 255, 0.05),
-    0 0 26px color-mix(in srgb, hsl(var(--node-hue) 92% 72%) 46%, transparent);
+    0 8px 0 rgba(5, 11, 27, 0.24),
+    0 0 0 8px rgba(255, 255, 255, 0.08),
+    0 0 28px color-mix(in srgb, hsl(var(--node-hue) 92% 72%) 50%, transparent);
 }
 
 body[data-game-mode="planet-campaign"] .planet-art-0 .map-planet-orb {
@@ -2901,14 +2934,40 @@ body[data-game-mode="planet-campaign"] .map-node-index {
 }
 
 body[data-game-mode="planet-campaign"] .campaign-map-node strong {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  justify-content: center;
+  max-width: 112px;
+  margin-top: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(6, 15, 28, 0.54);
   color: #f8fbff;
+  text-shadow:
+    0 2px 0 rgba(6, 15, 28, 0.7),
+    0 0 10px rgba(6, 15, 28, 0.85);
 }
 
 body[data-game-mode="planet-campaign"] .campaign-map-node small {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  justify-content: center;
+  max-width: 116px;
+  margin-top: 3px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(6, 15, 28, 0.38);
   color: #c9ecff;
+  text-shadow:
+    0 2px 0 rgba(6, 15, 28, 0.72),
+    0 0 8px rgba(6, 15, 28, 0.82);
 }
 
 body[data-game-mode="planet-campaign"] .campaign-map-node em {
+  position: relative;
+  z-index: 2;
   display: inline-flex;
   margin-top: 5px;
   padding: 4px 7px;
@@ -2923,19 +2982,30 @@ body[data-game-mode="planet-campaign"] .campaign-map-node em {
 }
 
 body[data-game-mode="planet-campaign"] .campaign-map-node.is-current {
-  background:
-    linear-gradient(180deg, rgba(255, 246, 168, 0.18), rgba(125, 211, 252, 0.08));
+  background: transparent;
 }
 
 body[data-game-mode="planet-campaign"] .campaign-map-node.is-current .map-planet-orb {
   box-shadow:
     inset -13px -13px 0 rgba(0, 0, 0, 0.16),
-    0 0 0 8px rgba(255, 246, 168, 0.16),
-    0 0 34px rgba(255, 246, 168, 0.48);
+    0 8px 0 rgba(5, 11, 27, 0.24),
+    0 0 0 10px rgba(255, 246, 168, 0.18),
+    0 0 36px rgba(255, 246, 168, 0.54);
 }
 
 body[data-game-mode="planet-campaign"] .campaign-map-node.is-saved .map-planet-orb {
   filter: saturate(1.18) brightness(1.08);
+}
+
+body[data-game-mode="planet-campaign"] .map-stars {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  margin-top: 4px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(6, 15, 28, 0.34);
+  text-shadow: 0 1px 0 rgba(6, 15, 28, 0.7);
 }
 
 body[data-game-mode="planet-campaign"] .enemy-card {
@@ -3997,6 +4067,24 @@ body[data-game-mode="planet-campaign"] .enemy-boss .enemy-sprite {
   body[data-game-mode="planet-campaign"] .answer-platform {
     grid-template-columns: 72px minmax(0, 1fr);
     gap: 10px;
+  }
+
+  body[data-game-mode="planet-campaign"] .campaign-map-route .route-glow {
+    stroke-width: 24;
+  }
+
+  body[data-game-mode="planet-campaign"] .campaign-map-route .route-ribbon,
+  body[data-game-mode="planet-campaign"] .campaign-map-route .route-stripe {
+    stroke-width: 13;
+  }
+
+  body[data-game-mode="planet-campaign"] .campaign-map-route .route-stripe {
+    stroke-dasharray: 6 11;
+  }
+
+  body[data-game-mode="planet-campaign"] .campaign-map-route .route-sparkle {
+    stroke-width: 3;
+    stroke-dasharray: 1 25;
   }
 
   body[data-game-mode="planet-campaign"] .player-avatar-card {
