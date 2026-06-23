@@ -145,6 +145,29 @@ button {
   background: rgba(255, 122, 122, 0.1);
 }
 
+.menu-button[data-action="planet-campaign"] {
+  border-color: rgba(134, 239, 172, 0.28);
+  background:
+    radial-gradient(circle at 12% 50%, rgba(250, 204, 21, 0.22), transparent 24%),
+    radial-gradient(circle at 88% 50%, rgba(56, 189, 248, 0.22), transparent 24%),
+    rgba(255, 255, 255, 0.06);
+}
+
+.menu-button[data-action="planet-campaign"]::after {
+  content: "New";
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #3b2f0b;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transform: translateY(-50%);
+}
+
 .settings-panel {
   position: fixed;
   z-index: 4;
