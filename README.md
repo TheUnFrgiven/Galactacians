@@ -6,11 +6,15 @@ Each mission is a short lesson. In the build phase the child picks one of three 
 
 ## Play
 
+The quickest way: double-click **`dist/galactacians.html`**. The whole game is in that one file and needs no internet or server.
+
+To work on the code, run the local server and open **http://localhost:8088/**:
+
 ```sh
 npm start
 ```
 
-Open **http://127.0.0.1:8088/**. Node 20+ is needed only for the tiny local server; the game itself is plain HTML, CSS and JavaScript with no build step and no dependencies. It works best on a tablet or laptop in landscape.
+Node 20+ is needed only for the tiny local server; the game itself is plain HTML, CSS and JavaScript with no dependencies. After changing code, run `npm run build` to refresh `dist/galactacians.html`. It works best on a tablet or laptop in landscape.
 
 ## What is in the basics build
 
