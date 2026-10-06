@@ -1,16 +1,12 @@
 {
   "name": "galactacians",
-  "version": "2.0.0",
+  "version": "3.0.0-basics",
   "private": true,
-  "description": "A playful Earth-defense game powered by little math wins",
+  "description": "A tower defense game where every tower is bought with a math answer. Ages 6-9.",
+  "type": "module",
   "scripts": {
     "start": "node server.cjs",
-    "test": "node --test tests/v2-*.test.mjs",
-    "test:browser": "playwright test --config=playwright.v2.config.cjs"
-  },
-  "devDependencies": {
-    "@playwright/test": "^1.63.0",
-    "agent-browser": "^0.38.1",
-    "prettier": "^3.9.9"
+    "test": "node --test tests/core.test.mjs",
+    "balance": "node tests/sim.mjs"
   }
 }

@@ -1,6 +1,8 @@
-# Galactacians · Earth Patrol
+# Galactacians
 
-A fresh playable browser prototype for a cheerful tower-defense game powered by small arithmetic wins. Built from scratch after reviewing the earlier Galactacians game.
+A tower defense game for ages 6–9 where every tower is bought with a math answer.
+
+Each mission is a short lesson. In the build phase the child picks one of three tower cards and pays for it by solving the problem printed on it: easy cards give basic towers, hard cards give strong ones. In the waves, aliens float toward Earth and the towers defend it with no math interrupting. Along the way the game tracks every fact the child practises.
 
 ## Play
 
@@ -8,74 +10,51 @@ A fresh playable browser prototype for a cheerful tower-defense game powered by 
 npm start
 ```
 
-Open **http://127.0.0.1:8088/**. Node 20+ is required for the local server; the game itself is static HTML, CSS and JavaScript with no build step, production package dependencies, remote assets, or backend. A generic static server also works.
+Open **http://127.0.0.1:8088/**. Node 20+ is needed only for the tiny local server; the game itself is plain HTML, CSS and JavaScript with no build step and no dependencies. It works best on a tablet or laptop in landscape.
 
-## The new loop
+## What is in the basics build
 
-1. Start with **10 energy** in a persistent wallet.
-2. Pick one of **five distinct shape towers**, then tap a space in the five-lane field.
-3. The first wave starts after an **8-second build countdown**. Cute aliens float **right to left** toward Earth, whose face becomes worried when they get close.
-4. Open **Earn energy** for one question. Combat pauses for thinking: a hint appears after **10 seconds**, then the solution appears and play resumes at **20 seconds**. A correct answer earns **1 energy** and returns to combat automatically. Merely revealing the answer earns nothing. Recharge becomes available again after **3 seconds of active play**.
-   The cooldown advances during active combat and build countdowns. There is no standalone tactical Pause button; Menu and switching away from the tab suspend play for interruptions.
-5. Waves continue automatically after a **5-second build window**. Intermediate waves grant **3 energy**, and every fifth defeated alien grants **1 energy**. Reposition or recycle defenses while building.
-6. Complete all three waves, earn mission stars, and continue your six-stop journey. Stars buy Earth colors; every tower is available from the start.
+| Part | What it does |
+| --- | --- |
+| Start screen | The child picks where to start: adding, taking away, make 10, or times tables. |
+| Learning path | 4 worlds × 4 missions (3 lessons and a Captain boss). Beating a Captain opens the next world. |
+| Teach cards | A short spoken picture lesson before each world's first mission, replayable from the path. |
+| Question shop | 3 picks per build phase. Easy / Medium / Hard cards use facts the child knows, is learning, or is ready to stretch to. Number pad, a picture hint after a mistake, the worked answer after two. |
+| Battle | 5 towers (Pebble, Bricky, Prism, Frost, Poppy), 5 aliens (Scout, Skater, Swarm, Helmet, Captain), merging to level 3, and Earth's Star Beam, charged by first-try answers. |
+| Progress | XP, a kind daily streak with freezes, stars, one new tower per mission won, and a fact map per world. |
+| Grown-ups | Settings for sound, voice and motion, plus a CSV export of every answer for parents, teachers or a study. |
 
-| Shape    | Tower  | Role                                               | Energy |
-| -------- | ------ | -------------------------------------------------- | ------ |
-| Circle   | Pebble | Rapid, short-range shots for scouts and skaters    | 2      |
-| Triangle | Prism  | Slow, long-range beam that ignores armor           | 3      |
-| Square   | Bricky | Durable blocker that reflects part of an attack    | 2      |
-| Diamond  | Frost  | Area slow across its own and two neighboring lanes | 3      |
-| Pentagon | Poppy  | Area damage against clustered swarms               | 4      |
-
-The home screen leads straight into play. **Menu** contains navigation everywhere; there is no permanent sidebar. **Practice** combines operation selection with local learning records, streaks, and daily activity. Its three-question sets remain untimed and advance automatically after a correct answer. A tower collection, cosmetic shop, and saved settings remain available. Sound uses synthesized tones. Less-motion mode disables decorative animation. Math supports addition, nonnegative subtraction, multiplication, and exact division. Starter division stays within a single-digit dividend; more advanced fact practice may use a two-digit dividend.
-
-## Scope and honest boundaries
-
-- This is a **playable design slice**, not a finished online game or a validated educational curriculum. Arithmetic fluency is the focus; ages 7–15 have very different needs, so math level is chosen by comfort.
-- Friends and rankings are future work and are hidden from the current navigation. No friend accounts, invitations, messages, or live competitors are simulated as real.
-- Reminders are **in-app only**. There are no push notifications or background deliveries.
-- Progress is stored on this browser/device under `galactacians-v2`. It is not cloud-synced. The old `planet-math-defense-save` is untouched.
-- The wallet persists; an active battle does not survive leaving/reloading. Preparation allows full tower refunds; active waves offer partial refunds.
-- Mission stars pay only when a new best is earned. Accuracy tracks independent first tries separately from assisted successes. One solved question extends the daily learning streak; combat by itself does not.
-- Tower matchups, costs, the persistent wallet, timed battle support, mission pacing, and educational benefit still need real playtesting. No effectiveness or certification claim is made.
-
-## Platform direction
-
-Keep the shared JavaScript game while proving the gameplay. The intended packaging route is [Capacitor for iOS and Android](https://capacitorjs.com/docs), which can use an existing JavaScript app, and [Tauri for Windows](https://v2.tauri.app/), which supports an existing web frontend. These are planned native containers, **not builds already delivered or tested**. Device performance, touch ergonomics, app lifecycle, durable saves, signing, and store submission remain release work.
-
-Read [the redesign blueprint](docs/redesign-blueprint.md) for the old-game audit, why lanes and a wallet were chosen, educational sources, balance hypotheses, and the roadmap to a production learning hub.
+Everything is saved on the device under `galactacians-basics-v1`. There are no accounts and nothing is sent anywhere.
 
 ## Code map
 
-- `index.html` — new app entry.
-- `src/v2/app.js` / `app.css` — hub, navigation, practice, dialogs and settings.
-- `src/v2/battle.js` / `battle.css` — simulation, lane board, enemies and tower behavior.
-- `src/v2/data.js` — tower, mission and cosmetic concepts.
-- `src/v2/learning.js` — arithmetic, safe local saves, rewards, streaks and progression.
-- `src/v2/icons.js` — original SVG illustrations and icons.
-- `assets/fonts` — locally bundled Nunito with its SIL Open Font License.
-- `server.cjs` — local-only static development server.
-
-## Validate
-
-```sh
-npm install
-npm test
-npm run test:browser
+```
+src/core/    game rules, no DOM (unit tested)
+  content.js   towers, aliens, worlds, missions and waves (all data)
+  questions.js facts, question formats and hints
+  learner.js   fact stages, XP, streak, stars, shop fact picking
+  shop.js      the three-card question shop
+  battle.js    deterministic tower defense simulation
+  save.js      local save, validation and CSV export
+src/ui/      screens drawn with DOM + SVG
+  app.js       start screen, path, teach cards, fact map, settings
+  mission.js   build phases, shop, hand, merging, waves, results
+  question.js  the number-pad question view
+  art.js       original SVG art; audio.js sound and speech
+tests/
+  core.test.mjs  rules, learning model, saves and balance checks
+  sim.mjs        simulated players that play every mission
 ```
 
-The browser suite uses installed Google Chrome (`channel: 'chrome'`) through Playwright. If Chrome is absent, install it or change the test configuration to use a Playwright browser. It starts the local server when necessary. Tests cover arithmetic validity and hints/retries, reward deduplication, calendar dates, malformed saves, the complete hub, saved preferences, cosmetics, desktop/mobile layouts, battle economy, all tower roles, menu/math/hidden-tab suspension, and win/loss outcomes. Screenshots and failure traces are written under `test-results/`.
+## Test
 
-Verified on **6 October 2026**: **13 learning tests and 32 browser tests passed**. A mixed defense completes the first mission with full health from the starting ten-energy wallet. Later-mission comparisons at a fixed twenty-energy budget reward the five-role formation over repeated Pebble/Prism placements. These scenarios check intended counterplay; they do not replace player observation.
+```sh
+npm test         # 17 tests, including balance across all 16 missions
+npm run balance  # prints how each simulated player does on each mission
+```
 
-## Earlier prototype
+Simulated players include a careful child mixing card levels, a child who only picks easy cards, one who is always wrong first, and one who places towers at random. The tests check that a child mixing card levels wins every mission and that accuracy earns more stars.
 
-The old files remain available for reference and comparison:
+## Honest limits
 
-- `http://127.0.0.1:8088/game-menu.html` — old main menu.
-- `http://127.0.0.1:8088/play.html?mode=campaign` — old campaign.
-- `http://127.0.0.1:8088/play.html?mode=infinite` — old infinite mode.
-- [Archived README](docs/legacy-readme.md), `PROJECT_MEMORY.md`, and the earlier curriculum documents describe the previous direction. The new [redesign blueprint](docs/redesign-blueprint.md) takes precedence for the new game.
-
-Legacy auth pages are historical front-end prototypes, not production authentication. The new design does not ask children for an email, password, or birth date.
+This is a playable first version for playtesting, not a finished product. Balance numbers come from simulations and need real children. Voice uses the browser's built-in speech. Online leagues, teacher accounts and more worlds are planned in the design doc, not built.
