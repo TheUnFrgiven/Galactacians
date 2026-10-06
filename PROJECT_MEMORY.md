@@ -1,5 +1,25 @@
 # Galactacians Project Memory
 
+## Current direction — 6 October 2026
+
+The active implementation is `index.html` and `src/v2/`, served by `npm start` at `http://127.0.0.1:8088/`. `README.md` and `docs/redesign-blueprint.md` are the current handoff. The user now prioritizes a readable game screen, continuous combat and a smaller strategic roster over the initial eight-tower learning dashboard.
+
+The roster has **five** roles: Pebble (rapid short-range shots), Prism (slow heavy armor-ignoring beam), Bricky (wall and reflection), Frost (area slow across three lanes), and Poppy (area damage against swarms). Five lanes carry floating aliens right to left. Earth rotates, becomes worried when a live enemy reaches the first two columns, and relaxes once nearby danger clears.
+
+Missions have three waves. Initial preparation is an eight-second countdown; subsequent waves begin after five seconds without another Start click. Intermediate waves grant three energy, and every fifth defeated alien grants one energy. The persistent wallet starts at ten energy on a new profile. Automated play verifies a full-health first-mission win from this starting wallet. At difficulties four and six, a mixed five-role defense preserves all five hearts while a repeated Pebble/Prism formation at the same twenty-energy budget does not. These specific scenarios are regression checks; tower matchups and the wallet still need observed playtesting.
+
+Battle recharge contains one question: automatically show a hint at ten seconds, then reveal the solution and resume at twenty seconds. A solved answer grants one energy once and returns to battle after 750 ms. Revealing a solution without a correct response grants no energy, XP, solved count or streak. Recharge has a three-second active-play cooldown. Calm Practice remains an untimed three-question set with automatic advance after 1.2 seconds. There is no standalone tactical Pause button. Menu and hidden-tab suspension remain available for interruptions. The cooldown advances during active combat and build countdowns, and stops while the simulation is suspended.
+
+All pages use a global Menu button with an animated alien mascot. There is no fixed sidebar, marketing footer, or settings tip column. Practice and the previous Progress page are merged; `#progress` redirects to Practice. Friends/rankings are future work, hidden from navigation. Reminders are an in-menu daily-goal preference, not push delivery. Streaks, practice records, cosmetic stars and preferences persist locally under `galactacians-v2`, independently of the old save.
+
+Keep the shared JavaScript game while validating the loop. The intended native packaging route is Capacitor for iOS/Android and Tauri for Windows; no native build is delivered or tested yet. Local fonts and original SVG art allow gameplay without external asset requests. The old build remains at `game-menu.html` and `play.html`; its README is `docs/legacy-readme.md`.
+
+Validation on 6 October 2026: `npm test` passed all 13 learning tests, and `npm run test:browser` passed all 32 browser tests. The suite covers complete missions and strategy comparisons, ten/twenty-second math support, reward and timer cleanup, active-play cooldown, responsive screens, navigation and saved preferences.
+
+The historical notes below describe the earlier auto-defense/curriculum prototype. They are retained for reference and do not override this new direction.
+
+---
+
 This file restores the working context from the recovered Codex chats. Use it as the handoff before continuing Galactacians work.
 
 ## Identity

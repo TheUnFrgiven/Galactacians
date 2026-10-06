@@ -1,106 +1,81 @@
-# Galactacians
+# Galactacians · Earth Patrol
 
-`Galactacians` is a static browser prototype for a space-campaign math learning game.
+A fresh playable browser prototype for a cheerful tower-defense game powered by small arithmetic wins. Built from scratch after reviewing the earlier Galactacians game.
 
-Earlier prototype name: `Planet Math Defense`.
+## Play
 
-The goal is to build a real game that teaches ages 7-12 through structured space missions, mastery gates, repair loops, and planet restoration. The main campaign should be standards-informed and scripted, while endless/random practice belongs in separate modes.
-
-- center-planet auto-defense combat
-- primary-school math questions
-- Duolingo-style streak pressure, repair lessons, and checkpoint recovery
-- professional curriculum direction with explicit objectives, scaffolds, mastery, and review
-
-## Run
-
-From the project folder:
-
-```bash
-cd /Users/theunfrgiven/Documents/Galactacians
-python3 -m http.server 8088
+```sh
+npm start
 ```
 
-Open:
+Open **http://127.0.0.1:8088/**. Node 20+ is required for the local server; the game itself is static HTML, CSS and JavaScript with no build step, production package dependencies, remote assets, or backend. A generic static server also works.
 
-- `http://localhost:8088/game-menu.html`
-- `http://localhost:8088/index.html?mode=campaign`
-- `http://localhost:8088/index.html?mode=infinite`
-- `http://localhost:8088/index.html?mode=practice&skill=division`
+## The new loop
 
-No build step is required.
+1. Start with **10 energy** in a persistent wallet.
+2. Pick one of **five distinct shape towers**, then tap a space in the five-lane field.
+3. The first wave starts after an **8-second build countdown**. Cute aliens float **right to left** toward Earth, whose face becomes worried when they get close.
+4. Open **Earn energy** for one question. Combat pauses for thinking: a hint appears after **10 seconds**, then the solution appears and play resumes at **20 seconds**. A correct answer earns **1 energy** and returns to combat automatically. Merely revealing the answer earns nothing. Recharge becomes available again after **3 seconds of active play**.
+   The cooldown advances during active combat and build countdowns. There is no standalone tactical Pause button; Menu and switching away from the tab suspend play for interruptions.
+5. Waves continue automatically after a **5-second build window**. Intermediate waves grant **3 energy**, and every fifth defeated alien grants **1 energy**. Reposition or recycle defenses while building.
+6. Complete all three waves, earn mission stars, and continue your six-stop journey. Stars buy Earth colors; every tower is available from the start.
 
-Do not use `/Users/theunfrgiven/Documents/Playground` for Galactacians work. That path is a symlink to the separate XApp project.
+| Shape    | Tower  | Role                                               | Energy |
+| -------- | ------ | -------------------------------------------------- | ------ |
+| Circle   | Pebble | Rapid, short-range shots for scouts and skaters    | 2      |
+| Triangle | Prism  | Slow, long-range beam that ignores armor           | 3      |
+| Square   | Bricky | Durable blocker that reflects part of an attack    | 2      |
+| Diamond  | Frost  | Area slow across its own and two neighboring lanes | 3      |
+| Pentagon | Poppy  | Area damage against clustered swarms               | 4      |
 
-## Current Systems
+The home screen leads straight into play. **Menu** contains navigation everywhere; there is no permanent sidebar. **Practice** combines operation selection with local learning records, streaks, and daily activity. Its three-question sets remain untimed and advance automatically after a correct answer. A tower collection, cosmetic shop, and saved settings remain available. Sound uses synthesized tones. Less-motion mode disables decorative animation. Math supports addition, nonnegative subtraction, multiplication, and exact division. Starter division stays within a single-digit dividend; more advanced fact practice may use a two-digit dividend.
 
-- the `Planet` attacks automatically from the center
-- `Shield` absorbs damage before health
-- four math upgrade paths:
-  - `Addition` increases damage
-  - `Subtraction` increases max health and max shield
-  - `Multiplication` increases simultaneous targets
-  - `Division` increases health and shield regeneration
-- Campaign planet map with clickable lesson planets, 1-3 star saves, `Population`, and `Mission Progress`
-- Infinite Galaxy `Population` pressure, survival timer, and checkpoint repair
-- repair lessons for both learning support and survival recovery, depending on mode
-- browser save data under `planet-math-defense-save`
-- multiple visual themes with distinct asset styles
+## Scope and honest boundaries
 
-## Education Redesign
+- This is a **playable design slice**, not a finished online game or a validated educational curriculum. Arithmetic fluency is the focus; ages 7–15 have very different needs, so math level is chosen by comfort.
+- Friends and rankings are future work and are hidden from the current navigation. No friend accounts, invitations, messages, or live competitors are simulated as real.
+- Reminders are **in-app only**. There are no push notifications or background deliveries.
+- Progress is stored on this browser/device under `galactacians-v2`. It is not cloud-synced. The old `planet-math-defense-save` is untouched.
+- The wallet persists; an active battle does not survive leaving/reloading. Preparation allows full tower refunds; active waves offer partial refunds.
+- Mission stars pay only when a new best is earned. Accuracy tracks independent first tries separately from assisted successes. One solved question extends the daily learning streak; combat by itself does not.
+- Tower matchups, costs, the persistent wallet, timed battle support, mission pacing, and educational benefit still need real playtesting. No effectiveness or certification claim is made.
 
-The recovered redesign is saved in:
+## Platform direction
 
-- [docs/education-system-redesign.md](/Users/theunfrgiven/Documents/Galactacians/docs/education-system-redesign.md)
-- [docs/curriculum-map-ages-7-12.md](/Users/theunfrgiven/Documents/Galactacians/docs/curriculum-map-ages-7-12.md)
-- [docs/campaign-mode-redesign.md](/Users/theunfrgiven/Documents/Galactacians/docs/campaign-mode-redesign.md)
-- [docs/iso-21001-gameplay-alignment.md](/Users/theunfrgiven/Documents/Galactacians/docs/iso-21001-gameplay-alignment.md)
-- [src/curriculum/learning-system.js](/Users/theunfrgiven/Documents/Galactacians/src/curriculum/learning-system.js)
-- [src/curriculum/curriculum-compiler.js](/Users/theunfrgiven/Documents/Galactacians/src/curriculum/curriculum-compiler.js)
-- [tests/curriculum-validation.js](/Users/theunfrgiven/Documents/Galactacians/tests/curriculum-validation.js)
+Keep the shared JavaScript game while proving the gameplay. The intended packaging route is [Capacitor for iOS and Android](https://capacitorjs.com/docs), which can use an existing JavaScript app, and [Tauri for Windows](https://v2.tauri.app/), which supports an existing web frontend. These are planned native containers, **not builds already delivered or tested**. Device performance, touch ergonomics, app lifecycle, durable saves, signing, and store submission remain release work.
 
-Current curriculum source:
+Read [the redesign blueprint](docs/redesign-blueprint.md) for the old-game audit, why lanes and a wallet were chosen, educational sources, balance hypotheses, and the roadmap to a production learning hub.
 
-- 12 galaxies
-- 58 mission arcs in the curriculum source, with runtime Campaign filtering out the placement strand
-- ages 7-12
-- ISO 21001:2025-informed gameplay checks, plus Common Core Mathematics and England National Curriculum Mathematics references
-- mastery states, scaffolds, misconception tags, question families, and reward mapping
-- runtime compiler that turns curriculum missions into playable campaign lessons
-- separated Campaign and Infinite Galaxy rules so the main learning route is not endless survival with lessons attached
+## Code map
 
-This is an ISO-inspired educational architecture, not an ISO certification claim.
-
-## Enemy Roles
-
-The current enemy roster includes four main minion roles plus a boss:
-
-- `Diver`: rushes the Planet and crashes into it
-- `Shield Breaker`: focuses shield damage and gets targeted first
-- `Ranger`: stays farther out and fires inward
-- `Melee`: moves closer and attacks the Planet directly
-- `Boss`: heavier late-pressure enemy
-
-## Notes
-
-- this is a front-end prototype, not a packaged app
-- pacing is still tuned for prototype testing, not final daily progression
-- the new curriculum data is now wired into gameplay through a compiler; the old 22-lesson campaign remains as a fallback if the curriculum source fails to load
-- Campaign starts directly in the curriculum route instead of a separate diagnostic screen
-- Campaign uses a clickable connected planet map, Population, Mission Progress, mastery, variable answer counts, attacker clearing, saved-planet star ratings, and guided repair; Infinite Galaxy keeps timer survival and enemy pressure
+- `index.html` — new app entry.
+- `src/v2/app.js` / `app.css` — hub, navigation, practice, dialogs and settings.
+- `src/v2/battle.js` / `battle.css` — simulation, lane board, enemies and tower behavior.
+- `src/v2/data.js` — tower, mission and cosmetic concepts.
+- `src/v2/learning.js` — arithmetic, safe local saves, rewards, streaks and progression.
+- `src/v2/icons.js` — original SVG illustrations and icons.
+- `assets/fonts` — locally bundled Nunito with its SIL Open Font License.
+- `server.cjs` — local-only static development server.
 
 ## Validate
 
-```bash
-node --check script.js
-node --check src/menu/main-menu.js
-node --check src/curriculum/learning-system.js
-node --check src/curriculum/curriculum-compiler.js
-node tests/curriculum-validation.js
+```sh
+npm install
+npm test
+npm run test:browser
 ```
 
-## Next Useful Steps
+The browser suite uses installed Google Chrome (`channel: 'chrome'`) through Playwright. If Chrome is absent, install it or change the test configuration to use a Playwright browser. It starts the local server when necessary. Tests cover arithmetic validity and hints/retries, reward deduplication, calendar dates, malformed saves, the complete hub, saved preferences, cosmetics, desktop/mobile layouts, battle economy, all tower roles, menu/math/hidden-tab suspension, and win/loss outcomes. Screenshots and failure traces are written under `test-results/`.
 
-- route failed skills into repair missions
-- add a parent/teacher progress screen for per-skill mastery states
-- improve the generated question families with richer visual manipulatives
-- tune the long-cycle pacing model after the learning loop is stable
+Verified on **6 October 2026**: **13 learning tests and 32 browser tests passed**. A mixed defense completes the first mission with full health from the starting ten-energy wallet. Later-mission comparisons at a fixed twenty-energy budget reward the five-role formation over repeated Pebble/Prism placements. These scenarios check intended counterplay; they do not replace player observation.
+
+## Earlier prototype
+
+The old files remain available for reference and comparison:
+
+- `http://127.0.0.1:8088/game-menu.html` — old main menu.
+- `http://127.0.0.1:8088/play.html?mode=campaign` — old campaign.
+- `http://127.0.0.1:8088/play.html?mode=infinite` — old infinite mode.
+- [Archived README](docs/legacy-readme.md), `PROJECT_MEMORY.md`, and the earlier curriculum documents describe the previous direction. The new [redesign blueprint](docs/redesign-blueprint.md) takes precedence for the new game.
+
+Legacy auth pages are historical front-end prototypes, not production authentication. The new design does not ask children for an email, password, or birth date.

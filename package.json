@@ -1,0 +1,16 @@
+{
+  "name": "galactacians",
+  "version": "2.0.0",
+  "private": true,
+  "description": "A playful Earth-defense game powered by little math wins",
+  "scripts": {
+    "start": "node server.cjs",
+    "test": "node --test tests/v2-*.test.mjs",
+    "test:browser": "playwright test --config=playwright.v2.config.cjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "agent-browser": "^0.38.1",
+    "prettier": "^3.9.9"
+  }
+}
