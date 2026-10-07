@@ -12,7 +12,7 @@ A tower defense game for ages 6–9 where every tower is bought with a math answ
 2. **Learning second.** Math lives in the build-phase shop. Harder problems buy stronger towers.
 3. **Tracking third.** Every answer is logged; facts move through stages new → learning → known → strong → mastered.
 
-Keep it small enough for kids to follow and for one person to finish: 5 towers, 5 aliens, 4 worlds of 4 missions in the basics build.
+Keep it small enough for kids to follow and for one person to finish: 6 towers, 6 aliens, 6 worlds of 4 missions in the basics build.
 
 ## Decisions made (October 2026)
 
@@ -20,7 +20,10 @@ Keep it small enough for kids to follow and for one person to finish: 5 towers, 
 - A first-try answer buys the card's tower. After a mistake, an Easy card still gives its tower; Medium and Hard cards give a Pebble. Every pick gives something.
 - Answers use a number pad, never multiple choice. No timers on questions.
 - 3 picks per build phase, 3 build phases per mission (about 9 questions, 4 minutes).
-- One new tower unlocks per mission won (Pebble + Bricky, then Prism, Frost, Poppy).
+- Four towers from the start (Pebble attack, Bricky wall, Frost slow, Prism armor breaker); Poppy and Magnet are earned by the first two wins. Each tower and alien gets an intro card the first time.
+- Waves are deliberately busy and ramp within a mission (first wave in 3 lanes). Simulations: a child mixing cards wins about 80%; three towers alone fail after mission 1. Tune with `BALANCE` in content.js.
+- Division (÷ 2, 5, 10) and a Galaxy mix world exist; review cards (35% chance) bring back earlier skills; Captain missions mix skills.
+- Speed button 1×/2×/3×, remembered in settings.
 - Merging two identical towers of the same level levels them up, to level 3.
 - Earth's Star Beam charges from first-try answers and clears one lane.
 - Difficulty is personal: Easy = facts the child knows, Medium = facts they are learning or got wrong, Hard = the hardest third, in a "missing number" format.

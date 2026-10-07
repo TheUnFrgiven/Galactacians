@@ -50,8 +50,26 @@ export function factsFor(skill) {
       })),
     );
   }
+  if (skill === "div2510") {
+    const base = { 10: 0.05, 2: 0.25, 5: 0.45 };
+    return [2, 5, 10].flatMap((t) =>
+      range(1, 10).map((n) => ({
+        id: `div:${n * t}/${t}`,
+        skill,
+        a: n * t,
+        b: t,
+        d: Math.min(1, base[t] + (n / 10) * 0.55),
+      })),
+    );
+  }
+  if (skill === "mixed") return MIXED_SKILLS.flatMap((s) => factsFor(s));
   throw new Error(`Unknown skill: ${skill}`);
 }
+
+const MIXED_SKILLS = ["add10", "sub10", "bond10", "mul2510", "div2510"];
+
+/** Which skill a fact id belongs to (used by mixed worlds and review cards). */
+export const skillOfFact = (id) => ({ add: "add10", sub: "sub10", bond: "bond10", mul: "mul2510", div: "div2510" })[String(id).split(":")[0]];
 
 export const FORMATS = ["picture", "number", "missing"];
 
@@ -117,6 +135,19 @@ export function makeQuestion(fact, format = "number") {
       hint = `${a} groups of ${b}. Count by ${b}s.`;
     }
     visual = { kind: "mul", a, b };
+  } else if (skill === "div2510") {
+    op = "÷";
+    const each = a / b;
+    if (format === "missing") {
+      [left, right, result, blank, answer] = [a, "?", each, "right", b];
+      say = `${a} shared into how many groups gives ${each} in each?`;
+      hint = `Count by ${each}s until you reach ${a}. How many groups?`;
+    } else {
+      [left, right, result, blank, answer] = [a, b, "?", "result", each];
+      say = `${a} divided by ${b}. How many in each group?`;
+      hint = `Share ${a} into ${b} equal groups. Or think: ${b} times what makes ${a}?`;
+    }
+    visual = { kind: "div", a, b };
   } else {
     throw new Error(`Unknown skill: ${skill}`);
   }

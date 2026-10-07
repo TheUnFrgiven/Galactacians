@@ -16,12 +16,14 @@ export function blankProfile() {
     unlockedUnits: 1,
     completed: {},
     seenTeach: {},
+    seenTowers: {},
+    seenAliens: {},
     facts: {},
     xp: 0,
     streak: 0,
     freezes: 0,
     lastPlayDate: null,
-    settings: { sound: true, voice: true, reducedMotion: false },
+    settings: { sound: true, voice: true, reducedMotion: false, speed: 1 },
     log: [],
   };
 }

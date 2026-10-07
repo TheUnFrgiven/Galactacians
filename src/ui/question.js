@@ -62,7 +62,7 @@ export function askQuestion(container, card) {
       container.querySelector(".question").classList.add("solved");
       sfx.correct();
       speak(outcome === "first" ? "Yes! Great job!" : "That's it!");
-      setTimeout(() => resolve({ outcome, attempts, ms: performance.now() - started, hinted }), 750);
+      setTimeout(() => resolve({ outcome, attempts, ms: performance.now() - started, hinted }), 450);
     };
     const check = () => {
       if (done || typed === "") return;

@@ -17,12 +17,16 @@ export function normalize(raw) {
   p.freezes = Math.min(2, num(raw.freezes));
   p.lastPlayDate = isDate(raw.lastPlayDate) ? raw.lastPlayDate : null;
   for (const u of UNITS) if (raw.seenTeach?.[u.id] === true) p.seenTeach[u.id] = true;
+  for (const key of ["seenTowers", "seenAliens"]) {
+    for (const [id, v] of Object.entries(raw[key] || {})) if (v === true && /^[a-z]+$/.test(id)) p[key][id] = true;
+  }
+  if ([1, 2, 3].includes(raw.settings?.speed)) p.settings.speed = raw.settings.speed;
   const ids = new Set(MISSIONS.map((m) => m.id));
   for (const [id, stars] of Object.entries(raw.completed || {})) {
     if (ids.has(id)) p.completed[id] = Math.min(3, num(stars));
   }
   for (const [id, rec] of Object.entries(raw.facts || {})) {
-    if (!/^[a-z]+:[0-9+\-x]+$/.test(id) || !rec || typeof rec !== "object") continue;
+    if (!/^[a-z]+:[0-9+\-x/]+$/.test(id) || !rec || typeof rec !== "object") continue;
     p.facts[id] = {
       stage: Math.min(4, num(rec.stage)),
       attempts: num(rec.attempts),

@@ -3,7 +3,7 @@
  * the same mission and the same actions always give the same result.
  * The renderer reads `state` and drains `events` each frame.
  */
-import { ALIENS, COLS, MAX_LEVEL, towerStats } from "./content.js";
+import { ALIENS, BALANCE, COLS, MAX_LEVEL, towerStats } from "./content.js";
 
 const TICK = 0.05;
 export const BEAM_COST = 3;
@@ -92,8 +92,9 @@ export function createBattle(mission) {
 
   function spawn({ lane, type }) {
     const base = ALIENS[type];
-    const hp = Math.round(base.hp * state.mission.hpScale);
-    state.aliens.push({ id: state.nextId++, type, lane, x: COLS + 0.4, hp, maxHp: hp, slow: 0, flash: 0, blocked: false });
+    const hp = Math.round(base.hp * state.mission.hpScale * BALANCE.alienHp);
+    state.aliens.push({ id: state.nextId++, type, lane, x: COLS + 0.4, hp, maxHp: hp, slow: 0, flash: 0, blocked: false, jumped: false });
+    emit("spawn", { type, lane });
   }
 
   function hurt(alien, amount, pierce = false) {
@@ -131,6 +132,17 @@ export function createBattle(mission) {
       const cx = tower.col + 0.5;
       const reach = (a, laneSpread) =>
         a.hp > 0 && Math.abs(a.lane - tower.lane) <= laneSpread && a.x <= cx + s.range && a.x >= cx - (tower.type === "frost" ? s.range : 0.2);
+      if (tower.type === "magnet") {
+        const target = state.aliens.filter((a) => reach(a, 0)).sort((a, b) => a.x - b.x)[0];
+        if (!target) continue;
+        tower.cooldown = s.rate;
+        tower.flash = 0.3;
+        const push = (target.type === "boss" ? 0.6 : 1.3) + (tower.level - 1) * 0.35;
+        target.x = Math.min(COLS + 0.4, target.x + push);
+        hurt(target, s.damage);
+        emit("magnet", { lane: tower.lane, col: tower.col, x: target.x });
+        continue;
+      }
       if (tower.type === "frost") {
         const hits = state.aliens.filter((a) => reach(a, 1));
         if (!hits.length) continue;
@@ -195,6 +207,12 @@ export function createBattle(mission) {
       const wall = state.towers
         .filter((t) => t.hp > 0 && t.lane === alien.lane && alien.x >= t.col + 0.3 && nextX <= t.col + 1.02)
         .sort((a, b) => b.col - a.col)[0];
+      if (wall && alien.type === "hopper" && !alien.jumped) {
+        alien.jumped = true;
+        alien.x = wall.col - 0.05;
+        emit("hop", { lane: alien.lane, x: alien.x });
+        continue;
+      }
       alien.blocked = Boolean(wall);
       if (wall) {
         wall.hp -= base.attack * dt;
@@ -247,7 +265,7 @@ export function createBattle(mission) {
 
   /** Advance by real seconds; internally always in fixed ticks. */
   function step(seconds) {
-    carry += Math.min(seconds, 0.25);
+    carry += Math.min(seconds, 0.5);
     while (carry >= TICK) {
       carry -= TICK;
       tick(TICK);
@@ -258,6 +276,11 @@ export function createBattle(mission) {
     if (state.status === "lost") return 0;
     return state.hearts >= 5 ? 3 : state.hearts >= 3 ? 2 : 1;
   }
+
+  /** Aliens still to beat in this wave (waiting to spawn plus alive). */
+  const remaining = () => (state.status === "wave" ? state.schedule.length - state.spawnIndex + state.aliens.length : 0);
+  const waveSize = () => state.schedule.length;
+  const boss = () => state.aliens.find((a) => a.type === "boss" && a.hp > 0) || null;
 
   /** Earth looks worried when an alien is in the first two columns. */
   const danger = () => state.aliens.some((a) => a.x < 2);
@@ -274,6 +297,9 @@ export function createBattle(mission) {
     nextWavePreview,
     stars,
     danger,
+    remaining,
+    waveSize,
+    boss,
     drainEvents: () => {
       const out = events;
       events = [];

@@ -2,13 +2,14 @@
  * App shell: the start screen, the learning path, and the small dialogs
  * (teach cards, fact map, settings). Missions are mounted from mission.js.
  */
-import { UNITS, MISSIONS, TOWERS, TOWER_ORDER, UNLOCKS, unitMissions, unlockedTowers, getUnit } from "../core/content.js";
+import { UNITS, MISSIONS, TOWERS, TOWER_ORDER, UNLOCKS, ALIENS, BASIC_SKILLS, unitMissions, unlockedTowers, getUnit } from "../core/content.js";
 import { missionOpen, nextMission, missionsCompleted, skillSummary, factRecord, STAGES } from "../core/learner.js";
 import { factsFor } from "../core/questions.js";
 import { loadProfile, saveProfile, logToCsv } from "../core/save.js";
 import { earthArt, icon, mathPicture, towerArt, alienArt } from "./art.js";
 import { setAudioPrefs, sfx, speak } from "./audio.js";
 import { mountMission } from "./mission.js";
+import { towerInfoHTML, alienInfoHTML } from "./info.js";
 
 const app = document.querySelector("#app");
 let profile = loadProfile();
@@ -78,7 +79,13 @@ function factGrid(skill) {
   if (skill === "add10") rows = [...Array(9)].map((_, i) => [...Array(10 - (i + 1))].map((_, j) => cell(`add:${i + 1}+${j + 1}`, `${i + 1}+${j + 1}`)));
   else if (skill === "sub10") rows = [...Array(9)].map((_, i) => [...Array(i + 1)].map((_, j) => cell(`sub:${i + 2}-${j + 1}`, `${i + 2}−${j + 1}`)));
   else if (skill === "bond10") rows = [[...Array(9)].map((_, i) => cell(`bond:${i + 1}`, `${i + 1}+${9 - i}`))];
-  else rows = [2, 5, 10].map((t) => [...Array(10)].map((_, n) => cell(`mul:${n + 1}x${t}`, `${n + 1}×${t}`)));
+  else if (skill === "mul2510") rows = [2, 5, 10].map((t) => [...Array(10)].map((_, n) => cell(`mul:${n + 1}x${t}`, `${n + 1}×${t}`)));
+  else if (skill === "div2510") rows = [2, 5, 10].map((t) => [...Array(10)].map((_, n) => cell(`div:${(n + 1) * t}/${t}`, `${(n + 1) * t}÷${t}`)));
+  else
+    rows = BASIC_SKILLS.map((sk) => {
+      const sum = skillSummary(profile, sk);
+      return [`<span class="fact-skill"><b>${getUnit(sk).title}</b><span class="unit-bar"><i style="width:${(sum.learned / sum.total) * 100}%"></i></span><small>${sum.learned}/${sum.total}</small></span>`];
+    });
   void facts;
   return rows.map((r) => `<div class="fact-row">${r.join("")}</div>`).join("");
 }
@@ -134,8 +141,19 @@ function showSettings() {
   };
 }
 
+function showGuide() {
+  const have = unlockedTowers(missionsCompleted(profile));
+  modal(`
+    <h2>Towers & aliens</h2>
+    <p class="modal-sub">Every alien has a tower that beats it. Mix your towers!</p>
+    <h3>Towers</h3>
+    <div class="guide-list">${TOWER_ORDER.map((t) => (have.includes(t) ? towerInfoHTML(t) : `<div class="info-card locked"><span class="info-art">${towerArt(t, 1)}</span><div class="info-body"><b>???</b><p>Win more missions to unlock this tower.</p></div></div>`)).join("")}</div>
+    <h3>Aliens</h3>
+    <div class="guide-list">${Object.keys(ALIENS).map((a) => alienInfoHTML(a)).join("")}</div>`, "guide-modal");
+}
+
 /* ---------- screens ---------- */
-const START_LINES = ["I'm just starting", "I can add", "I can make 10", "I'm learning times tables"];
+const START_LINES = ["I'm just starting", "I can add", "I can take away", "I'm learning times tables", "I'm learning sharing", "I know a bit of everything"];
 
 function renderStart() {
   app.innerHTML = `
@@ -177,7 +195,7 @@ function renderPath() {
   const next = nextMission(profile);
   const done = missionsCompleted(profile);
   const have = unlockedTowers(done);
-  const nextUnlock = UNLOCKS[have.length >= 5 ? 99 : UNLOCKS.findIndex((group) => !have.includes(group[0]))];
+  const nextUnlock = UNLOCKS.find((group) => !have.includes(group[0]));
   const nextUnit = getUnit(next.unit);
   app.innerHTML = `
     <main class="path">
@@ -186,6 +204,7 @@ function renderPath() {
         <div class="p-stats">
           <span class="stat streak" title="Days in a row">${icon("flame")}<b>${profile.streak}</b></span>
           <span class="stat xp" title="XP">${icon("bolt")}<b>${profile.xp}</b> XP</span>
+          <button class="chip-btn p-guide" type="button">${icon("shield")} Towers & aliens</button>
           <button class="round-btn p-settings" type="button" aria-label="Settings">${icon("settings")}</button>
         </div>
       </header>
@@ -201,7 +220,7 @@ function renderPath() {
           <div class="collection-row">
             ${TOWER_ORDER.map((t) => `<span class="col-tower ${have.includes(t) ? "" : "locked"}" title="${TOWERS[t].name}">${towerArt(t, 1)}<small>${have.includes(t) ? TOWERS[t].name : "?"}</small></span>`).join("")}
           </div>
-          ${nextUnlock ? `<span class="collection-next">Win 1 more mission to unlock a new tower!</span>` : `<span class="collection-next">You have every tower. Try merging to level 3!</span>`}
+          ${nextUnlock ? `<span class="collection-next">Win 1 more mission to unlock ${TOWERS[nextUnlock[0]].name}!</span>` : `<span class="collection-next">You have every tower. Try merging to level 3!</span>`}
         </div>
       </section>
       <section class="units">
@@ -225,6 +244,7 @@ function renderPath() {
     </main>`;
   app.querySelector(".hero-play").onclick = () => play(next);
   app.querySelector(".p-settings").onclick = showSettings;
+  app.querySelector(".p-guide").onclick = showGuide;
   app.querySelectorAll("[data-mission]").forEach((b) => (b.onclick = () => play(MISSIONS.find((m) => m.id === b.dataset.mission))));
   app.querySelectorAll(".u-teach").forEach((b) => (b.onclick = () => showTeach(getUnit(b.dataset.unit))));
   app.querySelectorAll(".u-facts").forEach((b) => (b.onclick = () => showFactMap(getUnit(b.dataset.unit))));

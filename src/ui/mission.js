@@ -3,13 +3,14 @@
  * tower defense. Reads the simulation each frame and draws it with DOM elements.
  */
 import { createBattle, BEAM_COST } from "../core/battle.js";
-import { ALIENS, COLS, TOWERS, MISSIONS, unlockedTowers, getUnit, towerStats } from "../core/content.js";
+import { ALIENS, COLS, TOWERS, TOWER_ORDER, MISSIONS, unlockedTowers, getUnit, towerStats } from "../core/content.js";
 import { makeShop, resolveCard, PICKS_PER_BUILD } from "../core/shop.js";
 import { recordAnswer, completeMission, missionsCompleted } from "../core/learner.js";
 import { createRng } from "../core/rng.js";
 import { alienArt, earthArt, icon, spaceScenery, towerArt } from "./art.js";
 import { askQuestion } from "./question.js";
 import { sfx, speak } from "./audio.js";
+import { towerInfoHTML, alienInfoHTML, pipsHTML, goodVsHTML } from "./info.js";
 
 const TIER_LABEL = { bronze: "Easy", silver: "Medium", gold: "Hard" };
 
@@ -32,13 +33,18 @@ export function mountMission(root, { mission, profile, save, onExit, onNext }) {
   let xpEarned = 0;
   let answered = 0;
   let firstTries = 0;
+  let paused = false;
+  let speed = profile.settings.speed || 1;
+  let rangeTimer = 0;
+  let infoTimer = 0;
 
   root.innerHTML = `
     <div class="mission" style="--lanes:${state.lanes}">
       <header class="m-top">
         <button class="round-btn m-back" type="button" aria-label="Back to the path">${icon("back")}</button>
-        <div class="m-title"><b>${mission.title}</b><span class="m-wave"></span></div>
+        <div class="m-title"><b>${mission.title}</b><span class="m-wave"></span><span class="m-prog" hidden><i></i></span></div>
         <div class="m-hearts" aria-label="Earth's hearts"></div>
+        <button class="m-speed" type="button" aria-label="Game speed">1×</button>
         <button class="m-beam" type="button" disabled>${icon("bolt")}<span>Star Beam</span><i class="pips"></i></button>
       </header>
       <div class="m-board">
@@ -49,6 +55,9 @@ export function mountMission(root, { mission, profile, save, onExit, onNext }) {
           <div class="m-cells">${Array.from({ length: state.lanes * COLS }, (_, i) => `<button class="m-cell" type="button" data-lane="${Math.floor(i / COLS)}" data-col="${i % COLS}" aria-label="Lane ${Math.floor(i / COLS) + 1}, square ${(i % COLS) + 1}"></button>`).join("")}</div>
           <div class="m-entities"></div>
           <div class="m-fx"></div>
+          <div class="m-danger"></div>
+          <div class="m-bossbar" hidden><span>Captain</span><i><b></b></i></div>
+          <div class="m-info" hidden></div>
           <div class="m-banner" hidden></div>
           <span class="rotate-tip">Tip: turn your phone sideways</span>
         </div>
@@ -92,6 +101,16 @@ export function mountMission(root, { mission, profile, save, onExit, onNext }) {
           ? `Build time · next: wave ${state.wave + 1} of ${state.totalWaves}`
           : "";
     $(".m-wave").textContent = waveText;
+    const prog = $(".m-prog");
+    prog.hidden = state.status !== "wave";
+    if (state.status === "wave") {
+      const total = battle.waveSize() || 1;
+      prog.querySelector("i").style.width = `${Math.round((1 - battle.remaining() / total) * 100)}%`;
+      prog.title = `${battle.remaining()} aliens left`;
+    }
+    $(".mission").classList.toggle("in-wave", state.status === "wave");
+    $(".m-speed").textContent = `${speed}×`;
+    $(".m-speed").classList.toggle("fast", speed > 1);
     $(".m-hearts").innerHTML = Array.from({ length: 5 }, (_, i) => `<span class="${i < state.hearts ? "on" : "off"}">${icon("heart")}</span>`).join("");
     const beam = $(".m-beam");
     beam.querySelector(".pips").innerHTML = Array.from({ length: BEAM_COST }, (_, i) => `<b class="${i < state.beam ? "on" : ""}"></b>`).join("");
@@ -130,6 +149,37 @@ export function mountMission(root, { mission, profile, save, onExit, onNext }) {
       cell.classList.toggle("can-merge", action === "merge");
     });
   }
+  /** Which squares a tower at (lane, col) can reach, matching the rules in battle.js. */
+  function reachCells(type, level, lane, col) {
+    const s = towerStats(type, level);
+    const out = [];
+    const spread = type === "frost" || type === "poppy" ? 1 : 0;
+    for (let l = lane - spread; l <= lane + spread; l++) {
+      if (l < 0 || l >= state.lanes) continue;
+      for (let c = 0; c < COLS; c++) {
+        const mid = c + 0.5, cx = col + 0.5;
+        const ok = type === "bricky" ? c === col : type === "frost" ? Math.abs(mid - cx) <= s.range : mid >= cx - 0.2 && mid <= cx + s.range;
+        if (ok) out.push(`${l}:${c}`);
+      }
+    }
+    return new Set(out);
+  }
+  function showRange(type, level, lane, col, ms = 0) {
+    const cells = reachCells(type, level, lane, col);
+    root.querySelectorAll(".m-cell").forEach((cell) => cell.classList.toggle("in-range", cells.has(`${cell.dataset.lane}:${cell.dataset.col}`)));
+    clearTimeout(rangeTimer);
+    if (ms) rangeTimer = setTimeout(clearRange, ms);
+  }
+  function clearRange() {
+    root.querySelectorAll(".m-cell.in-range").forEach((c) => c.classList.remove("in-range"));
+  }
+  function showInfo(html, ms = 4500) {
+    const box = $(".m-info");
+    box.innerHTML = html;
+    box.hidden = false;
+    clearTimeout(infoTimer);
+    infoTimer = setTimeout(() => (box.hidden = true), ms);
+  }
   function selectHand(i) {
     selected = selected === i ? -1 : i;
     sfx.tap();
@@ -137,17 +187,22 @@ export function mountMission(root, { mission, profile, save, onExit, onNext }) {
     if (selected >= 0) {
       const t = state.hand[selected];
       coach(`${TOWERS[t.type].name}: ${TOWERS[t.type].tip} Tap a glowing square.`);
-    }
+      showInfo(towerInfoHTML(t.type, t.level), 3500);
+    } else clearRange();
   }
   function clickCell(lane, col) {
     if (selected < 0) {
       const tower = state.towers.find((t) => t.lane === lane && t.col === col);
-      if (tower) coach(`${TOWERS[tower.type].name}, level ${tower.level}. ${TOWERS[tower.type].tip}`);
-      else if (state.hand.length) coach("Tap a tower in your hand first.");
+      if (tower) {
+        showInfo(towerInfoHTML(tower.type, tower.level));
+        showRange(tower.type, tower.level, lane, col, 2500);
+      } else if (state.hand.length) coach("Tap a tower in your hand first.");
       return;
     }
     const action = battle.place(selected, lane, col);
     if (!action) return;
+    const placed = state.towers.find((t) => t.lane === lane && t.col === col);
+    showRange(placed.type, placed.level, lane, col, 1400);
     if (action === "merge") {
       sfx.merge();
       speak("Merged! Level up!");
@@ -173,9 +228,11 @@ export function mountMission(root, { mission, profile, save, onExit, onNext }) {
     const eq = `${q.blank === "left" ? "?" : q.left} ${q.op} ${q.blank === "right" ? "?" : q.right} = ${q.blank === "result" ? "?" : q.result}`;
     return `<button class="shop-card tier-${card.tier}" type="button" data-card="${i}">
       <span class="tier-tag">${TIER_LABEL[card.tier]}</span>
+      ${card.badge ? `<span class="card-badge">${card.badge === "Review" ? "Surprise review!" : "Mixed!"}</span>` : ""}
       <span class="card-art">${towerArt(card.tower.type, card.tower.level)}</span>
       <b class="card-name">${t.name}${card.tower.level > 1 ? ` <small>level ${card.tower.level}</small>` : ""}</b>
       <span class="card-role">${t.role}</span>
+      <span class="card-stats">${pipsHTML(card.tower.type)}${goodVsHTML(card.tower.type, true)}</span>
       <span class="card-price">${eq}</span>
     </button>`;
   }
@@ -183,7 +240,7 @@ export function mountMission(root, { mission, profile, save, onExit, onNext }) {
     shopHidden = false;
     overlay.hidden = false;
     const pickNo = PICKS_PER_BUILD - picksLeft + 1;
-    const cards = makeShop(profile, mission, mission.unit, rng, excludeSet());
+    const cards = makeShop(profile, mission, rng, excludeSet());
     sheet.className = "m-sheet shop";
     sheet.innerHTML = `
       <div class="shop-head"><h2>Pick a tower</h2><span class="shop-count">${pickNo} of ${PICKS_PER_BUILD}</span>
@@ -238,7 +295,43 @@ export function mountMission(root, { mission, profile, save, onExit, onNext }) {
     renderTop();
     renderHand();
     renderAction();
-    openShop();
+    const fresh = unlockedTowers(missionsCompleted(profile)).filter((t) => !profile.seenTowers[t]);
+    if (fresh.length) meetTowers(fresh);
+    else openShop();
+  }
+  function meetTowers(list) {
+    overlay.hidden = false;
+    sheet.className = "m-sheet meet";
+    sheet.innerHTML = `
+      <h2>${list.length > 1 ? "Meet your towers" : "New tower!"}</h2>
+      <p class="shop-sub">Each tower has a job. Mix them to beat every kind of alien.</p>
+      <div class="meet-list">${list.map((t) => towerInfoHTML(t)).join("")}</div>
+      <div class="result-actions"><button class="big-btn meet-go" type="button">${icon("play")} Let's build!</button></div>`;
+    speak(list.length > 1 ? "Meet your towers! Each one has a different job." : `New tower: ${TOWERS[list[0]].name}! ${TOWERS[list[0]].tip}`);
+    sheet.querySelector(".meet-go").onclick = () => {
+      sfx.tap();
+      list.forEach((t) => (profile.seenTowers[t] = true));
+      save();
+      openShop();
+    };
+  }
+  function meetAlien(type) {
+    paused = true;
+    overlay.hidden = false;
+    sheet.className = "m-sheet meet meet-alien";
+    sheet.innerHTML = `
+      <h2>New alien!</h2>
+      ${alienInfoHTML(type)}
+      <div class="result-actions"><button class="big-btn meet-go" type="button">Got it!</button></div>`;
+    speak(`New alien: ${ALIENS[type].name}! ${ALIENS[type].does} ${ALIENS[type].tip}`);
+    sheet.querySelector(".meet-go").onclick = () => {
+      sfx.tap();
+      profile.seenAliens[type] = true;
+      save();
+      overlay.hidden = true;
+      paused = false;
+      last = performance.now();
+    };
   }
   function renderIncoming() {
     root.querySelectorAll(".m-incoming").forEach((el) => (el.innerHTML = ""));
@@ -280,6 +373,9 @@ export function mountMission(root, { mission, profile, save, onExit, onNext }) {
       else if (e.kind === "merge") puff("fx-merge", e.col + 0.5, e.lane, "★");
       else if (e.kind === "place") puff("fx-place", e.col + 0.5, e.lane);
       else if (e.kind === "towerLost") puff("fx-pop", e.col + 0.5, e.lane, "✧");
+      else if (e.kind === "magnet") puff("fx-magnet", e.x, e.lane, "»");
+      else if (e.kind === "hop") puff("fx-hop", e.x, e.lane, "↷");
+      else if (e.kind === "spawn" && !profile.seenAliens[e.type] && !paused) meetAlien(e.type);
       else if (e.kind === "beam") {
         const lane = root.querySelector(`.m-lane[data-lane="${e.lane}"]`);
         lane?.classList.remove("beamed");
@@ -297,13 +393,13 @@ export function mountMission(root, { mission, profile, save, onExit, onNext }) {
       } else if (e.kind === "waveClear") {
         banner("Wave cleared! Build time.");
         sfx.correct();
-        setTimeout(() => !destroyed && startBuild(), 900);
+        setTimeout(() => !destroyed && startBuild(), 350);
         renderTop();
         renderAction();
       } else if (e.kind === "won" || e.kind === "lost") {
         renderTop();
         renderAction();
-        setTimeout(() => !destroyed && showResult(), 900);
+        setTimeout(() => !destroyed && showResult(), 700);
       }
     }
   }
@@ -373,13 +469,17 @@ export function mountMission(root, { mission, profile, save, onExit, onNext }) {
       (el, s) => (el.style.cssText = pos(s.x, s.lane)),
     );
     $(".mission").classList.toggle("danger", battle.danger());
+    const boss = battle.boss();
+    const bar = $(".m-bossbar");
+    bar.hidden = !boss;
+    if (boss) bar.querySelector("b").style.width = `${Math.max(0, (boss.hp / boss.maxHp) * 100)}%`;
   }
   function frame(now) {
     if (destroyed) return;
     const dt = Math.min(0.1, (now - last) / 1000);
     last = now;
-    if (state.status === "wave" && !document.hidden) {
-      battle.step(dt);
+    if (state.status === "wave" && !document.hidden && !paused) {
+      battle.step(dt * speed);
       handleEvents();
       renderTop();
     } else handleEvents();
@@ -438,6 +538,19 @@ export function mountMission(root, { mission, profile, save, onExit, onNext }) {
     const cell = e.target.closest(".m-cell");
     if (cell) return clickCell(+cell.dataset.lane, +cell.dataset.col);
   });
+  root.addEventListener("mouseover", (e) => {
+    const cell = e.target.closest(".m-cell");
+    if (!cell || selected < 0) return;
+    const t = state.hand[selected];
+    if (t && battle.canPlace(selected, +cell.dataset.lane, +cell.dataset.col)) showRange(t.type, t.level, +cell.dataset.lane, +cell.dataset.col);
+  });
+  $(".m-speed").onclick = () => {
+    speed = speed >= 3 ? 1 : speed + 1;
+    profile.settings.speed = speed;
+    save();
+    sfx.tap();
+    renderTop();
+  };
   $(".m-back").onclick = onExit;
   $(".m-beam").onclick = () => {
     if (battle.fireBeam()) {

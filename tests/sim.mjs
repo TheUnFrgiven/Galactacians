@@ -93,13 +93,14 @@ export function simulate(mission, policy) {
   while (battle.state.status === "build" || battle.state.status === "wave") {
     if (battle.state.status === "build") {
       for (let i = 0; i < PICKS_PER_BUILD; i++) {
-        const shop = makeShop(profile, mission, SKILL[mission.unit], rng);
+        const shop = makeShop(profile, mission, rng);
         const tier = policy.tiers[pickCount++ % policy.tiers.length];
         const card = shop.find((c) => c.tier === tier);
         const first = rng() < policy.accuracy;
         battle.addToHand(resolveCard(card, first ? "first" : "retry"));
         if (first) battle.chargeBeam();
       }
+      if (policy.maxTowers) battle.state.hand.splice(0, Math.max(0, battle.state.hand.length - Math.max(0, policy.maxTowers - battle.state.towers.length)));
       if (policy.random) placeRandom(battle, rng);
       else placeHand(battle);
       battle.startWave();
@@ -117,6 +118,7 @@ export const POLICIES = {
   ambitious: { name: "ambitious", tiers: ["gold", "silver", "gold"], accuracy: 0.6 },
   neverRight: { name: "neverRight", tiers: ["gold"], accuracy: 0 },
   carelessKid: { name: "carelessKid", tiers: ["bronze", "silver", "gold"], accuracy: 0.7, random: true },
+  threeTowers: { name: "threeTowers", tiers: ["silver", "bronze", "gold"], accuracy: 0.8, maxTowers: 3 },
 };
 
 if (import.meta.url === `file://${process.argv[1]}`) {

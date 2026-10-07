@@ -5,6 +5,7 @@ import { blankProfile, recordAnswer, completeMission, missionOpen, pickFacts, sk
 import { makeShop, resolveCard } from "../src/core/shop.js";
 import { createBattle } from "../src/core/battle.js";
 import { MISSIONS, UNITS, getMission, unlockedTowers, TOWERS } from "../src/core/content.js";
+import { skillOfFact } from "../src/core/questions.js";
 import { normalize, logToCsv } from "../src/core/save.js";
 import { createRng } from "../src/core/rng.js";
 import { simulate, POLICIES } from "./sim.mjs";
@@ -18,7 +19,7 @@ test("every fact gives a correct, whole, non-negative answer in every format", (
         const q = makeQuestion(fact, format);
         assert.ok(Number.isInteger(q.answer) && q.answer >= 0, `${fact.id} ${format}`);
         const [l, r, res] = [q.left, q.right, q.result].map((v, i) => (v === "?" ? q.answer : v));
-        const calc = { "+": l + r, "−": l - r, "×": l * r }[q.op];
+        const calc = { "+": l + r, "−": l - r, "×": l * r, "÷": l / r }[q.op];
         assert.equal(calc, res, `${fact.id} ${format}: ${q.explanation}`);
         assert.ok(isCorrect(q, String(q.answer)));
         assert.ok(!isCorrect(q, ""));
@@ -28,7 +29,7 @@ test("every fact gives a correct, whole, non-negative answer in every format", (
 });
 
 test("fact counts stay small enough to track", () => {
-  assert.deepEqual(SKILLS.map((s) => factsFor(s).length), [45, 45, 9, 30]);
+  assert.deepEqual(SKILLS.map((s) => factsFor(s).length), [45, 45, 9, 30, 30, 159]);
 });
 
 test("a fact needs first-try answers on two days to be mastered, and a mistake sends it back", () => {
@@ -78,21 +79,46 @@ test("missions pay only new stars, and a boss win opens the next unit", () => {
   assert.ok(missionOpen(p, getMission("sub10-1")));
 });
 
-test("towers unlock one per finished mission", () => {
-  assert.deepEqual(unlockedTowers(0), ["pebble", "bricky"]);
-  assert.deepEqual(unlockedTowers(1), ["pebble", "bricky", "prism"]);
-  assert.deepEqual(unlockedTowers(3), ["pebble", "bricky", "prism", "frost", "poppy"]);
-  assert.equal(unlockedTowers(50).length, 5);
+test("four towers from the start, two more are earned", () => {
+  assert.deepEqual(unlockedTowers(0), ["pebble", "bricky", "frost", "prism"]);
+  assert.deepEqual(unlockedTowers(1), ["pebble", "bricky", "frost", "prism", "poppy"]);
+  assert.deepEqual(unlockedTowers(2), ["pebble", "bricky", "frost", "prism", "poppy", "magnet"]);
+  assert.equal(unlockedTowers(50).length, 6);
+});
+
+test("practised skills come back as surprise review cards, and bosses mix skills", () => {
+  const p = blankProfile();
+  recordAnswer(p, { question: makeQuestion(factsFor("add10")[3], "number"), tier: "bronze", outcome: "first" });
+  const rng = createRng(9);
+  let reviews = 0;
+  for (let i = 0; i < 200; i++) {
+    const cards = makeShop(p, getMission("sub10-1"), rng);
+    for (const c of cards) {
+      assert.equal(skillOfFact(c.question.factId), c.skill);
+      if (c.badge === "Review") {
+        reviews++;
+        assert.equal(c.skill, "add10");
+      }
+    }
+  }
+  assert.ok(reviews > 40 && reviews < 110, `reviews: ${reviews}`);
+  const bossSkills = new Set();
+  for (let i = 0; i < 100; i++) makeShop(blankProfile(), getMission("mul2510-4"), rng).forEach((c) => bossSkills.add(c.skill));
+  assert.ok(bossSkills.size >= 3, [...bossSkills].join());
+  const mixedSkills = new Set();
+  for (let i = 0; i < 100; i++) makeShop(blankProfile(), getMission("mixed-2"), rng).forEach((c) => mixedSkills.add(c.skill));
+  assert.equal(mixedSkills.size, 5);
 });
 
 test("a shop has three different facts, ordered easy to hard, and only unlocked towers", () => {
   const p = blankProfile();
   const rng = createRng(3);
   for (let i = 0; i < 50; i++) {
-    const cards = makeShop(p, getMission("add10-1"), "add10", rng);
+    const cards = makeShop(p, getMission("add10-1"), rng);
     assert.deepEqual(cards.map((c) => c.tier), ["bronze", "silver", "gold"]);
     assert.equal(new Set(cards.map((c) => c.question.factId)).size, 3);
-    for (const c of cards) assert.ok(["pebble", "bricky"].includes(c.tower.type));
+    assert.ok(["pebble", "bricky"].includes(cards[0].tower.type), "easy cards give common towers");
+    for (const c of cards) assert.ok(unlockedTowers(0).includes(c.tower.type));
     assert.equal(cards[2].question.format, "missing");
   }
 });
@@ -127,6 +153,29 @@ test("merging needs the same tower at the same level, up to level 3", () => {
   assert.equal(b.canPlace(0, 9, 0), null, "outside the board");
 });
 
+test("a Hopper jumps over the first tower it meets; a Magnet pushes aliens back", () => {
+  const m = { ...getMission("add10-1"), waves: [[{ at: 0, lane: 0, type: "hopper" }]] };
+  const b = createBattle(m);
+  b.addToHand({ type: "bricky", level: 1 });
+  b.place(0, 0, 5);
+  b.startWave();
+  for (let i = 0; i < 40; i++) b.step(0.25);
+  assert.ok(b.drainEvents().some((e) => e.kind === "hop"));
+  assert.ok(b.state.aliens[0].x < 5, "hopper is past the wall");
+
+  const m2 = { ...getMission("add10-1"), waves: [[{ at: 0, lane: 1, type: "tank" }]] };
+  const b2 = createBattle(m2);
+  b2.addToHand({ type: "magnet", level: 1 });
+  b2.place(0, 1, 1);
+  b2.startWave();
+  let pushes = 0;
+  for (let i = 0; i < 200; i++) {
+    b2.step(0.25);
+    pushes += b2.drainEvents().filter((e) => e.kind === "magnet").length;
+  }
+  assert.ok(pushes >= 2, `pushes: ${pushes}`);
+});
+
 test("the simulation is deterministic", () => {
   const run = () => simulate(getMission("sub10-3"), { ...POLICIES.mixed, seed: 7 });
   assert.deepEqual(run(), run());
@@ -143,11 +192,23 @@ test("an empty defense loses, so towers (and the math that buys them) matter", (
   assert.equal(b.state.status, "lost");
 });
 
-test("balance: a child mixing card levels wins every mission", () => {
-  for (const m of MISSIONS) {
-    const wins = [1, 2, 3].filter((seed) => simulate(m, { ...POLICIES.mixed, seed }).won).length;
-    assert.ok(wins >= 2, `${m.id}: ${wins}/3`);
-  }
+const winRate = (policy, filter = () => true) => {
+  const runs = MISSIONS.filter(filter).flatMap((m) => [1, 2, 3].map((seed) => simulate(m, { ...policy, seed })));
+  return runs.filter((r) => r.won).length / runs.length;
+};
+
+test("balance: a child mixing card levels wins most missions, including bosses", () => {
+  assert.ok(winRate(POLICIES.mixed, (m) => !m.boss) >= 0.75);
+  assert.ok(winRate(POLICIES.mixed, (m) => m.boss) >= 0.6);
+  for (const m of MISSIONS.filter((m) => m.slot === 1)) assert.ok(simulate(m, { ...POLICIES.mixed, seed: 1 }).won, m.id);
+});
+
+test("balance: three towers are not enough after the first mission", () => {
+  assert.ok(winRate(POLICIES.threeTowers, (m) => m.slot > 1) <= 0.25);
+});
+
+test("balance: only easy cards rarely beats a Captain", () => {
+  assert.ok(winRate(POLICIES.bronzeOnly, (m) => m.boss) <= 0.25);
 });
 
 test("balance: accuracy and ambition earn more stars than always being wrong", () => {
@@ -172,8 +233,8 @@ test("broken saves fall back to a fresh profile and the log exports as CSV", () 
 });
 
 test("content: every mission has 3 waves, valid lanes and known aliens", () => {
-  assert.equal(MISSIONS.length, 16);
-  assert.equal(Object.keys(TOWERS).length, 5);
+  assert.equal(MISSIONS.length, 24);
+  assert.equal(Object.keys(TOWERS).length, 6);
   for (const m of MISSIONS) {
     assert.equal(m.waves.length, 3);
     for (const wave of m.waves) for (const s of wave) assert.ok(s.lane >= 0 && s.lane < m.lanes && s.at >= 0, m.id);
