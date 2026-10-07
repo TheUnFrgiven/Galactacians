@@ -1,5 +1,6 @@
 import { TOWERS, ENEMIES } from "./data.js";
 import { getEncounter } from "./encounters.js";
+import { STARTING_ENERGY, ANSWER_ENERGY } from "./economy.js";
 
 const ROWS = 5;
 const COLS = 7;
@@ -115,7 +116,7 @@ export function mountBattle(
     onExit = () => {},
     requestEnergy = async () => 0,
     onEnergyChange = () => {},
-    startingEnergy = 10,
+    startingEnergy = STARTING_ENERGY,
     guidedStart = false,
     settings = {},
   } = {},
@@ -181,7 +182,7 @@ export function mountBattle(
       <header class="gb-header">
         <button class="gb-icon-button gb-exit" type="button" aria-label="Leave mission">${icon("back")}</button>
         <div class="gb-mission-title"><h1>${esc(mission.title || mission.name || "Earth defense")}</h1></div>
-        <div class="gb-top-stats"><div class="gb-health" aria-label="Earth health"><span class="gb-hearts"></span></div><div class="gb-wallet" aria-label="Energy available">${icon("bolt")}<strong class="gb-energy">10</strong></div><button class="gb-math-button" type="button" aria-label="Earn energy with math">${icon("bolt")}<span>+ Energy</span></button></div>
+        <div class="gb-top-stats"><div class="gb-health" aria-label="Earth health"><span class="gb-hearts"></span></div><div class="gb-wallet" aria-label="Energy available">${icon("bolt")}<strong class="gb-energy">${state.energy}</strong></div><button class="gb-math-button" type="button" aria-label="Earn ${ANSWER_ENERGY} energy with math">${icon("bolt")}<span>Math +${ANSWER_ENERGY}</span></button></div>
       </header>
       <div class="gb-tower-tray" role="group" aria-label="Choose a tower">${towerTypes
         .map(
@@ -288,11 +289,9 @@ export function mountBattle(
       lastRow = Math.min(ROWS - 1, spot.row + radius);
     rangeLayer.dataset.previewTower = type.id;
     rangeLayer.dataset.lanes = `${firstRow + 1}-${lastRow + 1}`;
-    const splashLeft = Math.max(0, left - 0.95),
-      splashRight = Math.min(COLS, right + 0.95);
-    const splashFirst = Math.max(0, firstRow - 1),
-      splashLast = Math.min(ROWS - 1, lastRow + 1);
-    rangeLayer.innerHTML = `${type.role === "splash" ? `<div class="gb-range-band gb-range-splash" style="left:${(splashLeft / COLS) * 100}%;width:${((splashRight - splashLeft) / COLS) * 100}%;top:${(splashFirst / ROWS) * 100}%;height:${((splashLast - splashFirst + 1) / ROWS) * 100}%"></div>` : ""}<div class="gb-range-band gb-range-target" style="left:${(left / COLS) * 100}%;width:${((right - left) / COLS) * 100}%;top:${(firstRow / ROWS) * 100}%;height:${((lastRow - firstRow + 1) / ROWS) * 100}%"></div>${occupied && !moving ? "" : `<div class="gb-range-origin" style="left:${((spot.col + 0.5) / COLS) * 100}%;top:${((spot.row + 0.5) / ROWS) * 100}%">${towerArt(type)}</div>`}`;
+    // Mark each target lane separately. A giant rectangle suggests that shots
+    // also fill the gaps; Poppy's impact splash is shown when the shot lands.
+    rangeLayer.innerHTML = `${Array.from({ length: lastRow - firstRow + 1 }, (_, offset) => `<div class="gb-range-target" style="left:${(left / COLS) * 100}%;width:${((right - left) / COLS) * 100}%;top:${((firstRow + offset + 0.78) / ROWS) * 100}%"></div>`).join("")}${occupied && !moving ? "" : `<div class="gb-range-origin" style="left:${((spot.col + 0.5) / COLS) * 100}%;top:${((spot.row + 0.5) / ROWS) * 100}%">${towerArt(type)}</div>`}`;
   }
 
   function renderCoach() {
@@ -364,8 +363,17 @@ export function mountBattle(
       const type = imminent ? imminent.type : "";
       if (marker.dataset.incoming !== type) {
         marker.dataset.incoming = type;
-        marker.innerHTML = type ? alienArt(type) : "‹";
+        marker.innerHTML = type
+          ? '<span class="gb-entry-arrow">‹</span><span class="gb-entry-count"></span>'
+          : "";
       }
+      if (imminent)
+        marker.querySelector(".gb-entry-count").textContent = Math.max(
+          1,
+          Math.ceil(
+            waiting ? imminent.at + state.countdown : imminent.at - state.timer,
+          ),
+        );
     });
   }
   function toast(message) {
@@ -488,7 +496,9 @@ export function mountBattle(
       state.math ||
       ["complete", "lost"].includes(state.status);
     $(".gb-math-button span").textContent =
-      state.mathCooldown > 0 ? `${Math.ceil(state.mathCooldown)}s` : "+ Energy";
+      state.mathCooldown > 0
+        ? `${Math.ceil(state.mathCooldown)}s`
+        : `Math +${ANSWER_ENERGY}`;
     $(".gb-speed-button").textContent = `${state.speed}×`;
     $(".gb-speed-button").setAttribute(
       "aria-label",
@@ -607,7 +617,7 @@ export function mountBattle(
       return;
     }
     if (state.energy < type.cost) {
-      toast(`A little more energy! Tap “Earn energy” for a quick math break.`);
+      toast(`Solve one question for +${ANSWER_ENERGY} energy.`);
       $(".gb-math-button").classList.add("gb-nudge");
       setTimeout(() => {
         if (!state.destroyed) $(".gb-math-button").classList.remove("gb-nudge");
@@ -698,10 +708,6 @@ export function mountBattle(
     enemy.flash = 0.16;
     if (enemy.hp <= 0) {
       state.kills++;
-      if (state.kills % 5 === 0) {
-        state.energy++;
-        effect("+1", enemy.x, enemy.row, "#f4d877");
-      }
       state.renderDirty = true;
       effect("✦", enemy.x, enemy.row, "#a084cb", "pop");
     }
@@ -719,10 +725,10 @@ export function mountBattle(
         ) {
           damage(enemy, type.damage);
           enemy.slow = 3;
-          effect("❄", enemy.x, enemy.row, type.color);
+          effect("", enemy.x, enemy.row, type.color, "chill");
         }
       }
-      effect("❄", tower.col + 0.5, tower.row, type.color, "splash");
+      effect("", tower.col + 0.5, tower.row, type.color, "chill");
       return;
     }
     state.projectiles.push({
@@ -749,7 +755,7 @@ export function mountBattle(
             Math.abs(other.row - enemy.row) <= 1,
         )
         .forEach((other) => damage(other, projectile.damage * 0.7));
-      effect("✹", enemy.x, enemy.row, "#e99a62", "splash");
+      effect("", enemy.x, enemy.row, "#c3a3f0", "splash");
     }
   }
   function finish(won) {
@@ -901,9 +907,8 @@ export function mountBattle(
       else {
         state.status = "between";
         state.countdown = 5;
-        state.energy += 3;
         state.renderDirty = true;
-        toast("+3 energy · Next wave in 5");
+        toast("Next wave in 5");
       }
     }
   }
@@ -1001,7 +1006,10 @@ export function mountBattle(
         node.style.left = `${(item.x / COLS) * 100}%`;
         node.style.top = `${((item.row + 0.5) / ROWS) * 100}%`;
         node.style.opacity = Math.min(1, item.life * 2);
-        node.style.transform = `translate(-50%, ${-50 - (1 - item.life / item.maxLife) * 90}%)`;
+        const progress = 1 - item.life / item.maxLife;
+        node.style.transform = ["splash", "chill"].includes(item.kind)
+          ? `translate(-50%, -50%) scale(${0.4 + progress * 0.85})`
+          : `translate(-50%, ${-50 - progress * 90}%)`;
       },
     );
     state.towers.forEach((tower) =>

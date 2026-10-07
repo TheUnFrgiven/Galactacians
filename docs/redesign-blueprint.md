@@ -1,6 +1,6 @@
 # Galactacians: Earth Patrol
 
-Design blueprint · updated 6 October 2026
+Design blueprint · updated 7 October 2026
 
 ## The game we are building
 
@@ -36,10 +36,10 @@ Earth's continents rotate slowly beneath a stationary, friendly face. Its face t
 ## Exact mission loop
 
 1. **Play:** the home screen offers one obvious Defend Earth button and a small mission route. There is no permanent sidebar or brand bar competing with the game. Six missions increase tactical difficulty independently of math level.
-2. **Build:** a new profile begins with 10 energy in a persistent wallet. Pick one of five defenders and tap a space. An eight-second countdown starts the first wave automatically; lane portals telegraph arrivals.
+2. **Build:** every attempt starts with six mission energy. In an uncompleted first mission, a short cue highlights two useful pads and waits for the first placement before the eight-second countdown starts. Later missions start the countdown on entry. Pick one of five defenders and tap a pad; hovering, keyboard focus, or touch shows a short range mark on the affected lane(s). Amber entry arrows count down the next three seconds before an arrival in that lane.
 3. **Defend:** aliens float from right to left. Towers act automatically, but location and enemy matchups determine their value. A rapid shooter cannot efficiently solve an armored wave, and a heavy armor breaker cannot efficiently solve a swarm.
-4. **Recharge:** one optional arithmetic question pauses the simulation. After ten seconds, show its hint automatically. After twenty seconds, show the worked answer over the battlefield and resume play. A correct answer grants one energy and returns to combat after a short 750 ms success cue. No extra Continue button is required. An unanswered reveal is help, not a recorded correct answer or a currency reward.
-5. **Keep moving:** allow recharge again after three seconds of active play. Defeating every fifth alien grants one energy. Clearing an intermediate wave grants three energy and begins a five-second build countdown; the next wave launches automatically. There is no repeated Start wave gate.
+4. **Recharge:** one optional arithmetic question pauses the simulation. After ten seconds, show its hint automatically. After twenty seconds, show the worked answer over the battlefield and resume play. A correct answer grants three energy and returns to combat after a short 750 ms success cue. No extra Continue button is required. An unanswered reveal is help, not a recorded correct answer or a currency reward.
+5. **Keep moving:** allow recharge again after three seconds of active play. Kills and wave clears grant no energy. Reposition or recycle during the five-second build window, then use a solved question when a planned reinforcement is worth the interruption. The next wave launches automatically; there is no repeated Start wave gate.
 6. **Finish:** surviving all three waves earns mission stars; defeat offers a fresh attempt. Show a short result, then let the player choose to continue. A new mission does not start without that choice.
 
 The arithmetic pause freezes movement, projectiles, damage, tower cooldowns and wave countdowns. There is no standalone tactical Pause button. Menu and hidden-tab suspension protect real interruptions; they are separate from the bounded math break. The recharge cooldown advances during active combat and build countdowns, but stops while the simulation is suspended. Calm Practice remains an untimed alternative, with three-question sets that advance automatically 1.2 seconds after a correct answer.
@@ -60,27 +60,33 @@ Enemy variety supplies the reason to mix roles: scouts, fast skaters, tiny swarm
 
 Do not claim that the game is balanced merely because each tower has distinct code. Tests should demonstrate the intended counter matchups, then observed play should check whether a single repeated build still wins too easily.
 
+Armor now reduces ordinary damage by 70%, while Prism ignores it. Blocking and focused fire remain viable alternatives. Two equal-budget first-mission builds achieve full-health wins: beam and area control, or rapid fire with blockers and splash damage. The latter uses neither Prism nor Frost.
+
+Each mission has three authored waves in `encounters.js`: first contact introduces scouts, armor and groups; Moon mail emphasizes outside-lane speed; Ring road shifts neighboring lanes; Sharing space concentrates crowds; Cosmic mix combines protected convoys and edge traffic; Homecoming relays traffic from the edges to the center. Warnings and threat previews come from those actual spawn schedules.
+
+The combat background returns to a calm pale green field with separated horizontal ribbons. Decorative nebulae and star streams are hidden behind gameplay. Pebble shots, long Prism bolts and Poppy bubbles have distinct silhouettes; chill and splash use restrained rings at the affected position. Armor outlines, frost marks and contact markers make enemy status visible. Range previews use short blue lane-aligned marks during placement or inspection, so they explain direction without covering the board in boxes.
+
 ## Economy and pacing
 
-**Energy** buys defenses. Spending, refunds, correct answers and combat rewards update the same persistent wallet. **Stars** buy cosmetics. **Practice records** describe learning activity. **Streaks** count returning to arithmetic on consecutive days. Each reward needs a visible cause.
+**Energy** buys defenses within the current mission attempt. Spending, refunds, and battle answers update that attempt only. **Stars** buy cosmetics. **Practice records** describe learning activity. **Streaks** count returning to arithmetic on consecutive days. Each reward needs a visible cause.
 
-A new profile starts at ten energy, enough for several initial placements. Later missions retain the wallet balance. A correct answer, including one solved after a hint, grants exactly one energy once. Showing a solution at the battle deadline grants no energy, XP, solved-answer count or streak progress. The timed help should teach without creating a passive currency source.
+Every mission and retry starts at six energy, enough for a small opening formation. Historical wallet balances are preserved in saved data but do not fund attempts. A correct battle answer, including one solved after a hint, grants exactly three mission energy once. Practice grants XP and saved learning progress. Five solved questions grant one cosmetic star per local practice day, with a persisted claim flag. Showing a solution at the battle deadline grants no energy, XP, solved-answer count, daily star or streak progress.
 
-The battle economy also grants three energy after each intermediate wave and one energy per five defeated aliens. This keeps the action producing useful resources and avoids making every additional tower require a separate worksheet. There is no passive generator tower in the five-role roster.
+The battle economy has no passive recharge. This gives arithmetic a concrete job: a correct answer funds the next meaningful tower choice, while the six-energy opening allowance lets a player act before needing help. There is no passive generator tower in the five-role roster.
 
-| Event                      | Current pacing rule                                                      |
-| -------------------------- | ------------------------------------------------------------------------ |
-| Enter a mission            | Eight seconds to build before automatic launch                           |
-| Clear an intermediate wave | Five seconds to build before the next wave                               |
-| Open battle math           | One question; hint at ten seconds; solution and return at twenty seconds |
-| Solve battle math          | One energy and automatic return after 750 ms                             |
-| Reopen battle math         | Three seconds of active play must pass first                             |
-| Calm Practice              | Three untimed questions; automatic advance after 1.2 seconds             |
-| Finish a mission           | Player chooses the next action                                           |
+| Event                      | Current pacing rule                                                                                                  |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Enter a mission            | First mission waits for initial placement, then eight seconds to build; later missions start that countdown on entry |
+| Clear an intermediate wave | Five seconds to build before the next wave                                                                           |
+| Open battle math           | One question; hint at ten seconds; solution and return at twenty seconds                                             |
+| Solve battle math          | Three energy and automatic return after 750 ms                                                                       |
+| Reopen battle math         | Three seconds of active play must pass first                                                                         |
+| Calm Practice              | Three untimed questions; automatic advance after 1.2 seconds                                                         |
+| Finish a mission           | Player chooses the next action                                                                                       |
 
 These are prototype parameters, not established learning requirements. Test whether eight seconds is enough for a new player to understand placement and whether the twenty-second support feels helpful rather than hurried. Never subtract health, energy, stars or streaks for an arithmetic mistake. Calm Practice is available for learners who want more thinking time.
 
-**Known balance risks:** the wallet has no cap and can carry abundant practice earnings into a later mission. Conversely, a depleted wallet can make entry difficult. A three-second recharge cooldown prevents uninterrupted question chaining but is not a complete solution to either economy problem. Observe actual play before choosing a visible mission allowance, cap, or guaranteed starting grant. Any restriction must be legible and must preserve access to untimed practice.
+**Remaining balance questions:** the fixed allowance prevents practice hoarding or a previous loss from deciding a mission. Players can still earn additional energy with battle math, separated by three seconds of active play. Observe whether players use this to support a plan, whether five-second build windows allow useful repositioning, and whether multiple builds remain viable beyond the tested examples.
 
 ## Arithmetic and learning records
 
@@ -127,7 +133,7 @@ This is a delivery direction, not a claim that native builds exist. No native ru
 
 Engineering checks should cover valid arithmetic, reward deduplication, no passive reward on revealed answers, exact math-support deadlines, timer cleanup, active-play recharge cooldown, automatic wave transitions, armor counters, area effects, safe refunds, mission outcomes, saved preferences, route aliases, keyboard use and mobile layouts. Pauses and reduced motion must remain intentional and predictable.
 
-**Verified 6 October 2026:** all 13 learning tests and 32 browser tests pass. The first mission can be completed with full health from the starting ten-energy wallet, using combat rewards to expand the defense. At difficulties four and six, a twenty-energy formation using all five roles clears the mission with five hearts; a repeated Pebble/Prism formation at the same budget does not preserve full health. These are reproducible examples of intended counterplay, not proof that every formation or wallet balance is balanced.
+The current gameplay suite verifies two different full-health first-mission builds at sixteen total energy, successful route-specific defenses for all six missions from six starting energy with math-funded reinforcements, a starter-only loss without passive energy, accurate lane warnings and range marks, touch placement, safe retries, and saved daily rewards. These are reproducible examples of intended counterplay, not proof that every formation is balanced. The [player observation guide](playtest-guide.md) covers the remaining human playtest.
 
 Observed play should answer concrete questions:
 

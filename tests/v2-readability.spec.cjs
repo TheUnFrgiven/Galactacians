@@ -3,10 +3,10 @@ const { test, expect } = require("@playwright/test");
 const cell = (page, row, col) =>
   page.locator(`.gb-cell[data-row="${row}"][data-col="${col}"]`);
 async function openFirst(page) {
-  await page.clock.install();
+  await page.clock.install({ time: new Date("2026-10-07T09:00:00Z") });
+  await page.clock.pauseAt(new Date("2026-10-07T09:00:01Z"));
   await page.goto("/#mission/first-contact");
   await expect(page.locator(".gb-battle")).toBeVisible();
-  await page.clock.pauseAt(new Date());
 }
 
 test("first placement starts the countdown, with visible guidance and no extra start gate", async ({
@@ -19,7 +19,7 @@ test("first placement starts the countdown, with visible guidance and no extra s
   await expect(page.locator(".gb-alien")).toHaveCount(0);
   await expect(page.locator(".gb-wave-text")).toHaveText("Place a defender");
   await cell(page, 1, 2).click();
-  await expect(page.locator(".gb-energy")).toHaveText("8");
+  await expect(page.locator(".gb-energy")).toHaveText("4");
   await expect(page.locator(".gb-wave-text")).toHaveText("Incoming in 8");
   await expect(page.locator(".gb-coach")).toContainText("Cover both");
   await cell(page, 3, 2).click();
@@ -42,20 +42,22 @@ test("range previews match directional, area and blocking rules without spending
   const getRange = () =>
     page
       .locator(".gb-range-target")
+      .first()
       .evaluate((el) => ({
         left: parseFloat(el.style.left),
         width: parseFloat(el.style.width),
-        height: parseFloat(el.style.height),
+        height: parseFloat(getComputedStyle(el).height),
       }));
   const rapid = await getRange();
   expect(rapid.left).toBeCloseTo((2.3 / 7) * 100, 1);
   expect(rapid.width).toBeCloseTo((2.2 / 7) * 100, 1);
-  expect(rapid.height).toBe(20);
+  expect(rapid.height).toBeLessThanOrEqual(4);
+  await expect(page.locator(".gb-range-target")).toHaveCount(1);
   await page.locator('.gb-tower-card[data-tower="frost"]').click();
   await cell(page, 2, 2).focus();
   await expect(range).toHaveAttribute("data-lanes", "2-4");
   expect((await getRange()).left).toBe(0);
-  expect((await getRange()).height).toBe(60);
+  await expect(page.locator(".gb-range-target")).toHaveCount(3);
   await page.keyboard.press("ArrowUp");
   await expect(range).toHaveAttribute("data-lanes", "1-3");
   await page.locator('.gb-tower-card[data-tower="bricky"]').click();
@@ -63,8 +65,9 @@ test("range previews match directional, area and blocking rules without spending
   expect((await getRange()).width).toBeCloseTo((0.72 / 7) * 100, 1);
   await page.locator('.gb-tower-card[data-tower="poppy"]').click();
   await cell(page, 2, 2).hover();
-  await expect(page.locator(".gb-range-splash")).toBeVisible();
-  await expect(page.locator(".gb-energy")).toHaveText("10");
+  await expect(page.locator(".gb-range-target")).toHaveCount(3);
+  await expect(page.locator(".gb-range-splash")).toHaveCount(0);
+  await expect(page.locator(".gb-energy")).toHaveText("6");
   await expect(page.locator(".gb-occupied")).toHaveCount(0);
 });
 
@@ -102,7 +105,7 @@ test("touch placement and multi-lane previews stay readable on a phone", async (
   await page.locator('.gb-tower-card[data-tower="frost"]').tap();
   await cell(page, 2, 2).tap();
   await expect(cell(page, 2, 2)).toHaveClass(/gb-occupied/);
-  await expect(page.locator(".gb-energy")).toHaveText("7");
+  await expect(page.locator(".gb-energy")).toHaveText("3");
   await expect(page.locator(".gb-range-preview")).toHaveAttribute(
     "data-lanes",
     "2-4",

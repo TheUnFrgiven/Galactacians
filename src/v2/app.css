@@ -4707,6 +4707,9 @@ html[data-motion="reduced"] *:after {
   margin-left: 0;
   padding-bottom: 0;
 }
+.game-shell:has(.mission-content) {
+  background: #f7f9f2;
+}
 .game-shell .game-topbar {
   height: 66px;
   padding: 12px clamp(16px, 3vw, 40px);

@@ -31,6 +31,22 @@ test("mission math boosts the current attempt while victory and learning persist
   ).toBeVisible();
   const place = async (id, row, col) => {
     await page.locator(`button[data-tower="${id}"]`).click();
+    const cost = Number(
+      await page.locator(`[data-tower="${id}"] .gb-tower-cost`).innerText(),
+    );
+    while (Number(await page.locator(".gb-energy").innerText()) < cost) {
+      if (await page.locator(".gb-math-button").isDisabled())
+        await page.evaluate(() => advanceGame(3.1));
+      await page.locator(".gb-math-button").click();
+      const terms = await page.locator(".equation>span").allTextContents();
+      await page
+        .getByRole("button", {
+          name: `Answer ${Number(terms[0]) + Number(terms[2])}`,
+          exact: true,
+        })
+        .click();
+      await expect(page.getByRole("dialog")).not.toBeVisible();
+    }
     await page
       .locator(`.gb-cell[data-row="${row}"][data-col="${col}"]`)
       .click();
@@ -50,7 +66,7 @@ test("mission math boosts the current attempt while victory and learning persist
   await place("pebble", 1, 2);
   await place("pebble", 3, 2);
   await place("prism", 2, 0);
-  await expect(page.locator(".gb-energy")).toHaveText("3");
+  await expect(page.locator(".gb-energy")).toHaveText("2");
   await page.evaluate(() => advanceGame(12));
   await page.locator(".gb-math-button").click();
   const frozen = await page.locator(".gb-alien").first().getAttribute("style");
@@ -67,7 +83,7 @@ test("mission math boosts the current attempt while victory and learning persist
     })
     .click();
   await expect(page.getByRole("dialog")).not.toBeVisible();
-  await expect(page.locator(".gb-energy")).toHaveText("4");
+  await expect(page.locator(".gb-energy")).toHaveText("5");
   await untilBreather();
   await place("poppy", 2, 3);
   await place("frost", 2, 2);
@@ -84,7 +100,7 @@ test("mission math boosts the current attempt while victory and learning persist
   );
   expect(saved.energyBank).toBe(10);
   expect(saved.stars).toBe(3);
-  expect(saved.skills.addition.correct).toBe(1);
+  expect(saved.skills.addition.correct).toBe(4);
   expect(saved.completed["first-contact"].stars).toBe(3);
   await page.locator('[data-action="result-home"]').click();
   await expect(

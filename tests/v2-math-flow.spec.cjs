@@ -89,13 +89,13 @@ test("a solved battle question credits once and returns straight to play", async
   await page
     .getByRole("button", { name: `Answer ${answer}`, exact: true })
     .click();
-  await expect(page.locator(".answer-feedback")).toContainText("+1 energy");
+  await expect(page.locator(".answer-feedback")).toContainText("+3 energy");
   expect(await wallet(page)).toBe(10);
   await page.keyboard.press("1");
   await page.keyboard.press("2");
   await page.clock.runFor(750);
   await expect(page.getByRole("dialog")).not.toBeVisible();
-  await expect(page.locator(".gb-energy")).toHaveText("11");
+  await expect(page.locator(".gb-energy")).toHaveText("9");
   await expect(page.locator("[data-math-next]")).toHaveCount(0);
   expect(await wallet(page)).toBe(10);
 });

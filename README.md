@@ -12,13 +12,13 @@ Open **http://127.0.0.1:8088/**. Node 20+ is required for the local server; the 
 
 ## The new loop
 
-1. Start with **10 energy** in a persistent wallet.
-2. Pick one of **five distinct shape towers**, then tap a space in the five-lane field.
-3. The first wave starts after an **8-second build countdown**. Cute aliens float **right to left** toward Earth, whose face becomes worried when they get close.
+1. Every mission attempt starts with **6 energy**, including retries. Previous savings and losses do not change this allowance.
+2. Pick one of **five distinct shape towers**, then tap a placement pad. Clear lane ribbons, a ghost defender, and range previews show where it can act. Keyboard focus and touch support the same field.
+3. In the first mission, place your first defender to begin the **8-second build countdown**. Later missions begin their countdown on entry. Cute aliens float **right to left** toward Earth, whose face becomes worried when they get close. Amber entry arrows count down the next arrival in each threatened lane.
 4. Open **Earn energy** for one question. Combat pauses for thinking: a hint appears after **10 seconds**, then the solution appears and play resumes at **20 seconds**. A correct answer earns **1 energy** and returns to combat automatically. Merely revealing the answer earns nothing. Recharge becomes available again after **3 seconds of active play**.
    The cooldown advances during active combat and build countdowns. There is no standalone tactical Pause button; Menu and switching away from the tab suspend play for interruptions.
-5. Waves continue automatically after a **5-second build window**. Intermediate waves grant **3 energy**, and every fifth defeated alien grants **1 energy**. Reposition or recycle defenses while building.
-6. Complete all three waves, earn mission stars, and continue your six-stop journey. Stars buy Earth colors; every tower is available from the start.
+5. Waves continue automatically after a **5-second build window**. No energy is awarded for waiting, wave clears, or kills. Reposition or recycle defenses while building, then solve a question when the team needs another defender.
+6. Complete all three waves, earn mission stars, and continue your six-stop journey. Each mission has its own attack pattern: first contact, outside-lane couriers, shifting neighboring lanes, grouped swarms, shield convoys, and a homecoming relay. Stars buy Earth colors; every tower is available from the start.
 
 | Shape    | Tower  | Role                                               | Energy |
 | -------- | ------ | -------------------------------------------------- | ------ |
@@ -36,9 +36,10 @@ The home screen leads straight into play. **Menu** contains navigation everywher
 - Friends and rankings are future work and are hidden from the current navigation. No friend accounts, invitations, messages, or live competitors are simulated as real.
 - Reminders are **in-app only**. There are no push notifications or background deliveries.
 - Progress is stored on this browser/device under `galactacians-v2`. It is not cloud-synced. The old `planet-math-defense-save` is untouched.
-- The wallet persists; an active battle does not survive leaving/reloading. Preparation allows full tower refunds; active waves offer partial refunds.
+- Mission energy lasts for one attempt. Leaving or reloading restarts the battle with six energy. A correct battle answer adds three energy, once per question. Preparation allows full tower refunds; active waves offer partial refunds. Historical wallet data is retained for compatibility but no longer funds combat.
 - Mission stars pay only when a new best is earned. Accuracy tracks independent first tries separately from assisted successes. One solved question extends the daily learning streak; combat by itself does not.
-- Tower matchups, costs, the persistent wallet, timed battle support, mission pacing, and educational benefit still need real playtesting. No effectiveness or certification claim is made.
+- Practice earns XP and learning progress; five solved questions earn one cosmetic star per local day. Hinted solutions count, passive answer reveals do not. The daily star cannot be claimed twice by reloading.
+- Tower matchups, costs, timed battle support, mission pacing, and educational benefit still need real playtesting. No effectiveness or certification claim is made. Use the short [player observation guide](docs/playtest-guide.md).
 
 ## Platform direction
 
@@ -52,6 +53,7 @@ Read [the redesign blueprint](docs/redesign-blueprint.md) for the old-game audit
 - `src/v2/app.js` / `app.css` — hub, navigation, practice, dialogs and settings.
 - `src/v2/battle.js` / `battle.css` — simulation, lane board, enemies and tower behavior.
 - `src/v2/data.js` — tower, mission and cosmetic concepts.
+- `src/v2/encounters.js` — eighteen authored waves with matching lane warnings and short teaching cues.
 - `src/v2/learning.js` — arithmetic, safe local saves, rewards, streaks and progression.
 - `src/v2/icons.js` — original SVG illustrations and icons.
 - `assets/fonts` — locally bundled Nunito with its SIL Open Font License.
@@ -67,7 +69,9 @@ npm run test:browser
 
 The browser suite uses installed Google Chrome (`channel: 'chrome'`) through Playwright. If Chrome is absent, install it or change the test configuration to use a Playwright browser. It starts the local server when necessary. Tests cover arithmetic validity and hints/retries, reward deduplication, calendar dates, malformed saves, the complete hub, saved preferences, cosmetics, desktop/mobile layouts, battle economy, all tower roles, menu/math/hidden-tab suspension, and win/loss outcomes. Screenshots and failure traces are written under `test-results/`.
 
-Verified on **6 October 2026**: **13 learning tests and 32 browser tests passed**. A mixed defense completes the first mission with full health from the starting ten-energy wallet. Later-mission comparisons at a fixed twenty-energy budget reward the five-role formation over repeated Pebble/Prism placements. These scenarios check intended counterplay; they do not replace player observation.
+The gameplay regression suite checks two different full-health first-mission strategies at the same sixteen-energy total spend, including one without Prism or Frost. It also completes all six missions from six starting energy by solving only when a planned reinforcement is needed. A starter-only formation cannot fund itself through kills or wave clears. Tests cover lane warnings, directional and area range marks, touch placement, and identical retry budgets for old empty and rich profiles. These scenarios check intended choices; they do not replace player observation.
+
+Verified **7 October 2026**: **18 logic tests and 42 browser tests passed**. Desktop and phone screenshots were also inspected, with no browser exceptions or horizontal overflow.
 
 ## Earlier prototype
 

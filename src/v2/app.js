@@ -18,6 +18,7 @@ import {
   setSetting,
 } from "./learning.js";
 import { mountBattle } from "./battle.js";
+import { STARTING_ENERGY, ANSWER_ENERGY } from "./economy.js";
 
 let profile = loadProfile(),
   battle = null,
@@ -199,7 +200,7 @@ function navigate() {
     main.innerHTML = '<div id="battle-mount"></div>';
     battle = mountBattle(document.querySelector("#battle-mount"), {
       mission: m,
-      startingEnergy: m.startingEnergy ?? 10,
+      startingEnergy: m.startingEnergy ?? STARTING_ENERGY,
       guidedStart: m.id === "first-contact" && !profile.completed[m.id],
       settings: { ...profile.settings, equipped: profile.equipped },
       onExit: () => (location.hash = "adventure"),
@@ -318,7 +319,7 @@ function openMath(skill = "addition", inBattle = false) {
       answered = false;
       wrongChoices = new Set();
       const name = SKILLS.find((s) => s.id === q.skill)?.name || "Practice";
-      dialog.innerHTML = `${dialogClose()}<div class="math-dialog ${inBattle ? "math-quick" : ""}"><div class="math-topline"><span class="soft-badge">${icon(inBattle ? "bolt" : "star")} ${inBattle ? "+1 energy" : "+XP · Daily star"}</span>${inBattle ? "" : `<span>${index + 1} of ${total}</span>`}</div><h2 id="dialog-title">${inBattle ? "Power up!" : name}</h2><div class="equation"><span>${q.a}</span><span class="operation">${esc(q.operator)}</span><span>${q.b}</span><span class="equals">=</span><span class="answer-blank">?</span></div><div class="answer-options">${q.options.map((n, i) => `<button class="answer-option" data-answer="${n}" aria-label="Answer ${n}"><span>${n}</span><small>${i + 1}</small></button>`).join("")}</div><div class="answer-feedback" role="status" aria-live="polite"></div><div class="math-hint" hidden></div><div class="math-bottom"><button class="text-link hint-button" data-math-hint>${icon("help")} Hint</button><span class="math-earned">${icon(inBattle ? "bolt" : "star")} +${earned}${inBattle ? "" : " XP"}</span></div>${inBattle ? '<p class="math-status">Help in 10s · Back to play in 20s</p>' : ""}</div>`;
+      dialog.innerHTML = `${dialogClose()}<div class="math-dialog ${inBattle ? "math-quick" : ""}"><div class="math-topline"><span class="soft-badge">${icon(inBattle ? "bolt" : "star")} ${inBattle ? `+${ANSWER_ENERGY} energy` : "+XP · Daily star"}</span>${inBattle ? "" : `<span>${index + 1} of ${total}</span>`}</div><h2 id="dialog-title">${inBattle ? "Power up!" : name}</h2><div class="equation"><span>${q.a}</span><span class="operation">${esc(q.operator)}</span><span>${q.b}</span><span class="equals">=</span><span class="answer-blank">?</span></div><div class="answer-options">${q.options.map((n, i) => `<button class="answer-option" data-answer="${n}" aria-label="Answer ${n}"><span>${n}</span><small>${i + 1}</small></button>`).join("")}</div><div class="answer-feedback" role="status" aria-live="polite"></div><div class="math-hint" hidden></div><div class="math-bottom"><button class="text-link hint-button" data-math-hint>${icon("help")} Hint</button><span class="math-earned">${icon(inBattle ? "bolt" : "star")} +${earned}${inBattle ? "" : " XP"}</span></div>${inBattle ? '<p class="math-status">Help in 10s · Back to play in 20s</p>' : ""}</div>`;
       dialog.querySelector(".answer-option")?.focus();
       if (inBattle) {
         later(() => {
@@ -355,7 +356,7 @@ function openMath(skill = "addition", inBattle = false) {
       if (right) {
         answered = true;
         clearTimers();
-        const energyEarned = inBattle && !result.duplicate ? 1 : 0;
+        const energyEarned = inBattle && !result.duplicate ? ANSWER_ENERGY : 0;
         earned += inBattle ? energyEarned : result.xpEarned;
         dialog.querySelectorAll(".answer-option").forEach((b) => {
           b.disabled = true;

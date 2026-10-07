@@ -213,15 +213,15 @@ test("every mission attempt starts with its own supply regardless of the old wal
     );
     await page.goto("/#mission/first-contact");
     await page.reload();
-    await expect(page.locator(".gb-energy")).toHaveText("10");
+    await expect(page.locator(".gb-energy")).toHaveText("6");
     await page.locator('button[data-tower="pebble"]').click();
     await page.locator('.gb-cell[data-row="2"][data-col="2"]').click();
-    await expect(page.locator(".gb-energy")).toHaveText("8");
+    await expect(page.locator(".gb-energy")).toHaveText("4");
     await navigate(page, "Play");
     await page
       .getByRole("button", { name: "First contact, completed", exact: true })
       .click();
-    await expect(page.locator(".gb-energy")).toHaveText("10");
+    await expect(page.locator(".gb-energy")).toHaveText("6");
     const saved = await page.evaluate(() =>
       JSON.parse(localStorage.getItem("galactacians-v2")),
     );

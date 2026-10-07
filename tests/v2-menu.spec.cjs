@@ -32,7 +32,7 @@ test("mission menu replaces sidebar on desktop and closes without resetting defe
   await page.locator('[data-tower="pebble"]').click();
   await page.locator('.gb-cell[data-row="1"][data-col="0"]').click();
   await expect(page.locator(".gb-occupied")).toHaveCount(1);
-  await expect(page.locator(".gb-energy")).toHaveText("8");
+  await expect(page.locator(".gb-energy")).toHaveText("4");
 
   const menu = page.getByRole("button", { name: "Menu", exact: true });
   await menu.click();
@@ -56,7 +56,7 @@ test("mission menu replaces sidebar on desktop and closes without resetting defe
   await expect(menu).toBeFocused();
   await expect(page).toHaveURL(/#mission\/first-contact$/);
   await expect(page.locator(".gb-occupied")).toHaveCount(1);
-  await expect(page.locator(".gb-energy")).toHaveText("8");
+  await expect(page.locator(".gb-energy")).toHaveText("4");
 
   await menu.click();
   await page.getByRole("button", { name: "Back to defending" }).click();
