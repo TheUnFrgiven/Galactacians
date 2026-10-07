@@ -8,6 +8,7 @@ import { MISSIONS, ALIENS, COLS, towerStats } from "../src/core/content.js";
 import { blankProfile } from "../src/core/learner.js";
 import { makeShop, resolveCard, PICKS_PER_BUILD } from "../src/core/shop.js";
 import { createRng, hashString } from "../src/core/rng.js";
+import { pathToFileURL } from "node:url";
 
 const SKILL = { add10: "add10", sub10: "sub10", bond10: "bond10", mul2510: "mul2510" };
 
@@ -121,7 +122,7 @@ export const POLICIES = {
   threeTowers: { name: "threeTowers", tiers: ["silver", "bronze", "gold"], accuracy: 0.8, maxTowers: 3 },
 };
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   for (const [key, policy] of Object.entries(POLICIES)) {
     const rows = MISSIONS.map((m) => {
       const runs = [1, 2, 3].map((seed) => simulate(m, { ...policy, seed }));
