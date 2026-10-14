@@ -1,5 +1,9 @@
 # Galactacians · Earth Patrol
 
+## Approved native rebuild — 14 October 2026
+
+The next implementation uses **Godot and typed GDScript**. The completed [design decision register](docs/migration-decisions.md) is the source of truth for the rebuild. First milestone: one complete curriculum mission, followed by six missions and then additional modes. Existing browser builds remain preserved below as reference prototypes; their mechanics do not describe the approved native design.
+
 A fresh playable browser prototype for a cheerful tower-defense game powered by small arithmetic wins. Built from scratch after reviewing the earlier Galactacians game.
 
 ## Play

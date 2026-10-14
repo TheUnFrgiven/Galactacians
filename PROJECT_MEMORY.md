@@ -1,6 +1,10 @@
 # Galactacians Project Memory
 
-## Current direction — 7 October 2026
+## Current direction — 14 October 2026
+
+The design review is complete and migration to Godot with typed GDScript is authorized. Read `docs/migration-decisions.md` for the confirmed rules; its accepted decisions supersede the historical implementation notes below. First deliver one complete landscape curriculum mission for touch and mouse, then six missions, then challenges, survival and snapshot friend PvP. Preserve the web prototypes as references. Windows verification comes first, then Android and iPhone. Do not confuse the existing energy economy and automatic countdowns with the new question-earned towers, hidden power budget, untimed teaching and manual Ready flow.
+
+## Preserved browser implementation — 7 October 2026
 
 The active implementation is `index.html` and `src/v2/`, served by `npm start` at `http://127.0.0.1:8088/`. `README.md` and `docs/redesign-blueprint.md` are the current handoff. The user now prioritizes a readable game screen, continuous combat and a smaller strategic roster over the initial eight-tower learning dashboard.
 
