@@ -2,6 +2,8 @@
 
 ## Approved native rebuild — 14 October 2026
 
+The [complete curriculum and game design](docs/curriculum-game-design.md) specifies 36 missions across six themed worlds, teaching interactions, progression, menus and acceptance checks. The first playable release remains six introductory missions. The full campaign is designed, not yet implemented.
+
 The next implementation uses **Godot and typed GDScript**. The completed [design decision register](docs/migration-decisions.md) is the source of truth for the rebuild. First milestone: one complete curriculum mission, followed by six missions and then additional modes. Existing browser builds remain preserved below as reference prototypes; their mechanics do not describe the approved native design.
 
 The [native project](godot/README.md) now contains a menu foundation and tested reward-budget logic. Open `godot/project.godot` in Godot 4.7.2. The native mission is not yet playable. Headless import, startup and reward checks passed on Windows on 14 October 2026; visual and device testing remain pending.

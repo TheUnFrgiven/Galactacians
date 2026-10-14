@@ -2,6 +2,8 @@
 
 ## Current direction — 14 October 2026
 
+Latest design specification: `docs/curriculum-game-design.md`, requested after the user preferred Claude's level structure. It supplies a 36-mission, six-world arithmetic progression and implementation contract. It is authored design, not an implemented campaign. The first six introductory missions stay within 10; the expanded addition/subtraction path reaches 20 at M19–M24, and multiplication/division follow at M25–M36. This pacing refinement avoids compressing all prerequisites into the first six missions. Numeric gates, reinforcement budgets and lesson counts beyond the approved first chapter are working design defaults to validate, not historical user choices.
+
 The design review is complete and migration to Godot with typed GDScript is authorized. Read `docs/migration-decisions.md` for the confirmed rules; its accepted decisions supersede the historical implementation notes below. First deliver one complete landscape curriculum mission for touch and mouse, then six missions, then challenges, survival and snapshot friend PvP. Preserve the web prototypes as references. Windows verification comes first, then Android and iPhone. Do not confuse the existing energy economy and automatic countdowns with the new question-earned towers, hidden power budget, untimed teaching and manual Ready flow.
 
 ## Preserved browser implementation — 7 October 2026
