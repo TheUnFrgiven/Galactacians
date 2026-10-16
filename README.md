@@ -6,7 +6,7 @@ The [complete curriculum and game design](docs/curriculum-game-design.md) specif
 
 The next implementation uses **Godot and typed GDScript**. The completed [design decision register](docs/migration-decisions.md) is the source of truth for the rebuild. First milestone: one complete curriculum mission, followed by six missions and then additional modes. Existing browser builds remain preserved below as reference prototypes; their mechanics do not describe the approved native design.
 
-The [native project](godot/README.md) now includes a playable **First Contact** comparison level. Double-click `Play-first-level.cmd` on the configured Windows machine, or open `godot/project.godot` in Godot 4.7.2 and press F5. It includes teaching, tower earning/placement, combat, win/retry and local saving. Reward and 18 level checks pass; Windows renders were inspected. Later missions, production narration and mobile testing remain pending.
+The [native project](godot/README.md) now includes **six playable Earth Orbit missions and five floating astronaut roles**. Double-click `Play-Galactacians.cmd` on the configured Windows machine, or open `godot/project.godot` in Godot 4.7.2 and press F5. Adventure opens the chapter path. It includes addition/subtraction teaching, question-earned crew, preparation, waves, retries, saving and lesson unlocks. Reward, first-level and chapter checks pass; Windows renders were inspected. The remaining 30 designed missions, adaptive review, production narration and mobile testing remain pending.
 
 A fresh playable browser prototype for a cheerful tower-defense game powered by small arithmetic wins. Built from scratch after reviewing the earlier Galactacians game.
 

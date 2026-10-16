@@ -1,5 +1,20 @@
 # Galactacians Project Memory
 
+## Latest implementation — 16 October 2026
+
+User preference: Claude's level/curriculum structure, ChatGPT browser gameplay feel,
+clean cute artwork from both. Towers are now floating astronauts with the same five
+roles, colored suits and shape badges. `godot/art` contains original astronaut SVGs
+and shared browser alien/Earth assets. `chapter.gd` authors six opening missions;
+`level.gd` runs path, teaching, reward/placement, multi-wave combat and unlocks.
+Launch `Play-Galactacians.cmd`. Reward and 18 first-level checks pass; chapter checks
+exercise all six missions, 1,620 arithmetic cases, strong/weak crew routes and roles.
+Visual inspection found and fixed TextureRect minimum-size portrait overflow.
+New save is `earth-orbit-v2.json`; old first-level and browser saves remain untouched.
+The full 36-mission progression is designed, but only six are playable. Recorded audio,
+adaptive review scheduling and mobile validation remain pending. Earlier implementation
+notes below describe prior milestones, not current limitations or current art.
+
 ## Current direction — 14 October 2026
 
 Playable comparison milestone now exists in `godot/scripts/level.gd` with pure combat in `first_battle.gd`. Launch `Play-first-level.cmd` or open Godot and press F5. First Contact teaches addition within five, earns Pebbles at three strengths, requires placement, then runs one two-lane encounter on a three-lane field. It has hints, animated reveals, retry, targeted learning recovery and JSON saving. Reward checks plus 18 mission checks pass; rendered Windows scenes inspected. No recorded voice, full campaign or mobile build yet. User wants to compare this first level before deciding whether to approve the result; do not expand beyond it without incorporating feedback.

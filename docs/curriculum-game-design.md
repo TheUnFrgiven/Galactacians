@@ -2,6 +2,15 @@
 
 Design specification · 14 October 2026
 
+Implementation update · 16 October 2026: M01–M06 are playable in Godot. The user has
+specified Claude-style level/curriculum structure, the ChatGPT browser battlefield feel,
+and clean cute **floating astronaut defenders**. The five role names and strategic jobs
+remain; geometric shapes are chest badges rather than bodies. Original astronaut SVGs
+share suit proportions and restrained drift. Browser alien/Earth artwork is reused.
+M07–M36 below remain authored design, not delivered gameplay. Recorded narration and
+the adaptive review scheduler are still pending. This distinction supersedes older
+statements in this document that the native implementation is only a menu foundation.
+
 Status: implementation-ready working design, not implemented content or a validated educational intervention. The approved decision register governs core rules. This document fills in lesson sequencing, teaching interactions, interface flow and evaluation criteria. Numeric thresholds and combat values are provisional and must be tested.
 
 ## 1. Direction and scope

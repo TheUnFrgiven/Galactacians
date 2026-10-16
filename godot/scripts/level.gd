@@ -1,10 +1,11 @@
 extends Control
 
 const Battle = preload("res://scripts/first_battle.gd")
+const Content = preload("res://scripts/chapter.gd")
 const Bucket = preload("res://scripts/reward_bucket.gd")
 const FONT = preload("res://friendly_font.tres")
 const INK := Color("294e48")
-const SAVE_PATH := "user://first-contact-v1.json"
+const SAVE_PATH := "user://earth-orbit-v2.json"
 const FACTS: Array[Vector2i] = [Vector2i(1, 1), Vector2i(1, 2), Vector2i(1, 3), Vector2i(2, 2), Vector2i(3, 1), Vector2i(2, 1), Vector2i(3, 2), Vector2i(2, 3)]
 var ui: Control
 var screen := "menu"
@@ -36,14 +37,47 @@ var tutorial := 0
 var speed := 1.0
 var loaded: Dictionary = {}
 var question_active := false
+var mission := 0
+var wave := 0
+var earth_health := 5
+var checkpoint_health := 5
+var operation := "+"
+var chosen_role := "pebble"
+var pending_role := "pebble"
+var offered_role := "pebble"
+var cleared: Array[int] = []
+var portraits: Dictionary = {}
+var alien_textures: Dictionary = {}
+var earth_texture: Texture2D
+
+func mission_data() -> Dictionary:
+	return Content.MISSIONS[mission]
+
+func expected_answer() -> int:
+	return question.x + question.y if operation == "+" else question.x - question.y
+
+func fact_key() -> String:
+	return "%d%s%d" % [question.x, operation, question.y]
+
+func mark_complete() -> void:
+	completed = true
+	if not cleared.has(mission):
+		cleared.append(mission)
 
 func _ready() -> void:
+	for role: String in Content.ROLES:
+		portraits[role] = load("res://art/" + role + ".svg")
+	for kind: String in ["scout", "skater", "swarm", "tank", "boss"]:
+		alien_textures[kind] = load("res://art/alien-" + kind + ".svg")
+	earth_texture = load("res://art/earth.svg")
 	if FileAccess.file_exists(SAVE_PATH):
 		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(SAVE_PATH))
-		if parsed is Dictionary and parsed.get("version") == 1:
+		if parsed is Dictionary and parsed.get("version") == 2:
 			loaded = parsed
 			motion = bool(loaded.get("motion", true))
 			completed = bool(loaded.get("completed", false))
+			for id: Variant in loaded.get("cleared", []):
+				cleared.append(int(id))
 	ui = Control.new()
 	ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -63,11 +97,38 @@ func _process(delta: float) -> void:
 			remaining -= step
 		if battle.done:
 			victory = battle.won
-			completed = completed or (victory and evidence.size() >= 3)
+			earth_health = battle.hearts
+			if victory and wave + 1 < int(mission_data().waves):
+				formation = battle.towers.filter(func(t: Dictionary) -> bool: return t.hp > 0).duplicate(true)
+				wave += 1
+				bucket = Bucket.new(3)
+				screen = "prepare"
+				save_game()
+				build()
+				return
+			if victory and learning_ready():
+				mark_complete()
 			screen = "result"
 			save_game()
 			build()
 	queue_redraw()
+
+func learning_ready() -> bool:
+	if evidence.size() < 3:
+		return false
+	if mission == 5:
+		return evidence.any(func(f: String) -> bool: return "+" in f) and evidence.any(func(f: String) -> bool: return "−" in f)
+	return true
+
+func portrait(role: String, rect: Rect2) -> void:
+	var art := TextureRect.new()
+	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	art.texture = portraits.get(role, portraits.pebble)
+	art.position = rect.position
+	art.size = rect.size
+	art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ui.add_child(art)
 
 func label(text: String, rect: Rect2, fs: int = 24, color: Color = INK, center: bool = false) -> Label:
 	var node := Label.new()
@@ -117,17 +178,19 @@ func build() -> void:
 	if screen == "menu":
 		label("EARTH ORBIT", Rect2(700, 120, 440, 35), 19, Color("699469"), true)
 		label("Small friends.\nBig adventure.", Rect2(680, 165, 480, 150), 50, INK, true)
-		label("First contact", Rect2(720, 324, 400, 40), 26, INK, true)
-		button("Play first level  →", Rect2(740, 395, 360, 70), start_new)
+		label("Your little space crew is ready.", Rect2(680, 324, 480, 40), 24, INK, true)
+		button("Adventure  →", Rect2(740, 395, 360, 70), open_path)
 		if not loaded.is_empty():
 			button("Continue", Rect2(740, 480, 360, 56), resume_game, Color("dce9c9"))
 		button("Settings", Rect2(1090, 28, 160, 48), open_settings, Color("edf0df"), 19)
 		label("GALACTACIANS", Rect2(80, 600, 500, 55), 28, INK, true)
+	elif screen == "path":
+		path_ui()
 	else:
 		button("‹  Menu", Rect2(30, 23, 125, 48), open_settings, Color.WHITE, 20)
-		label("First contact", Rect2(180, 18, 520, 55), 32)
-		label("EARTH ORBIT   /   01", Rect2(183, 69, 450, 25), 15, Color("718f7d"))
-		var count: int = battle.hearts if screen in ["battle", "result"] else 5
+		label(str(mission_data().name), Rect2(180, 18, 650, 55), 32)
+		label("EARTH ORBIT   /   %02d   ·   WAVE %d / %d" % [mission + 1, wave + 1, mission_data().waves], Rect2(183, 69, 650, 25), 15, Color("718f7d"))
+		var count: int = battle.hearts if screen in ["battle", "result"] else earth_health
 		label("♥ ".repeat(count) + "♡ ".repeat(5 - count), Rect2(960, 25, 280, 50), 32, Color("d97786"), true)
 		if screen == "prepare":
 			prepare_ui()
@@ -160,21 +223,51 @@ func build() -> void:
 			result_ui()
 	queue_redraw()
 
+func open_path() -> void:
+	screen = "path"
+	modal = ""
+	build()
+
+func path_ui() -> void:
+	button("‹ Home", Rect2(35, 25, 145, 50), func() -> void: screen = "menu"; build(), Color.WHITE, 21)
+	label("Earth Orbit", Rect2(200, 45, 880, 65), 44, INK, true)
+	label("Little lessons. A growing crew.", Rect2(200, 112, 880, 40), 23, INK, true)
+	for i: int in range(6):
+		var x: float = 85 + i % 3 * 390
+		var y: float = 200 + floori(i / 3.0) * 230
+		var available: bool = i == 0 or cleared.has(i - 1)
+		var node: Button = button("", Rect2(x, y, 350, 195), start_mission.bind(i), Color("e2edd4") if available else Color("e9eade"))
+		node.disabled = not available
+		portrait(str(Content.MISSIONS[i].new) if not str(Content.MISSIONS[i].new).is_empty() else "pebble", Rect2(x + 12, y + 20, 100, 115))
+		label("%02d  %s" % [i + 1, "✓" if cleared.has(i) else ""], Rect2(x + 125, y + 15, 200, 30), 20)
+		label(str(Content.MISSIONS[i].name), Rect2(x + 125, y + 49, 210, 64), 24)
+		label(str(Content.MISSIONS[i].topic) if available else "Finish the previous lesson", Rect2(x + 20, y + 139, 310, 40), 18, INK, true)
+
+func start_mission(id: int) -> void:
+	mission = id
+	start_new()
+
 func prepare_ui() -> void:
 	if question_active:
 		label("Your question is waiting", Rect2(60, 556, 800, 55), 30)
 		button("Back to question", Rect2(890, 595, 320, 65), func() -> void: modal = "question"; build())
 	elif pending > 0:
-		label("Pebble joined! Tap a landing pad.", Rect2(60, 556, 850, 55), 30)
-		label("Aliens will visit the top and bottom lanes.", Rect2(60, 615, 1000, 40), 22)
+		portrait(pending_role, Rect2(45, 552, 120, 130))
+		label("%s joined! Tap a landing pad." % Content.NAMES[pending_role], Rect2(180, 556, 850, 55), 29)
+		label("Watch the marked lanes. Your astronaut floats in place.", Rect2(180, 615, 1000, 40), 21)
 	elif selected >= 0:
-		label("Tap an empty pad to move Pebble.", Rect2(60, 560, 900, 60), 28)
+		label("Tap an empty pad to move your astronaut.", Rect2(60, 560, 900, 60), 28)
 		button("Done", Rect2(1040, 600, 175, 60), func() -> void: selected = -1; build())
 	elif bucket.remaining() > 0:
-		label("Choose your next friend", Rect2(60, 542, 900, 45), 27)
+		label("Choose your crew", Rect2(60, 543, 330, 44), 25)
+		for i: int in range(int(mission_data().roles)):
+			var role: String = Content.ROLES[i]
+			button(str(Content.NAMES[role]), Rect2(400 + i * 152, 552, 140, 37), func() -> void: offered_role = role; build(), Color("c7dfb1") if offered_role == role else Color("edf1e6"), 18)
 		for strength: int in range(1, mini(3, bucket.remaining()) + 1):
 			var prompt: Vector2i = offer_fact(strength)
-			button("Pebble %s    %d + %d" % ["●".repeat(strength), prompt.x, prompt.y], Rect2(60 + (strength - 1) * 340, 600, 320, 66), choose.bind(strength), Color("d8edbc"), 23)
+			var q: Dictionary = Content.question(mission, index, strength)
+			button("       %s    %d %s %d" % ["●".repeat(strength), prompt.x, q.op, prompt.y], Rect2(60 + (strength - 1) * 340, 600, 320, 66), choose.bind(strength), Color("d8edbc"), 23)
+			portrait(offered_role, Rect2(62 + (strength - 1) * 340, 591, 80, 80))
 		button("?", Rect2(1160, 604, 56, 56), func() -> void: tutorial = 0; modal = "tutorial"; build(), Color("e4dff3"))
 	else:
 		label("Team ready!", Rect2(60, 554, 700, 50), 32)
@@ -189,16 +282,26 @@ func teaching_art(a: int, b: int, rect: Rect2, combine: bool) -> void:
 	art.b = b
 	art.joined = combine
 	art.moving = motion
+	art.subtract = operation == "−"
 	ui.add_child(art)
 
 func tutorial_ui() -> void:
-	label("Hello, Earth defender!" if tutorial == 0 else "Two groups. One happy team.", Rect2(350, 85, 580, 65), 32, INK, true)
-	label("Answer a little sum to meet Pebble.\nThen place your friend in a lane." if tutorial == 0 else "Two friends meet one more.\nTap to bring them together.", Rect2(370, 158, 540, 85), 24, INK, true)
-	teaching_art(2, 1, Rect2(365, 260, 550, 190), tutorial >= 2)
+	var data: Dictionary = mission_data()
+	label("Welcome, space crew!" if tutorial == 0 else str(data.topic), Rect2(350, 85, 580, 65), 32, INK, true)
+	var introducing: String = str(data.new)
+	var tip: String = "Earn your crew with a sum.\nPlace them, then tap Ready."
+	if not introducing.is_empty():
+		tip = "%s · %s\nEarn a crewmate, then choose a lane." % [Content.NAMES[introducing], Content.JOBS[introducing]]
+	if tutorial == 0:
+		label(tip, Rect2(370, 158, 540, 85), 24, INK, true)
+		portrait(introducing if not introducing.is_empty() else "pebble", Rect2(515, 265, 250, 250))
+	else:
+		label("%d friends are here. %d leave. Who stays?" % [data.a, data.b] if operation == "−" else "%d friends meet %d more. How many altogether?" % [data.a, data.b], Rect2(370, 158, 540, 85), 23, INK, true)
+		teaching_art(int(data.a), int(data.b), Rect2(365, 250, 550, 190), tutorial >= 2)
 	if tutorial >= 2:
-		label("2 + 1 = 3", Rect2(360, 450, 560, 70), 42, INK, true)
-		label("More dots on a Pebble means a stronger friend.", Rect2(355, 515, 570, 32), 18, INK, true)
-	button("Meet Pebble" if tutorial == 0 else ("Bring them together" if tutorial == 1 else "My turn!"), Rect2(440, 555, 400, 65), tutorial_next)
+		label("%d %s %d = %d" % [data.a, data.op, data.b, Content.answer(data)], Rect2(360, 450, 560, 70), 42, INK, true)
+		label("More dots means a stronger astronaut.", Rect2(355, 515, 570, 32), 18, INK, true)
+	button("Let’s learn" if tutorial == 0 else (("Let them leave" if operation == "−" else "Bring them together") if tutorial == 1 else "My turn!"), Rect2(440, 555, 400, 65), tutorial_next)
 
 func tutorial_next() -> void:
 	tutorial += 1
@@ -208,16 +311,17 @@ func tutorial_next() -> void:
 	build()
 
 func question_ui() -> void:
-	label("Let’s practise" if recovery else "A new Pebble friend", Rect2(350, 76, 580, 45), 26, INK, true)
-	label("%d + %d = %s" % [question.x, question.y, str(question.x + question.y) if revealed else "?"], Rect2(350, 120, 580, 70), 48, INK, true)
+	label("Let’s practise" if recovery else "%s joins your crew" % Content.NAMES[chosen_role], Rect2(350, 76, 580, 45), 26, INK, true)
+	label("%d %s %d = %s" % [question.x, operation, question.y, str(expected_answer()) if revealed else "?"], Rect2(350, 120, 580, 70), 48, INK, true)
 	if hinted or revealed:
 		teaching_art(question.x, question.y, Rect2(380, 195, 520, 125), joined)
 		label(feedback, Rect2(350, 319, 580, 65), 21, INK, true)
 	else:
-		label("How many altogether?", Rect2(350, 200, 580, 50), 24, INK, true)
+		label("How many stay?" if operation == "−" else "How many altogether?", Rect2(350, 200, 580, 50), 24, INK, true)
+		portrait(chosen_role, Rect2(580, 253, 120, 125))
 		label(feedback, Rect2(350, 255, 580, 50), 21, INK, true)
 	if revealed:
-		button("Bring the groups together" if not joined else "Pebble joins us" if not recovery else "Try a fresh question", Rect2(390, 495, 500, 68), explain_next)
+		button(("Let them leave" if operation == "−" else "Bring the groups together") if not joined else "Pebble joins us" if not recovery else "Try a fresh question", Rect2(390, 495, 500, 68), explain_next)
 		return
 	answer_label = label(answer if not answer.is_empty() else "_", Rect2(390, 390, 125, 80), 44, INK, true)
 	for digit: int in range(10):
@@ -251,16 +355,15 @@ func result_ui() -> void:
 	label("You sent the visitors home." if victory else "Your friends are ready to try again.\nMove them into the marked lanes.", Rect2(365, 195, 550, 90), 25, INK, true)
 	label("★  ★  ★" if victory else "♡", Rect2(350, 300, 580, 90), 65, Color("d7a947"), true)
 	if victory:
-		label("First contact complete!" if evidence.size() >= 3 else "Battle won! Let’s practise a little more together.", Rect2(350, 400, 580, 60), 23, INK, true)
-		button("Play again" if evidence.size() >= 3 else "A little practice", Rect2(410, 490, 460, 65), start_new if evidence.size() >= 3 else start_recovery)
+		label("Lesson complete! Your adventure grows." if learning_ready() else "Battle won! Let’s practise a little more together.", Rect2(350, 400, 580, 60), 23, INK, true)
+		button("Back to the adventure" if learning_ready() else "A little practice", Rect2(410, 490, 460, 65), open_path if learning_ready() else start_recovery)
 	else:
 		button("Rearrange & retry", Rect2(410, 490, 460, 65), retry)
 	button("Home", Rect2(490, 580, 300, 48), go_home, Color("eef1df"), 20)
 
 func offer_fact(strength: int) -> Vector2i:
-	var offset: int = 0 if strength == 1 else 3 if strength == 2 else 6
-	var count: int = 3 if strength == 1 else 3 if strength == 2 else 2
-	return FACTS[offset + index % count]
+	var q: Dictionary = Content.question(mission, index, strength)
+	return Vector2i(q.a, q.b)
 
 func start_new() -> void:
 	bucket = Bucket.new(6)
@@ -271,6 +374,13 @@ func start_new() -> void:
 	pending = 0
 	selected = -1
 	index = 0
+	wave = 0
+	earth_health = 5
+	checkpoint_health = 5
+	operation = str(mission_data().op)
+	offered_role = "pebble"
+	chosen_role = "pebble"
+	completed = cleared.has(mission)
 	victory = false
 	recovery = false
 	question_active = false
@@ -284,6 +394,8 @@ func choose(strength: int) -> void:
 	if not bucket.can_offer(strength) or pending > 0 or question_active:
 		return
 	question = offer_fact(strength)
+	operation = str(Content.question(mission, index, strength).op)
+	chosen_role = offered_role
 	power = strength
 	reset_question()
 
@@ -322,7 +434,7 @@ func _input(event: InputEvent) -> void:
 
 func hint() -> void:
 	hinted = true
-	feedback = "Count the first group. Then count on %d more." % question.y
+	feedback = "Start with %d. Move %d away, then count who stays." % [question.x, question.y] if operation == "−" else "Count the first group. Then count on %d more." % question.y
 	save_game()
 	build()
 
@@ -330,14 +442,14 @@ func reveal() -> void:
 	revealed = true
 	hinted = true
 	joined = false
-	feedback = "%d friends here. %d more are coming to join." % [question.x, question.y]
+	feedback = "%d friends here. %d are heading home." % [question.x, question.y] if operation == "−" else "%d friends here. %d more are coming to join." % [question.x, question.y]
 	save_game()
 	build()
 
 func explain_next() -> void:
 	if not joined:
 		joined = true
-		feedback = "%d and %d together make %d friends." % [question.x, question.y, question.x + question.y]
+		feedback = "%d leave. %d friends stay with us." % [question.y, expected_answer()] if operation == "−" else "%d and %d together make %d friends." % [question.x, question.y, expected_answer()]
 		save_game()
 		build()
 	else:
@@ -346,7 +458,7 @@ func explain_next() -> void:
 func submit() -> void:
 	if answer.is_empty() or not question_active or revealed:
 		return
-	if answer.to_int() == question.x + question.y:
+	if answer.to_int() == expected_answer():
 		finish_answer()
 	elif not wrong:
 		wrong = true
@@ -361,13 +473,15 @@ func finish_answer() -> void:
 	if not question_active:
 		return
 	var independent: bool = not (hinted or wrong or revealed)
-	var fact: String = "%d+%d" % [question.x, question.y]
+	var fact: String = fact_key()
 	if not recovery:
 		var reward: Dictionary = bucket.award("q%d" % index, power, wrong, revealed, hinted)
 		if reward.is_empty():
 			return
 		pending = int(reward.power)
-	if independent and not evidence.has(fact) and fact != "2+1":
+		pending_role = "pebble" if reward.fallback else chosen_role
+	var taught: String = "%d%s%d" % [mission_data().a, mission_data().op, mission_data().b]
+	if independent and not evidence.has(fact) and fact != taught:
 		# The exact worked tutorial example is not fresh independent evidence.
 		evidence.append(fact)
 	records.append({"fact": fact, "hinted": hinted, "wrong": wrong, "revealed": revealed, "independent": independent})
@@ -375,8 +489,8 @@ func finish_answer() -> void:
 	index += 1
 	modal = ""
 	if recovery:
-		if evidence.size() >= 3:
-			completed = true
+		if learning_ready():
+			mark_complete()
 			recovery = false
 			screen = "result"
 		else:
@@ -390,11 +504,13 @@ func start_recovery() -> void:
 	next_recovery()
 
 func next_recovery() -> void:
-	for i: int in range(FACTS.size()):
-		var candidate: Vector2i = FACTS[(index + i) % FACTS.size()]
-		var fact: String = "%d+%d" % [candidate.x, candidate.y]
-		if not evidence.has(fact) and fact != "2+1":
-			question = candidate
+	var taught: String = "%d%s%d" % [mission_data().a, mission_data().op, mission_data().b]
+	for i: int in range(60):
+		var q: Dictionary = Content.question(mission, index + i, 1 + i % 3)
+		var fact: String = "%d%s%d" % [q.a, q.op, q.b]
+		if not evidence.has(fact) and fact != taught:
+			question = Vector2i(q.a, q.b)
+			operation = str(q.op)
 			break
 	reset_question()
 
@@ -417,7 +533,7 @@ func place(lane: int, col: int) -> void:
 				build()
 			return
 	if pending > 0:
-		formation.append({"lane": lane, "col": col, "x": 300.0 + col * 155, "power": pending})
+		formation.append({"lane": lane, "col": col, "x": 300.0 + col * 155, "power": pending, "role": pending_role})
 		pending = 0
 	elif selected >= 0:
 		formation[selected].lane = lane
@@ -431,7 +547,8 @@ func launch() -> void:
 	if bucket.remaining() != 0 or pending > 0 or question_active:
 		return
 	checkpoint = formation.duplicate(true)
-	battle.begin(checkpoint)
+	checkpoint_health = earth_health
+	battle.begin(checkpoint, Content.recipe(mission, wave), earth_health)
 	screen = "battle"
 	selected = -1
 	save_game()
@@ -439,6 +556,7 @@ func launch() -> void:
 
 func retry() -> void:
 	formation = checkpoint.duplicate(true)
+	earth_health = checkpoint_health
 	pending = 0
 	selected = -1
 	screen = "prepare"
@@ -447,21 +565,23 @@ func retry() -> void:
 	build()
 
 func save_game() -> void:
-	if screen == "menu":
+	if screen in ["menu", "path"]:
 		loaded["motion"] = motion
 		if not loaded.is_empty() and loaded.has("version") and not "--test" in OS.get_cmdline_user_args():
 			var settings_file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 			if settings_file:
 				settings_file.store_string(JSON.stringify(loaded))
 		return
-	var state: Dictionary = {"version": 1, "screen": screen, "modal": modal,
+	var state: Dictionary = {"version": 2, "screen": screen, "modal": modal,
 		"formation": formation, "checkpoint": checkpoint, "spent": bucket.spent,
 		"resolved": bucket.resolved_questions, "pending": pending, "index": index,
 		"evidence": evidence, "records": records, "victory": victory, "completed": completed,
 		"recovery": recovery, "motion": motion, "tutorial": tutorial,
 		"question": [question.x, question.y], "power": power, "question_active": question_active,
 		"wrong": wrong, "hinted": hinted, "revealed": revealed, "joined": joined, "feedback": feedback,
-		"hearts": battle.hearts}
+		"hearts": battle.hearts, "mission": mission, "wave": wave, "earth_health": earth_health,
+		"checkpoint_health": checkpoint_health, "capacity": bucket.capacity, "operation": operation,
+		"chosen_role": chosen_role, "pending_role": pending_role, "offered_role": offered_role, "cleared": cleared}
 	loaded = state.duplicate(true)
 	if "--test" in OS.get_cmdline_user_args():
 		return
@@ -474,8 +594,16 @@ func resume_game() -> void:
 	if loaded.is_empty():
 		start_new()
 		return
-	bucket = Bucket.new(6)
-	bucket.spent = clampi(int(loaded.get("spent", 0)), 0, 6)
+	mission = clampi(int(loaded.get("mission", 0)), 0, 5)
+	wave = int(loaded.get("wave", 0))
+	earth_health = int(loaded.get("earth_health", 5))
+	checkpoint_health = int(loaded.get("checkpoint_health", 5))
+	operation = str(loaded.get("operation", "+"))
+	chosen_role = str(loaded.get("chosen_role", "pebble"))
+	pending_role = str(loaded.get("pending_role", "pebble"))
+	offered_role = str(loaded.get("offered_role", "pebble"))
+	bucket = Bucket.new(int(loaded.get("capacity", 6)))
+	bucket.spent = clampi(int(loaded.get("spent", 0)), 0, bucket.capacity)
 	bucket.resolved_questions = loaded.get("resolved", {}).duplicate(true)
 	formation.assign(loaded.get("formation", []))
 	checkpoint.assign(loaded.get("checkpoint", []))
@@ -491,6 +619,7 @@ func resume_game() -> void:
 	if screen == "battle":
 		screen = "prepare"
 		formation = checkpoint.duplicate(true)
+		earth_health = checkpoint_health
 	if modal == "settings":
 		modal = ""
 	tutorial = int(loaded.get("tutorial", 0))
@@ -517,12 +646,17 @@ func _draw() -> void:
 		earth(Vector2(320, 335), 135, false)
 		alien(Vector2(490, 160), 1.3, 0)
 		alien(Vector2(140, 490), 0.9, 2)
+		pebble(Vector2(535, 450), 2, "pebble")
+		pebble(Vector2(140, 190), 2, "frost")
+		return
+	if screen == "path":
+		draw_arc(Vector2(640, 365), 330, 0, TAU, 120, Color("d8e3c9"), 2, true)
 		return
 	rounded(Rect2(30, 125, 1220, 410), Color("d4e4c8"), 28)
 	for lane: int in range(3):
 		var y: float = 171 + lane * 122
 		rounded(Rect2(215, y, 1008, 108), Color("edf3de") if lane != 1 else Color("e4edda"), 25)
-		if lane != 1:
+		if lane != 1 or wave > 0:
 			draw_circle(Vector2(1173, y + 54), 25, Color("d6dfbc"))
 			draw_string(FONT, Vector2(1155, y + 65), "←", HORIZONTAL_ALIGNMENT_LEFT, -1, 34, Color("79916b"))
 		elif screen == "prepare":
@@ -541,16 +675,21 @@ func _draw() -> void:
 	var active: Array[Dictionary] = battle.towers if screen == "battle" else formation
 	for tower: Dictionary in active:
 		if tower.get("hp", 1) > 0:
-			pebble(Vector2(tower.x, 225 + tower.lane * 122), int(tower.power))
+			pebble(Vector2(tower.x, 225 + tower.lane * 122), int(tower.power), str(tower.get("role", "pebble")))
+			if screen == "battle" and float(tower.get("hp", 0)) < 30:
+				draw_arc(Vector2(tower.x, 225 + tower.lane * 122), 43, 0, PI, 25, Color("df9582"), 3, true)
 	if screen == "battle":
 		for enemy: Dictionary in battle.enemies:
-			alien(Vector2(enemy.x, 225 + enemy.lane * 122), 0.8, enemy.phase)
+			alien(Vector2(enemy.x, 225 + enemy.lane * 122), 0.95 if enemy.kind != "boss" else 1.25, enemy.phase, enemy.kind)
+			if enemy.slow > 0:
+				draw_arc(Vector2(enemy.x, 225 + enemy.lane * 122), 36, 0, TAU, 32, Color("9cd8e2"), 2, true)
 			if enemy.hit > 0:
 				draw_arc(Vector2(enemy.x, 225 + enemy.lane * 122), 34, 0, TAU, 24, Color("ffe5a1"), 4, true)
 		for shot: Dictionary in battle.shots:
 			var bullet: Vector2 = shot.from.lerp(shot.to, clampf(1.0 - shot.life / 0.16, 0.0, 1.0))
-			draw_line(bullet - Vector2(20, 0), bullet, Color("e5b34f"), 4, true)
-			draw_circle(bullet, 6, Color("f8cb68"))
+			var color: Color = Color("7cc4d7") if shot.role == "frost" else Color("b399ce") if shot.role == "poppy" else Color("e5b34f")
+			draw_line(bullet - Vector2(16, 0), bullet, color, 3, true)
+			draw_circle(bullet, 5, color, true, -1, true)
 	rounded(Rect2(30, 545, 1220, 150), Color.WHITE, 24)
 
 func rounded(rect: Rect2, color: Color, radius: int) -> void:
@@ -560,53 +699,36 @@ func rounded(rect: Rect2, color: Color, radius: int) -> void:
 	draw_style_box(box, rect)
 
 func earth(center: Vector2, radius: float, worried: bool) -> void:
-	var p: Vector2 = center + Vector2(0, sin(time * 1.3) * 5 if motion else 0)
-	draw_circle(p, radius + 10, Color("bfdab3"))
-	draw_circle(p, radius + 3, Color("528d85"))
-	draw_circle(p, radius, Color("85cddd"))
-	var land := PackedVector2Array([Vector2(-0.7, -0.4), Vector2(-0.3, -0.75), Vector2(0.0, -0.66), Vector2(0.12, -0.35), Vector2(-0.1, -0.2), Vector2(-0.03, 0.1), Vector2(-0.26, 0.34), Vector2(-0.48, 0.14), Vector2(-0.43, -0.12)])
-	var coast := PackedVector2Array([Vector2(0.25, 0.03), Vector2(0.52, -0.1), Vector2(0.76, 0.1), Vector2(0.65, 0.41), Vector2(0.34, 0.7), Vector2(0.15, 0.49)])
-	for polygon: PackedVector2Array in [land, coast]:
-		var points := PackedVector2Array()
-		for point: Vector2 in polygon:
-			points.append(p + point.rotated(time * 0.07) * radius)
-		draw_colored_polygon(points, Color("92c871"))
+	var p: Vector2 = center + Vector2(0, sin(time * 1.15) * 3 if motion else 0)
+	var diameter: float = radius * 2.65
+	draw_set_transform(p, time * 0.025 if motion else 0)
+	draw_texture_rect(earth_texture, Rect2(-Vector2.ONE * diameter / 2, Vector2.ONE * diameter), false)
+	draw_set_transform(Vector2.ZERO)
 	for x: float in [-0.26, 0.26]:
-		draw_circle(p + Vector2(radius * x, 2), radius * 0.065, INK)
-		draw_circle(p + Vector2(radius * x * 1.6, radius * 0.17), radius * 0.09, Color("efa7a0"))
+		draw_circle(p + Vector2(radius * x, 2), radius * 0.055, INK, true, -1, true)
+		draw_circle(p + Vector2(radius * x * 1.6, radius * 0.17), radius * 0.065, Color("efa7a0"), true, -1, true)
 	if worried:
-		draw_arc(p + Vector2(0, radius * 0.4), radius * 0.17, PI + 0.2, TAU - 0.2, 20, INK, 4, true)
-		draw_line(p + Vector2(-28, -20), p + Vector2(-13, -26), INK, 3, true)
-		draw_line(p + Vector2(13, -26), p + Vector2(28, -20), INK, 3, true)
+		draw_arc(p + Vector2(0, radius * 0.38), radius * 0.15, PI + 0.2, TAU - 0.2, 24, INK, 3, true)
+		draw_line(p + Vector2(-28, -20), p + Vector2(-13, -26), INK, 2.5, true)
+		draw_line(p + Vector2(13, -26), p + Vector2(28, -20), INK, 2.5, true)
 	else:
-		draw_arc(p + Vector2(0, radius * 0.15), radius * 0.18, 0.2, PI - 0.2, 20, INK, 4, true)
+		draw_arc(p + Vector2(0, radius * 0.15), radius * 0.18, 0.2, PI - 0.2, 24, INK, 3, true)
 
-func pebble(p: Vector2, strength: int) -> void:
-	var r: float = 24 + strength * 3
-	draw_circle(p + Vector2(0, 10), r + 5, Color("b6cba3"))
-	draw_circle(p, r + 2, INK)
-	draw_circle(p, r, Color("8dcb78"))
-	draw_arc(p + Vector2(-6, -5), r * 0.6, PI, PI * 1.5, 12, Color("c7eab1"), 5, true)
-	for x: int in [-9, 9]:
-		draw_circle(p + Vector2(x, -1), 3.5, INK)
-	draw_arc(p + Vector2(0, 5), 7, 0.1, PI - 0.1, 12, INK, 2, true)
+func pebble(p: Vector2, strength: int, role: String = "pebble") -> void:
+	var phase: float = p.x * 0.007 + p.y * 0.011
+	var offset := Vector2(0, sin(time * 1.8 + phase) * 3.0 if motion else 0)
+	var dim: float = 88 + strength * 3
+	draw_set_transform(p + offset, sin(time * 1.1 + phase) * 0.025 if motion else 0)
+	draw_texture_rect(portraits.get(role, portraits.pebble), Rect2(-dim / 2, -dim / 2 - 8, dim, dim), false)
+	draw_set_transform(Vector2.ZERO)
 	for i: int in range(strength):
-		draw_circle(p + Vector2((i - (strength - 1) / 2.0) * 10, 44), 3, Color("c8a249"))
+		draw_circle(p + Vector2((i - (strength - 1) / 2.0) * 9, 47), 2.6, Color("be9c54"), true, -1, true)
 
-func alien(center: Vector2, scale_value: float, phase: float) -> void:
-	var p: Vector2 = center + Vector2(0, sin(time * 2.3 + phase) * 6 if motion else 0)
-	draw_set_transform(p, sin(time + phase) * 0.04 if motion else 0, Vector2.ONE * scale_value)
-	draw_circle(Vector2(0, -8), 27, Color("9b88be"))
-	draw_circle(Vector2(0, -10), 24, Color("c9b7e3"))
-	for x: int in [-10, 10]:
-		draw_circle(Vector2(x, -10), 4, INK)
-		draw_line(Vector2(x, -30), Vector2(x * 1.5, -40), INK, 2, true)
-		draw_circle(Vector2(x * 1.5, -40), 4, Color("d8b768"))
-	draw_arc(Vector2(0, -2), 6, 0, PI, 12, INK, 2, true)
-	ellipse(Vector2(0, 15), Vector2(40, 13), Color("827ea7"))
-	ellipse(Vector2(0, 11), Vector2(39, 12), Color("c1b8dc"))
-	for x: int in [-23, 0, 23]:
-		draw_circle(Vector2(x, 12), 3, Color("fff1ba"))
+func alien(center: Vector2, scale_value: float, phase: float, kind: String = "scout") -> void:
+	var p: Vector2 = center + Vector2(0, sin(time * 1.7 + phase) * 3 if motion else 0)
+	var dim: float = 90 * scale_value
+	draw_set_transform(p, sin(time * 0.9 + phase) * 0.025 if motion else 0)
+	draw_texture_rect(alien_textures.get(kind, alien_textures.scout), Rect2(-dim / 2, -dim / 2, dim, dim), false)
 	draw_set_transform(Vector2.ZERO)
 
 func ellipse(center: Vector2, radii: Vector2, color: Color) -> void:
@@ -622,17 +744,29 @@ class TeachingArt extends Control:
 	var joined := false
 	var moving := true
 	var progress := 0.0
+	var subtract := false
 	func _ready() -> void:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
 	func _process(dt: float) -> void:
 		progress = minf(1, progress + dt * 1.5) if moving else 1.0
 		queue_redraw()
 	func _draw() -> void:
-		for i: int in range(a + b):
-			var start := Vector2(55 + i * 75 + (60 if i >= a else 0), size.y * 0.5)
-			var target := Vector2(size.x * 0.5 + (i - (a + b - 1) / 2.0) * 65, size.y * 0.5)
+		var total: int = a if subtract else a + b
+		for i: int in range(total):
+			var start := Vector2(size.x / 2 - 150 + (i % 5) * 70, 38 + floori(i / 5.0) * 60)
+			var target: Vector2 = start
+			var leaving: bool = subtract and i >= a - b
+			if leaving:
+				target += Vector2(20, -25)
+			elif not subtract:
+				target.x += 12 if i < a else -12
 			var p: Vector2 = start.lerp(target, progress) if joined else start
-			draw_circle(p, 25, Color("9fce84") if i < a else Color("b7a3d7"))
+			var color := Color("9fce84") if i < a else Color("b7a3d7")
+			if leaving and joined:
+				color = Color("dde1d4")
+			draw_circle(p, 22, color, true, -1, true)
+			if leaving and joined:
+				draw_line(p + Vector2(-13, 13), p + Vector2(13, -13), Color("a6ac9c"), 2, true)
 			for x: int in [-7, 7]:
 				draw_circle(p + Vector2(x, -3), 3, Color("294e48"))
 			draw_arc(p + Vector2(0, 3), 6, 0, PI, 12, Color("294e48"), 2, true)

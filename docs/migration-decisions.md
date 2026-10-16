@@ -163,4 +163,10 @@ Next implementation milestone: establish the Godot project alongside the preserv
 
 ## Curriculum design elaboration — 14 October 2026
 
+Latest user visual direction (implemented 16 October): use Claude's levels/curriculum,
+ChatGPT's gameplay feel, and clean cute art informed by both browser versions. Replace
+geometric tower bodies with floating astronauts; preserve the five role mechanics and
+shape badges. The approved math/preparation rules remain in force. Six opening missions
+are now playable; the complete 36-mission plan remains staged design beyond them.
+
 User requested the full basic-teaching progression grounded in curriculum, simpler understandable gameplay and the stronger Claude level structure. `curriculum-game-design.md` supplies the resulting working specification: six themed worlds of six missions, with the first six remaining the initial release. The authoring plan extends addition/subtraction through mission 24, then equal groups and sharing through mission 36. To preserve prerequisite teaching, the first chapter stays within 10, with the progression to 20 in the later addition/subtraction worlds. This is an explicit design refinement of the earlier initial-release number-range wording, not a claim the user separately approved every new threshold. Numeric check gates, budgets, wave counts and later content are design defaults requiring educator review and playtesting. The core confirmed reward, help, retry and preparation rules remain unchanged. Existing native implementation is only the foundation; the full design is not yet implemented.
