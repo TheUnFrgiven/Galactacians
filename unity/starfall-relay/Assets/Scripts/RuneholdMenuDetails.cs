@@ -100,7 +100,7 @@ public sealed partial class RuneholdGame
         HubHeading("Your story. Your colors.", "Milestones earn paint credits. Make the captain and her equipment your own.");
         if (MenuTab("Milestones", new Rect(337, 226, 225, 37), collectionTab == 0)) collectionTab = 0;
         if (MenuTab("Paint bay", new Rect(574, 226, 225, 37), collectionTab == 1)) collectionTab = 1;
-        MenuPill(pilotJournal.Tokens + " PAINT CREDITS", new Rect(962, 232, 235, 25), Gold);
+        MenuPill(MenuCount(pilotJournal.Tokens, "paint credit").ToUpperInvariant(), new Rect(962, 232, 235, 25), Gold);
         if (collectionTab == 0)
         {
             for (int row = 0; row < 6; row++)

@@ -6,7 +6,7 @@
 - A licensed static regular-weight Nunito derivative adds a quieter body text weight beside the existing bold headings. Both are distributed under the included SIL Open Font License. Long single-line names and headings fit their available width.
 - The flight console uses original pixel glyphs, consistent gutters, thinner borders and a clear active navigation row. The existing captain and starship assets remain central.
 - The learning route has illustrated pixel planets, selection rings and readable practice availability. Practice difficulty and profile/collection sections use consistent selected tabs.
-- Equipment cards and profile ranks use equipment artwork. The paint bay shows four cached portraits recolored with the same palette function used by gameplay. Previewing does not equip or buy a palette.
+- Equipment cards and profile ranks use equipment artwork. The paint bay shows four cached portraits recolored with the same palette function used by gameplay. All four previews, including the original colors, stay independent of the currently equipped palette. Previewing does not equip or buy a palette.
 - Achievement cards show trophy emblems, real counts, progress bars and credit rewards. Equipped, affordable and unavailable palette states are distinct.
 - Settings has themed text entry, separate audio tracks and mute buttons, clear toggles and save feedback. Muting remembers the preceding level during the current session. Existing persisted music migration remains in place.
 - Thin progress bars keep a visible colored fill. The teaching number pad has a single-line answer field with more vertical room, correcting clipped placeholder text. The practice summary includes a completion emblem.

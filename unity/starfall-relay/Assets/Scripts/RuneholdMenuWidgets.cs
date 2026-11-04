@@ -122,7 +122,6 @@ public sealed partial class RuneholdGame
     private void DrawLiveryPortrait(int index, Vector2 center, float height)
     {
         if (pilotTexture == null) return;
-        if (index == 0) { DrawTrimmedSprite(pilotTexture, pilotFrames[0], center, height, Color.white); return; }
         if (!menuPortraits.TryGetValue(index, out Texture2D portrait))
         {
             Rect uv = pilotFrames[0];
