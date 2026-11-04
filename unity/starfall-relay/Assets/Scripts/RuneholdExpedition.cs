@@ -21,6 +21,7 @@ public sealed class StarfallPilotJournal
     public int[] Setpoints = new int[6];
     public float SoundVolume = .55f;
     public float MusicVolume = .32f;
+    public int MusicSettingsVersion;
 }
 
 public sealed partial class RuneholdGame

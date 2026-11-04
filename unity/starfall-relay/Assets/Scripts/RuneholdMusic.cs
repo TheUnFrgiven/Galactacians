@@ -12,6 +12,11 @@ public sealed partial class RuneholdGame
     {
         // Original 16-bar composition, synthesized here from oscillators and seeded
         // noise. No samples, recordings, external tracks or music service required.
+        if (pilotJournal.MusicSettingsVersion < 1)
+        {
+            pilotJournal.MusicVolume = .32f;
+            pilotJournal.MusicSettingsVersion = 1;
+        }
         pilotJournal.MusicVolume = Mathf.Clamp01(pilotJournal.MusicVolume);
         relayMusic = gameObject.AddComponent<AudioSource>();
         relayMusic.playOnAwake = false; relayMusic.loop = true; relayMusic.spatialBlend = 0;

@@ -26,7 +26,7 @@ These are initial tuning values. Building and visual inspection do not establish
 
 The mission-control shell uses the existing deck and pilot art, a framed captain portrait, mission illustration, learning route, clearer navigation hierarchy and button hover/press feedback. Small buttons fit their font to their bounds.
 
-“Relay Afterglow” is an original sixteen-bar composition at 96 BPM, created in `RuneholdMusic.cs`. Soft synthesized keys, a restrained melody, sustained chords, syncopated bass and swung percussion are generated from oscillators and fixed-seed noise. No external recordings, sample packs or third-party music tracks are included. Note releases wrap into the loop for continuity. Music and sound effects have independent saved volume settings. Music ducks during questions and combat, and the less-motion option also quiets the menu visualizer.
+“Relay Afterglow” is an original sixteen-bar composition at 96 BPM, created in `RuneholdMusic.cs`. Soft synthesized keys, a restrained melody, sustained chords, syncopated bass and swung percussion are generated from oscillators and fixed-seed noise. No external recordings, sample packs or third-party music tracks are included. Note releases wrap into the loop for continuity. Music and sound effects have independent saved volume settings. Existing journals receive a versioned default music setting once; a saved zero volume remains muted on subsequent launches. Music ducks during questions and combat, and the less-motion option also quiets the menu visualizer.
 
 ## Build and runtime review
 
