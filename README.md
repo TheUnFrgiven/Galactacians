@@ -1,10 +1,15 @@
 # Galactacians · Earth Patrol
 
+## Starfall Relay — Unity expedition
+
+The continuous pixel-art action-defense game is in [unity/starfall-relay](unity/starfall-relay/README.md). Open that folder with Unity 6000.6.7f1 and run `Assets/Scenes/Moonvale.unity`. Captain Aria explores a starship deck, uses math to authorize permanent upgrades, and defends the relay against growing meteor swarms. This revision includes fixed rifle poses, cannon upgrade signs, power-scaling briefings, illustrated menus and an original synthesized soundtrack. See the [implementation notes](unity/starfall-relay/Docs/relay-polish.md) for the forecast model and review limits.
+
+
 ## Approved native rebuild — 14 October 2026
 
 The [complete curriculum and game design](docs/curriculum-game-design.md) specifies 36 missions across six themed worlds, teaching interactions, progression, menus and acceptance checks. The first playable release remains six introductory missions. The full campaign is designed, not yet implemented.
 
-The next implementation uses **Godot and typed GDScript**. The completed [design decision register](docs/migration-decisions.md) is the source of truth for the rebuild. First milestone: one complete curriculum mission, followed by six missions and then additional modes. Existing browser builds remain preserved below as reference prototypes; their mechanics do not describe the approved native design.
+The separate curriculum rebuild uses **Godot and typed GDScript**. The completed [design decision register](docs/migration-decisions.md) is the source of truth for the rebuild. First milestone: one complete curriculum mission, followed by six missions and then additional modes. Existing browser builds remain preserved below as reference prototypes; their mechanics do not describe the approved native design.
 
 The [native project](godot/README.md) now includes **six playable Earth Orbit missions and five floating astronaut roles**. Double-click `Play-Galactacians.cmd` on the configured Windows machine, or open `godot/project.godot` in Godot 4.7.2 and press F5. Adventure opens the chapter path. It includes addition/subtraction teaching, question-earned crew, preparation, waves, retries, saving and lesson unlocks. Reward, first-level and chapter checks pass; Windows renders were inspected. The remaining 30 designed missions, adaptive review, production narration and mobile testing remain pending.
 

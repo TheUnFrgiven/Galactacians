@@ -1,0 +1,23 @@
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+MemoryCaptures/
+Recordings/
+*.csproj
+*.sln
+*.suo
+*.user
+*.unitypackage
+.DS_Store
+
+# Local checkpoints, browser state and review captures
+.openai/
+.playwright-cli/
+output/
+.env
+.env.*
+!.env.example
