@@ -33,9 +33,9 @@ public sealed partial class RuneholdGame
         showTutorial = !learningProfile.TutorialComplete;
     }
 
-    private void SaveLearningProfile()
+    private bool SaveLearningProfile()
     {
-        if (!CanPersistProgress) return;
+        if (!CanPersistProgress) return false;
         try
         {
             Directory.CreateDirectory(Application.persistentDataPath);
@@ -43,8 +43,9 @@ public sealed partial class RuneholdGame
             File.WriteAllText(temporary, JsonUtility.ToJson(learningProfile, true));
             File.Copy(temporary, LearningSavePath, true);
             File.Delete(temporary);
+            return true;
         }
-        catch (Exception exception) { Debug.LogWarning("Learning profile could not be saved: " + exception.GetType().Name); }
+        catch (Exception exception) { Debug.LogWarning("Learning profile could not be saved: " + exception.GetType().Name); return false; }
     }
 
     private MathQuestion NextLearningQuestion()
@@ -219,7 +220,7 @@ public sealed partial class RuneholdGame
     {
         if (questionIntro) { DrawQuestionIntroduction(); return; }
         if (studyResult) { DrawStudyAnswerResult(); return; }
-        OverlayShade(.78f); Fill(245, 112, 790, 560, Ink); Fill(245, 112, 790, 5, Gold);
+        OverlayShade(.78f); MenuCard(new Rect(245, 112, 790, 560), Gold);
         Text(learningPractice ? "FLIGHT ACADEMY · " + StarfallCurriculum.Names[question.Lesson] : "ENGINEERING · " + UpgradeName(selectedUpgrade), 278, 131, 720, 34, new GUIStyle(titleStyle) { fontSize = 23 });
         Text(learningPractice ? StarfallCurriculum.Topics[question.Lesson] + " · no answer timer" : CalibrationPurpose + " · set the control load", 278, 171, 710, 25, smallStyle);
         string prompt = questionExplained ? question.Text.Replace("?", question.Answer.ToString()) : question.Text;

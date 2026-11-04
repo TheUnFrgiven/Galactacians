@@ -175,7 +175,7 @@ public sealed partial class RuneholdGame
     private void DrawEngineeringBay()
     {
         OverlayShade(.64f);
-        Fill(270, 135, 740, 530, Ink); Fill(270, 135, 740, 5, Gold);
+        MenuCard(new Rect(270, 135, 740, 530), Gold);
         Text("ASCENSION BAY", 300, 155, 500, 38, titleStyle);
         if (PixelButton("DEFENSES", 302, 200, 180, 29, !astronautUpgradeTab ? Hex("277c8e") : PanelLight)) astronautUpgradeTab = false;
         if (PixelButton("ASTRONAUT", 495, 200, 180, 29, astronautUpgradeTab ? Hex("277c8e") : PanelLight)) astronautUpgradeTab = true;

@@ -26,6 +26,10 @@ Open this project with Unity 6000.6.7f1. Press Play from `Assets/Scenes/Moonvale
 - **N:** open the difficulty briefing; **Enter** launches after review. In questions, **1–4** select answers, **H** shows a hint, **J** opens the worked example, and **Enter** continues after the explanation. Settings can switch to typed numerical answers. First-time upgrade questions show the lesson teaching first.
 - **Escape:** pause.
 
+## Menu quality pass — 4 November 2026
+
+The menu now uses a consistent button system, regular and bold typography, pixel navigation icons and illustrated planet destinations. Equipment illustrations, real palette previews, trophy cards and progress bars make the collection and profile more readable. Settings includes themed audio controls, mute restoration, safe name editing and accurate save feedback. Teaching, engineering and pause buttons share the same controls. See [menu-quality-pass.md](Docs/menu-quality-pass.md) for changes, keyboard controls and review limits.
+
 ## Readability, power scaling and original music — 4 November 2026
 
 - Fixed hand anchors and deliberate four-direction pose changes replace the orbiting rifle motion. Horizontal mirroring, vertical foreshortening, recoil and bullet origins use the same rig.

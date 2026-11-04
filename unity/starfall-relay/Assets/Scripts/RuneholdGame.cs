@@ -105,7 +105,7 @@ public sealed partial class RuneholdGame : MonoBehaviour
     private Texture2D alloyPickupTexture, crystalPickupTexture;
     private readonly Rect[] pilotFrames = new Rect[4];
     private Rect alloyPickupUv, crystalPickupUv;
-    private GUIStyle labelStyle, titleStyle, smallStyle, buttonStyle, hugeStyle;
+    private GUIStyle labelStyle, titleStyle, smallStyle, hugeStyle;
     private Vector2 pilotPosition = new Vector2(640, 516);
     private int pilotFacing;
     private bool pilotWalking;
@@ -172,6 +172,7 @@ public sealed partial class RuneholdGame : MonoBehaviour
     private void OnDestroy()
     {
         foreach (Texture2D variant in liveryTextures.Values) Destroy(variant);
+        foreach (Texture2D portrait in menuPortraits.Values) Destroy(portrait);
         foreach (AudioClip clip in relaySounds) Destroy(clip);
         if (relayMusic != null) relayMusic.Stop();
         if (relayMusicClip != null) Destroy(relayMusicClip);
@@ -541,10 +542,8 @@ public sealed partial class RuneholdGame : MonoBehaviour
         labelStyle = new GUIStyle(GUI.skin.label) { font = academyFont, fontSize = 17, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleLeft, wordWrap = true, normal = { textColor = Cream } };
         titleStyle = new GUIStyle(labelStyle) { fontSize = 28, normal = { textColor = Cream } };
         hugeStyle = new GUIStyle(labelStyle) { fontSize = 42, alignment = TextAnchor.MiddleCenter, normal = { textColor = Cream } };
-        smallStyle = new GUIStyle(labelStyle) { fontSize = 13, fontStyle = FontStyle.Normal, normal = { textColor = Hex("c4d0df") } };
-        buttonStyle = new GUIStyle(GUI.skin.label) { font = academyFont, fontSize = 16, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleCenter, wordWrap = true };
-        buttonStyle.normal.background = null; buttonStyle.hover.background = null; buttonStyle.active.background = null;
-        buttonStyle.normal.textColor = Cream; buttonStyle.hover.textColor = Color.white; buttonStyle.active.textColor = Gold;
+        smallStyle = new GUIStyle(labelStyle) { font = academyBodyFont, fontSize = 13, fontStyle = FontStyle.Normal, normal = { textColor = Hex("c4d0df") } };
+
     }
 
     private void DrawWorld()
@@ -748,7 +747,7 @@ public sealed partial class RuneholdGame : MonoBehaviour
     private void DrawPause()
     {
         OverlayShade(.8f);
-        Fill(435, 260, 410, 266, Ink); Fill(435, 260, 410, 5, Gold);
+        MenuCard(new Rect(435, 260, 410, 266), Gold);
         TextCentered("PAUSED", 460, 290, 360, 46, titleStyle);
         TextCentered("WASD to move · auto-fire is active", 460, 345, 360, 30, smallStyle);
         if (PixelButton("RESUME  [ESC]", 478, 405, 324, 52, Hex("277c8e"))) pauseOpen = false;
@@ -831,21 +830,7 @@ public sealed partial class RuneholdGame : MonoBehaviour
     private void OverlayShade(float alpha) => Fill(0, 0, DesignWidth, DesignHeight, new Color(.015f, .025f, .06f, alpha));
 
     private bool PixelButton(string text, float x, float y, float w, float h, Color color)
-    {
-        Rect hit = new Rect(x, y, w, h);
-        bool hover = hit.Contains(Event.current.mousePosition);
-        bool pressed = hover && Input.GetMouseButton(0);
-        float top = y + (pressed ? 2 : 0);
-        Color face = hover ? Color.Lerp(color, Color.white, .13f) : color;
-        Fill(x, y + 4, w, h, Hex("070d17"));
-        Fill(x, top, w, h, hover ? LearnerAccent : Hex("304355"));
-        Fill(x + 1, top + 1, w - 2, h - 3, Hex("0a1220"));
-        Fill(x + 3, top + 3, w - 6, h - 7, face);
-        Fill(x + 5, top + 4, w - 10, 1, new Color(1, 1, 1, hover ? .32f : .16f));
-        var fitted = new GUIStyle(buttonStyle) { fontSize = h < 32 ? 12 : 16, wordWrap = false, padding = new RectOffset() };
-        while (fitted.fontSize > 10 && fitted.CalcSize(new GUIContent(text)).x > w - 14) fitted.fontSize--;
-        return GUI.Button(new Rect(x + 3, top + 1, w - 6, h - 4), text, fitted);
-    }
+        => MenuButton(text, new Rect(x, y, w, h), color);
 
     private void Chip(string text, float x, float y, float w, float h, Color color)
     {
@@ -863,9 +848,10 @@ public sealed partial class RuneholdGame : MonoBehaviour
     private void ProgressBar(float x, float y, float w, float h, float value, Color color)
     {
         Fill(x, y, w, h, Hex("0a1321"));
-        float filled = Mathf.Clamp01(value) * (w - 4);
-        Fill(x + 2, y + 2, filled, h - 4, color);
-        if (filled > 3) Fill(x + 2, y + 2, filled, 2, new Color(1, 1, 1, .25f));
+        float inset = h < 8 ? 1 : 2;
+        float filled = Mathf.Clamp01(value) * (w - inset * 2);
+        Fill(x + inset, y + inset, filled, Mathf.Max(1, h - inset * 2), color);
+        if (filled > 3 && h >= 10) Fill(x + inset, y + inset, filled, 1, new Color(1, 1, 1, .2f));
     }
 
     private void Fill(float x, float y, float w, float h, Color color)

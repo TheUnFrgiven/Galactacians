@@ -93,16 +93,17 @@ public sealed partial class RuneholdGame
         return day;
     }
 
-    private void SavePilotJournal()
+    private bool SavePilotJournal()
     {
-        if (!journalLoaded || !CanPersistProgress) return;
+        if (!journalLoaded || !CanPersistProgress) return false;
         try
         {
             Directory.CreateDirectory(Application.persistentDataPath);
             File.WriteAllText(JournalPath + ".tmp", JsonUtility.ToJson(pilotJournal, true));
             File.Copy(JournalPath + ".tmp", JournalPath, true); File.Delete(JournalPath + ".tmp");
+            return true;
         }
-        catch (Exception e) { Debug.LogWarning("Pilot journal could not be saved: " + e.GetType().Name); }
+        catch (Exception e) { Debug.LogWarning("Pilot journal could not be saved: " + e.GetType().Name); return false; }
     }
 
     private void UpdateExpeditionPresentation(float dt)
@@ -174,7 +175,7 @@ public sealed partial class RuneholdGame
         {
             if (AchievementValue(i) < AchievementTarget(i) || pilotJournal.Achievements.Contains(AchievementId(i))) continue;
             pilotJournal.Achievements.Add(AchievementId(i)); pilotJournal.Tokens += AchievementRewards[i]; changed = true;
-            Announce("ACHIEVEMENT · " + AchievementNames[i], "+" + AchievementRewards[i] + " paint credits. Open Collection to choose a livery.", Gold);
+            Announce("ACHIEVEMENT · " + AchievementNames[i], "+" + AchievementRewards[i] + (AchievementRewards[i] == 1 ? " paint credit. " : " paint credits. ") + "Open Collection to choose a livery.", Gold);
         }
         if (changed) SavePilotJournal();
     }
@@ -232,14 +233,7 @@ public sealed partial class RuneholdGame
             Color32[] colors = source.GetPixels32();
             for (int i = 0; i < colors.Length; i++)
             {
-                Color c = colors[i]; if (c.a < .05f) continue;
-                bool armor = source == pilotTexture && c.r > .35f && c.r > c.g * 1.28f && c.g > c.b * 1.12f;
-                bool energy = c.g > .35f && c.b > .4f && c.r < c.g * .8f;
-                if (!armor && !energy) continue;
-                Color target = armor ? LiveryArmor(cachedLivery) : LiveryEnergy(cachedLivery);
-                float light = Mathf.Max(c.r, c.g, c.b);
-                Color result = Color.Lerp(target * light, Color.white, Mathf.Max(0, light - .82f) * 1.5f);
-                result.a = c.a; colors[i] = result;
+                colors[i] = LiveryPixel(colors[i], source == pilotTexture, cachedLivery);
             }
             var variant = new Texture2D(source.width, source.height, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp, name = source.name + " livery" };
             variant.SetPixels32(colors); variant.Apply(false, true); liveryTextures.Add(source, variant);
@@ -247,44 +241,7 @@ public sealed partial class RuneholdGame
     }
     private Texture2D LiveryTexture(Texture2D original) => original != null && liveryTextures.TryGetValue(original, out Texture2D variant) ? variant : original;
 
-    private void DrawCollection()
-    {
-        HubHeading("ACHIEVEMENTS + PAINT BAY", "Build your legacy. Earn paint credits from milestones and daily learning, then recolor your real equipment.");
-        if (PixelButton("MILESTONES", 337, 216, 270, 38, collectionTab == 0 ? Hex("277c8e") : PanelLight)) collectionTab = 0;
-        if (PixelButton("PAINT BAY", 622, 216, 270, 38, collectionTab == 1 ? Hex("277c8e") : PanelLight)) collectionTab = 1;
-        Text(pilotJournal.Tokens + " PAINT CREDITS", 918, 219, 280, 32, hubLabel);
-        if (collectionTab == 0)
-        {
-            for (int row = 0; row < 6; row++)
-            {
-                int i = achievementPage * 6 + row; float y = 276 + row * 63;
-                bool earned = pilotJournal.Achievements.Contains(AchievementId(i));
-                Fill(337, y, 860, 55, Panel); Fill(337, y, 4, 55, earned ? Mint : PanelLight);
-                Text((earned ? "[+] " : "[ ] ") + AchievementNames[i], 353, y + 4, 340, 24, new GUIStyle(hubLabel) { fontSize = 16 });
-                Text(AchievementCopy[i], 353, y + 29, 600, 22, new GUIStyle(hubCopy) { fontSize = 12 });
-                Text(earned ? "EARNED" : Mathf.Min(AchievementValue(i), AchievementTarget(i)) + "/" + AchievementTarget(i), 966, y + 5, 210, 24, hubCopy);
-                Text("+" + AchievementRewards[i] + " paint credits", 966, y + 29, 210, 22, new GUIStyle(hubCopy) { fontSize = 12, normal = { textColor = Gold } });
-            }
-            if (PixelButton(achievementPage == 0 ? "MORE MILESTONES  >" : "<  FIRST MILESTONES", 337, 682, 860, 39, PanelLight)) achievementPage = 1 - achievementPage;
-            return;
-        }
-        for (int i = 0; i < 4; i++)
-        {
-            float x = 337 + i % 2 * 438, y = 276 + i / 2 * 207;
-            bool owned = pilotJournal.Liveries.Contains(i), equipped = learningProfile.Accent == i;
-            Fill(x, y, 414, 188, Panel); Fill(x, y, 414, 3, LiveryEnergy(i));
-            Text(LiveryNames[i], x + 17, y + 13, 380, 29, new GUIStyle(hubLabel) { fontSize = 17 });
-            DrawPixelEllipse(new Vector2(x + 45, y + 77), 22, 22, LiveryArmor(i));
-            Fill(x + 37, y + 70, 17, 7, LiveryEnergy(i));
-            Text("Armor + visor + rifle energy\nTurret / shield lights + ship accents", x + 86, y + 54, 310, 53, new GUIStyle(hubCopy) { fontSize = 13 });
-            string label = equipped ? "EQUIPPED" : owned ? "EQUIP" : "UNLOCK · " + LiveryPrices[i] + " CREDITS";
-            if (PixelButton(label, x + 17, y + 125, 380, 42, equipped ? Hex("277c8e") : owned || pilotJournal.Tokens >= LiveryPrices[i] ? Hex("665032") : PanelLight))
-            {
-                EquipLivery(i);
-            }
-        }
-        Text("Earned liveries stay yours. Material pickup colors and hostile warning colors stay recognizable.", 338, 708, 850, 40, new GUIStyle(hubCopy) { fontSize = 13 });
-    }
+    private void DrawCollection() => DrawPolishedCollection();
 
     private void EquipLivery(int index)
     {
@@ -300,13 +257,13 @@ public sealed partial class RuneholdGame
 
     private void DrawPilotProfile()
     {
-        HubHeading(learningProfile.CadetName.ToUpperInvariant() + " · PILOT PROFILE", "Your expedition, learning and collection belong to one pilot. Activity below comes from real recorded events.");
+        HubHeading(learningProfile.CadetName + " · Captain’s dossier", "Your expedition, equipment and learning journey, all in one place.");
         string[] tabs = { "EXPEDITION", "LEARNING", "ACTIVITY" };
         for (int i = 0; i < 3; i++)
-            if (PixelButton(tabs[i], 337 + i * 291, 217, 274, 38, profileTab == i ? Hex("277c8e") : PanelLight)) profileTab = i;
+            if (MenuTab(tabs[i], new Rect(337 + i * 291, 229, 274, 38), profileTab == i)) profileTab = i;
         if (profileTab == 1) { DrawFactProfile(); return; }
         if (profileTab == 2) { DrawActivityProfile(); return; }
-        Fill(337, 278, 860, 170, Panel);
+        MenuCard(new Rect(337, 288, 860, 170), LearnerAccent);
         DrawMenuPilot(new Vector2(420, 370), -18, 1.3f);
         Text("LV " + astronautLevel + " · " + AscensionTitle, 494, 297, 680, 35, hubLabel);
         Text("Highest night survived: " + pilotJournal.HighestNight + "\nEnemies stopped: " + lifetimeKills + " · clean defenses: " + pilotJournal.CleanDefenses +
@@ -314,22 +271,23 @@ public sealed partial class RuneholdGame
         for (int i = 0; i < 6; i++)
         {
             float x = 337 + i % 3 * 291, y = 468 + i / 3 * 84;
-            Fill(x, y, 274, 72, Panel); Text(UpgradeName((Upgrade)i), x + 14, y + 9, 246, 25, new GUIStyle(hubCopy) { fontSize = 13 });
-            Text("RANK " + UpgradeLevel((Upgrade)i), x + 14, y + 35, 246, 27, hubLabel);
+            MenuCard(new Rect(x, y + 10, 274, 72), UpgradeColor((Upgrade)i)); DrawMenuEquipmentArt((Upgrade)i, new Vector2(x + 33, y + 46), 34); Text(UpgradeName((Upgrade)i), x + 60, y + 15, 201, 25, new GUIStyle(hubCopy) { fontSize = 12 });
+            Text("RANK " + UpgradeLevel((Upgrade)i), x + 60, y + 40, 201, 27, hubLabel);
         }
         Text("NEXT MILESTONE · " + NextMilestone(), 338, 669, 850, 63, hubCopy);
     }
 
     private void DrawFactProfile()
     {
-        if (PixelButton(showFactRecords ? "TOPIC SUMMARY" : "FACTS + REVIEW", 337, 271, 860, 33, PanelLight)) { showFactRecords = !showFactRecords; factPage = 0; }
+        if (PixelButton(showFactRecords ? "Topic summary  [F]" : "Facts + review  [F]", 337, 285, 860, 33, PanelLight)) { showFactRecords = !showFactRecords; factPage = 0; }
         if (!showFactRecords)
         {
-            Text(TotalLearning(true) + " independent · " + TotalLearning(false) + " supported · " + learningProfile.LearningXp + " learning XP", 338, 319, 850, 35, hubCopy);
+            Text(TotalLearning(true) + " independent · " + TotalLearning(false) + " supported · " + learningProfile.LearningXp + " learning XP", 338, 330, 850, 35, hubCopy);
             for (int i = 0; i < 6; i++)
             {
-                float y = 369 + i * 47; Fill(337, y, 860, 39, Panel);
-                Text(StarfallCurriculum.Names[i], 351, y + 5, 380, 30, new GUIStyle(hubCopy) { fontSize = 14 });
+                float y = 369 + i * 47; MenuCard(new Rect(337, y, 860, 39), Hex("66849e"));
+                DrawMenuPlanet(new Vector2(365, y + 20), i, 9, false, false);
+                Text(StarfallCurriculum.Names[i], 387, y + 5, 344, 30, new GUIStyle(hubCopy) { fontSize = 14 });
                 Text(learningProfile.Independent[i] + " independent · " + learningProfile.Supported[i] + " helped", 755, y + 5, 427, 30, hubCopy);
             }
             Text("Learning records describe practice evidence. Combat success is recorded separately.", 338, 677, 850, 50, hubCopy);
@@ -337,19 +295,19 @@ public sealed partial class RuneholdGame
         }
         var facts = new List<StarfallFactRecord>(learningProfile.Facts);
         facts.Sort((a, b) => StarfallCurriculum.ReviewWeight(b).CompareTo(StarfallCurriculum.ReviewWeight(a)));
-        if (facts.Count == 0) { Text("Complete an engineering calculation or a practice question to start your fact record.", 350, 351, 800, 100, hubLabel); return; }
+        if (facts.Count == 0) { MenuCard(new Rect(337, 342, 860, 280), LearnerAccent); MenuIcon(2, new Vector2(380, 392), 6, LearnerAccent); Text("Your first discovery is waiting.", 464, 380, 680, 42, hubLabel); Text("Complete an upgrade calculation or a practice question to start your fact record.", 464, 435, 660, 70, hubCopy); if (MenuButton("Visit the practice lab", new Rect(464, 540, 350, 42), LearnerAccent)) NavigateHub(HubPage.Practice); return; }
         int pages = Mathf.Max(1, (facts.Count + 5) / 6); factPage = Mathf.Clamp(factPage, 0, pages - 1);
         for (int row = 0; row < 6 && factPage * 6 + row < facts.Count; row++)
         {
-            StarfallFactRecord fact = facts[factPage * 6 + row]; float y = 326 + row * 54;
+            StarfallFactRecord fact = facts[factPage * 6 + row]; float y = 339 + row * 54;
             string equation = fact.Key.Contains(":") ? fact.Key.Substring(fact.Key.IndexOf(':') + 1).Replace("*", " × ").Replace("/", " ÷ ").Replace("+", " + ").Replace("-", " − ") : fact.Key;
             string stage = StarfallCurriculum.ReviewDue(fact) ? "REVIEW DUE" : fact.Mistakes + fact.Supported > fact.Independent ? "REVISIT WITH HELP" : fact.Independent >= 3 ? "FAMILIAR" : "BUILDING";
-            Fill(337, y, 860, 47, Panel); Text(equation, 352, y + 6, 240, 34, hubLabel);
+            MenuCard(new Rect(337, y, 860, 47), LearnerAccent); Text(equation, 352, y + 6, 240, 34, hubLabel);
             Text(fact.Independent + " independent / " + fact.Supported + " helped", 595, y + 6, 320, 34, hubCopy);
             Text(stage, 945, y + 6, 240, 34, new GUIStyle(hubCopy) { fontSize = 12, normal = { textColor = Gold } });
         }
         if (PixelButton("<", 337, 678, 100, 38, PanelLight)) factPage = (factPage + pages - 1) % pages;
-        TextCentered((factPage + 1) + " / " + pages + " · review suggestions, not mastery certification", 449, 679, 630, 38, hubCopy);
+        TextCentered((factPage + 1) + " / " + pages + "  ·  Your fact review", 449, 679, 630, 38, hubCopy);
         if (PixelButton(">", 1097, 678, 100, 38, PanelLight)) factPage = (factPage + 1) % pages;
     }
 
@@ -360,11 +318,11 @@ public sealed partial class RuneholdGame
         {
             string key = DateTime.Now.Date.AddDays(i - 6).ToString("yyyy-MM-dd");
             StarfallActivityDay day = pilotJournal.Days.Find(d => d.Date == key);
-            float y = 326 + i * 47; Fill(337, y, 860, 39, Panel);
+            float y = 326 + i * 47; MenuCard(new Rect(337, y, 860, 39), Hex("66849e"));
             Text(key.Substring(5), 351, y + 4, 110, 30, hubCopy);
             Text(day == null ? "No recorded activity" : day.Solved + " solves · " + day.Builds + " builds · " + day.Kills + " enemies · " + day.Victories + " wins", 470, y + 4, 710, 30, hubCopy);
         }
-        Text("Old saves keep their totals. Detailed activity starts when this version records your actions.", 338, 680, 850, 56, hubCopy);
+        Text("Each flight and practice session adds to your story. Keep exploring at your own pace.", 338, 680, 850, 56, hubCopy);
     }
 
     private string ThreatName(int wave) => wave % 3 == 0 ? "STORMHEART CONVOY" : wave % 3 == 2 ? "ION RUSH" : "EMBER DRIFT";
@@ -473,13 +431,18 @@ public sealed partial class RuneholdGame
 
     private void DrawNumberPad()
     {
-        Fill(278, 475, 450, 105, Panel);
-        TextCentered(string.IsNullOrEmpty(typedAnswer) ? learningPractice ? "YOUR ANSWER" : "ENTER LOAD" : typedAnswer, 292, 481, 205, 44, new GUIStyle(hugeStyle) { fontSize = 30 });
-        if (PixelButton("CHECK [ENTER]", 292, 535, 205, 36, Hex("277c8e")) && int.TryParse(typedAnswer, out int check)) SubmitLearningValue(check);
+        MenuCard(new Rect(278, 475, 450, 113), LearnerAccent);
+        Rect entry = new Rect(292, 486, 205, 48);
+        Fill(entry.x, entry.y, entry.width, entry.height, Hex("3b566b"));
+        Fill(entry.x + 1, entry.y + 1, entry.width - 2, entry.height - 2, Hex("0b1c2e"));
+        GUIStyle answer = MenuType(string.IsNullOrEmpty(typedAnswer) ? 18 : 30, Cream, true, TextAnchor.MiddleCenter);
+        answer.wordWrap = false;
+        GUI.Label(entry, string.IsNullOrEmpty(typedAnswer) ? learningPractice ? "Your answer" : "Enter load" : typedAnswer, answer);
+        if (PixelButton("CHECK [ENTER]", 292, 546, 205, 34, Hex("277c8e")) && int.TryParse(typedAnswer, out int check)) SubmitLearningValue(check);
         string[] keys = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "DEL", "0", "OK" };
         for (int i = 0; i < keys.Length; i++)
         {
-            if (!PixelButton(keys[i], 515 + i % 3 * 65, 480 + i / 3 * 24, 60, 22, i == 11 ? Hex("277c8e") : PanelLight)) continue;
+            if (!PixelButton(keys[i], 515 + i % 3 * 65, 480 + i / 3 * 27, 60, 24, i == 11 ? Hex("277c8e") : PanelLight)) continue;
             if (i == 9) { if (typedAnswer.Length > 0) typedAnswer = typedAnswer.Substring(0, typedAnswer.Length - 1); }
             else if (i == 11) { if (int.TryParse(typedAnswer, out int value)) SubmitLearningValue(value); }
             else if (typedAnswer.Length < 3) typedAnswer += keys[i];
@@ -512,15 +475,15 @@ public sealed partial class RuneholdGame
         relayAudio.volume = pilotJournal.SoundVolume;
         const int sampleRate = 22050;
         var random = new System.Random(31415);
-        for (int kind = 0; kind < 4; kind++)
+        for (int kind = 0; kind < 5; kind++)
         {
-            float duration = kind == 1 ? .065f : kind == 0 ? .2f : .35f;
+            float duration = kind == 4 ? .065f : kind == 1 ? .065f : kind == 0 ? .2f : .35f;
             float[] samples = new float[Mathf.CeilToInt(sampleRate * duration)];
             float angle = 0;
             for (int i = 0; i < samples.Length; i++)
             {
                 float time = i / (float)sampleRate, t = time / duration;
-                float frequency = kind == 1 ? Mathf.Lerp(1100, 230, t) : kind == 3 ? Mathf.Lerp(150, 38, t) :
+                float frequency = kind == 4 ? Mathf.Lerp(740, 520, t) : kind == 1 ? Mathf.Lerp(1100, 230, t) : kind == 3 ? Mathf.Lerp(150, 38, t) :
                     (kind == 2 ? 440 : 880) * (t < .33f ? 1 : t < .66f ? 1.25f : 1.5f);
                 angle += frequency * Mathf.PI * 2 / sampleRate;
                 float tone = Mathf.Sin(angle);
