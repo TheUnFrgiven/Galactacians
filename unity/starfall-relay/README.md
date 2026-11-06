@@ -6,25 +6,25 @@ A C# Unity pixel-art action-defense prototype: Captain Aria walks the Wayfarer�
 
 Open this project with Unity 6000.6.7f1. Press Play from `Assets/Scenes/Moonvale.unity`. The player build is in `Build/Runehold.app`.
 
-## Controls and run structure
+## Touch controls and expedition
 
-- **WASD / arrow keys:** move Captain Aria.
-- **Shift:** boost across the deck (2.5-second recharge). **Space:** discharge a fully charged Nova Pulse during combat. Kills and magnetic field capacitors recharge it; collecting a capacitor also restores one core integrity.
-- **B:** open the ship upgrades; **E:** inspect an installed cannon or nearby construction pad. Cannon signs and construction pads can also be clicked.
-- Weapons auto-fire at a meteor in range, retaining a live target to keep aim steady; no aiming input is needed.
-- Walk over the marked salvage to collect alloy and crystal.
-- During the untimed day, open the engineering bay, choose an upgrade, and solve one calibration question to confirm it.
-- Each calibration offers one retry, a specific hint, movable quantity cells and a worked explanation. Supported installation costs the normal materials; there is no insight currency.
-- Correct answers install visible hardware and open a reveal. An independent first-try answer refunds one alloy; helped answers install without that bonus. Cancelling spends nothing.
-- Cannons rotate, alternate barrels and deal area damage. Four cannon pads and two pads per support system hold hardware; further purchases keep strengthening installed systems.
-- Every night ends with one supply claim. Alloy = 2 + twice the night + half the astronaut level (rounded down); crystal = 1 + half the night + one clean-defense bonus. Claiming restores 20% maximum core integrity (at least 10) and opens the next day.
-- The expedition continues after Night 3. Levels, equipment, materials and math progress carry forward. Defeat retries the current night while retaining XP and all upgrades.
-- **M:** open or resume from the ship menu: Continue Expedition, Learning Galaxy, Practice Lab, Equipment Guide, Pilot Profile, Collection and Settings. The battle stays suspended while studying.
-- **L:** open My Galaxy: addition within 10, subtraction within 10, making ten, equal groups, fair sharing and mixed operations. Every third night is a milestone. A milestone plus two distinct independent upgrade checks unlocks the next topic in the same expedition. Changing topics keeps your character and equipment.
-- Practice Lab offers four operations and Starter, Explorer and Challenger difficulty. Engineering and practice answers both earn learning XP. Five completed questions in a local day grant a cosmetic star and paint credit; questions and upgrades remain available afterwards. Independent and helped records stay separate, with fact records and review suggestions.
-- **B, then Tab:** switch between Defense and Astronaut upgrades. In the bay, **1–3** buy the corresponding row and **T** switches between New Pad and Boost All when both are available. Plasma Rifle, Orbit Drones and Regen Reactor provide repeatable personal-power upgrades, each confirmed through math.
-- **N:** open the difficulty briefing; **Enter** launches after review. In questions, **1–4** select answers, **H** shows a hint, **J** opens the worked example, and **Enter** continues after the explanation. Settings can switch to typed numerical answers. First-time upgrade questions show the lesson teaching first.
-- **Escape:** pause.
+Designed for landscape play. Drag the left move stick; the rifle aims and shoots automatically. Tap **Boost** to reposition and **Nova** when its charge is full at night. Kills and magnetic field cells recharge Nova; cells also restore one core integrity. The stick owns one touch independently, so a second finger can trigger either ability.
+
+Tap **Menu**, **Upgrades**, or **Launch Night**. Tap cannon signs or construction pads to inspect their upgrades. Walk over salvage to collect it. During the untimed day, choose an upgrade and solve its calibration to install it. The on-screen number pad, hints, worked examples, navigation and launch briefing work without a keyboard. The interface and input use the same safe-area transform.
+
+The enlarged station has four elemental quarters, side bridges and north/south service routes. Floor, rails, crystal beds, reactor exclusion and bridge gates share the map illustration's coordinate system. Walking and boosting both use swept floor collision. A following camera, ship navigator and off-screen core indicator help orientation. Existing saved progression is retained; old off-floor player positions are moved to a valid floor point.
+
+- Four cannon pads and two pads per support system hold hardware; further ranks strengthen installed systems. Each engineering check offers a retry, a hint, movable cells and a worked explanation. Supported installation costs normal materials; independent first-try installation refunds one alloy. Cancelling spends nothing.
+- Each night ends with one supply claim. Alloy = 2 + twice the night + half the astronaut level (rounded down); crystal = 1 + half the night + a clean-defense bonus. Claiming restores 20% maximum core integrity (at least 10) and starts the next day.
+- The expedition continues past Night 3. Levels, equipment, materials and learning carry forward. Defeat retries the current night while keeping XP and upgrades.
+- **Learn** contains six curriculum destinations. Every third night is a milestone; a milestone and two distinct independent engineering checks unlock the next upgrade topic without resetting your ship. All destinations remain available for practice.
+- Practice offers four operations and three difficulties. Five completed questions in a local day grant a cosmetic star and paint credit. Independent and supported evidence remain separate. **Pilot** tracks expedition, learning and activity; **Collection** contains milestones and paint unlocks. **Settings** has sound, answer mode and motion preferences.
+
+Desktop fallback: WASD/arrows move, Shift boosts, Space fires Nova; B/E open engineering, N opens launch review, M opens the menu, Escape pauses. These are optional and are no longer printed throughout the game. The touch stick can also be dragged with a mouse.
+
+## Elemental and mobile presentation — 6 November 2026
+
+Brighter ice, solar, storm and verdant accents now sit on light surfaces with dark readable text. Four primary menu destinations replace the seven-row shortcut list. The chosen astronaut, equipment and deck artwork are preserved. See [elemental-mobile-pass.md](Docs/elemental-mobile-pass.md) for implementation details and platform review limits.
 
 ## Menu quality pass — 4 November 2026
 

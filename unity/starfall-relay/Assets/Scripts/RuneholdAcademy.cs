@@ -177,7 +177,7 @@ public sealed partial class RuneholdGame
             bool hover = hit.Contains(Event.current.mousePosition);
             if (selected || hover)
             {
-                Fill(hit.x, hit.y, hit.width, hit.height, new Color(.12f, .27f, .36f, hover ? .65f : .35f));
+                Fill(hit.x, hit.y, hit.width, hit.height, new Color(.48f, .72f, .96f, hover ? .22f : .12f));
                 Fill(hit.x + 10, hit.yMax - 1, hit.width - 20, 1, selected ? Gold : LearnerAccent);
             }
             DrawMenuPlanet(at, i, 21, selected, complete);
@@ -201,12 +201,12 @@ public sealed partial class RuneholdGame
             float x = 337 + i % 2 * 438, y = 300 + i / 2 * 180;
             MenuCard(new Rect(x, y, 414, 159), i < 2 ? LearnerAccent : Gold);
             Text(symbols[i], x + 20, y + 15, 60, 60, hugeStyle);
-            Text("[" + (i + 1) + "] " + SkillNames[i], x + 98, y + 17, 285, 30, hubLabel);
+            Text(SkillNames[i], x + 98, y + 17, 285, 30, hubLabel);
             Text(copy[i], x + 98, y + 56, 285, 42, hubCopy);
             if (PixelButton("Learn + practise", x + 98, y + 108, 285, 35, Hex("277c8e")))
             { practiceSkill = i; selectedLesson = SkillLesson(i); NavigateHub(HubPage.Lesson); }
         }
-        Text("[1–4] choose a skill · Left / Right change level. Learning XP and stars are separate from combat power.", 338, 691, 845, 47, hubCopy);
+        Text("Tap a skill to begin. Learning XP and stars are separate from combat power.", 338, 691, 845, 47, hubCopy);
     }
 
     private static int SkillLesson(int skill) => skill < 2 ? skill : skill == 2 ? 3 : 4;
@@ -222,7 +222,7 @@ public sealed partial class RuneholdGame
         Text("TRY THIS EXAMPLE", 358, 383, 790, 27, hubCopy);
         Text(example.Explanation, 358, 421, 790, 90, hubLabel);
         Text("Help is always available. One retry, then a worked example. Helped and independent answers are recorded separately.", 338, 556, 847, 60, hubCopy);
-        if (PixelButton("TRY 5 QUESTIONS [ENTER]", 337, 639, 385, 51, Hex("277c8e"))) StartStudySession(lesson);
+        if (PixelButton("TRY 5 QUESTIONS", 337, 639, 385, 51, Hex("277c8e"))) StartStudySession(lesson);
         bool open = lesson <= learningProfile.UnlockedLesson;
         if (MenuButton(open ? "Use for my upgrades" : "Unlock through expedition", new Rect(745, 639, 452, 51), Gold, open))
         {
@@ -234,8 +234,8 @@ public sealed partial class RuneholdGame
 
     private void DrawDefenderGuide()
     {
-        HubHeading("Built for the next great defense.", "Discover each system's job. Buy its next rank from the Ascension Bay on the deck [B].");
-        if (PixelButton(showWeaponPoses ? "System guide  [Space]" : "Rifle handling  [Space]", 337, 214, 860, 35, Hex("277c8e"))) showWeaponPoses = !showWeaponPoses;
+        HubHeading("Built for the next great defense.", "Discover each system's job. Buy its next rank from the Ascension Bay on the deck.");
+        if (PixelButton(showWeaponPoses ? "System guide" : "Rifle handling", 337, 214, 860, 35, Hex("277c8e"))) showWeaponPoses = !showWeaponPoses;
         if (showWeaponPoses)
         {
             MenuCard(new Rect(337, 272, 860, 375), LearnerAccent);
@@ -246,7 +246,7 @@ public sealed partial class RuneholdGame
                 DrawMenuPilot(new Vector2(447 + i * 213, 445), angles[i], 1.7f);
                 TextCentered(labels[i], 358 + i * 213, 552, 177, 40, hubLabel);
             }
-            Text("Move with WASD. Your rifle tracks nearby enemies automatically. Upgrade it for damage, piercing and spread.", 358, 598, 815, 42, hubCopy);
+            Text("Drag the move stick. Your rifle tracks nearby enemies automatically. Upgrade it for damage, piercing and spread.", 358, 598, 815, 42, hubCopy);
             return;
         }
         for (int i = 0; i < 6; i++)
@@ -364,7 +364,7 @@ public sealed partial class RuneholdGame
         StarfallQuestion example = StarfallCurriculum.CreateSkill(question.Lesson, 0, 271 + question.Lesson);
         Text("EXAMPLE: " + example.Explanation, 302, 407, 670, 84, labelStyle);
         Text("No timer. You can move the cells, ask for a hint, or work through an example together.", 278, 530, 720, 58, smallStyle);
-        if (PixelButton("I'M READY [ENTER]", 278, 604, 470, 45, Hex("277c8e"))) DismissQuestionIntro();
+        if (PixelButton("I'M READY", 278, 604, 470, 45, Hex("277c8e"))) DismissQuestionIntro();
         if (PixelButton("BACK", 770, 604, 228, 45, PanelLight)) { phase = Phase.Day; buildPanelOpen = true; }
     }
 
@@ -400,6 +400,6 @@ public sealed partial class RuneholdGame
         DrawTeachingCells();
         Text(question.Explanation, 750, 306, 250, 144, labelStyle);
         Text("Today: " + Mathf.Min(5, learningProfile.DailySolved) + "/5 solved · " + MenuCount(learningProfile.Stars, "cosmetic star") + "\nYour ship materials and combat XP are unchanged.", 278, 495, 720, 68, labelStyle);
-        if (PixelButton(studyIndex < 5 ? "NEXT QUESTION [ENTER]" : "SEE MY PROGRESS [ENTER]", 278, 594, 720, 49, Hex("277c8e"))) ContinueStudy();
+        if (PixelButton(studyIndex < 5 ? "NEXT QUESTION" : "SEE MY PROGRESS", 278, 594, 720, 49, Hex("277c8e"))) ContinueStudy();
     }
 }

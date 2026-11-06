@@ -279,7 +279,7 @@ public sealed partial class RuneholdGame
 
     private void DrawFactProfile()
     {
-        if (PixelButton(showFactRecords ? "Topic summary  [F]" : "Facts + review  [F]", 337, 285, 860, 33, PanelLight)) { showFactRecords = !showFactRecords; factPage = 0; }
+        if (PixelButton(showFactRecords ? "Topic summary" : "Facts + review", 337, 285, 860, 33, PanelLight)) { showFactRecords = !showFactRecords; factPage = 0; }
         if (!showFactRecords)
         {
             Text(TotalLearning(true) + " independent · " + TotalLearning(false) + " supported · " + learningProfile.LearningXp + " learning XP", 338, 330, 850, 35, hubCopy);
@@ -340,11 +340,12 @@ public sealed partial class RuneholdGame
     {
         dashCooldown = Mathf.Max(0, dashCooldown - dt);
         if (direction.sqrMagnitude > 0) lastMoveDirection = direction;
-        if ((Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.RightShift)) && dashCooldown <= 0)
+        bool boost = touchBoost || Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.RightShift);
+        touchBoost = false;
+        if (boost && dashCooldown <= 0)
         {
             Vector2 before = pilotPosition;
-            pilotPosition += (direction.sqrMagnitude > 0 ? direction : lastMoveDirection) * 135;
-            pilotPosition.x = Mathf.Clamp(pilotPosition.x, 52, 1228); pilotPosition.y = Mathf.Clamp(pilotPosition.y, 132, 674);
+            MoveOnDeck((direction.sqrMagnitude > 0 ? direction : lastMoveDirection) * 135);
             for (int i = 0; i < 6; i++) SpawnBurst(Vector2.Lerp(before, pilotPosition, i / 5f), LearnerAccent, 2);
             if (phase == Phase.Day)
                 foreach (SalvageNode node in nodes)
@@ -357,7 +358,8 @@ public sealed partial class RuneholdGame
     {
         pulseCharge = Mathf.Min(100, pulseCharge + dt * 1.5f);
         pulseAge += dt;
-        if (Input.GetKeyDown(KeyCode.Space) && pulseCharge >= 100)
+        bool nova = touchNova || Input.GetKeyDown(KeyCode.Space); touchNova = false;
+        if (nova && pulseCharge >= 100)
         {
             pulseOrigin = pilotPosition; pulseAge = 0; pulseCharge = 0; pilotJournal.Pulses++;
             PlayRelaySound(3);
@@ -382,7 +384,7 @@ public sealed partial class RuneholdGame
     {
         pulseCharge = Mathf.Min(100, pulseCharge + .32f);
         if (lifetimeKills % 12 != 0 || capacitors.Count >= 24) return;
-        Vector2 position = new Vector2(Mathf.Clamp(enemy.Position.x, 70, 1210), Mathf.Clamp(enemy.Position.y, 145, 660));
+        Vector2 position = NearestDeckPosition(enemy.Position);
         capacitors.Add(new CapacitorDrop { Position = position });
     }
 
@@ -413,14 +415,6 @@ public sealed partial class RuneholdGame
             }
     }
 
-    private void DrawAbilityHud()
-    {
-        if (phase != Phase.Night || pauseOpen) return;
-        Fill(772, 716, 222, 59, Ink);
-        Text(pulseCharge >= 100 ? "[SPACE] NOVA READY" : "NOVA PULSE · " + Mathf.FloorToInt(pulseCharge) + "%", 784, 721, 199, 24,
-            new GUIStyle(smallStyle) { normal = { textColor = pulseCharge >= 100 ? Gold : LearnerAccent }, fontStyle = FontStyle.Bold });
-        ProgressBar(784, 752, 198, 10, pulseCharge / 100, LearnerAccent);
-    }
 
     private string CalibrationPurpose => question.Operation == '-' ? "ISOLATE THE REMAINING CELLS" : question.Operation == '*' ? "WIRE EQUAL MODULE BANKS" :
         question.Operation == '/' ? "BALANCE THE EMITTERS" : "COMBINE THE POWER BANKS";
@@ -431,18 +425,18 @@ public sealed partial class RuneholdGame
 
     private void DrawNumberPad()
     {
-        MenuCard(new Rect(278, 475, 450, 113), LearnerAccent);
-        Rect entry = new Rect(292, 486, 205, 48);
+        MenuCard(new Rect(278, 475, 450, 200), LearnerAccent);
+        Rect entry = new Rect(292, 489, 131, 67);
         Fill(entry.x, entry.y, entry.width, entry.height, Hex("3b566b"));
         Fill(entry.x + 1, entry.y + 1, entry.width - 2, entry.height - 2, Hex("0b1c2e"));
         GUIStyle answer = MenuType(string.IsNullOrEmpty(typedAnswer) ? 18 : 30, Cream, true, TextAnchor.MiddleCenter);
         answer.wordWrap = false;
         GUI.Label(entry, string.IsNullOrEmpty(typedAnswer) ? learningPractice ? "Your answer" : "Enter load" : typedAnswer, answer);
-        if (PixelButton("CHECK [ENTER]", 292, 546, 205, 34, Hex("277c8e")) && int.TryParse(typedAnswer, out int check)) SubmitLearningValue(check);
+        if (PixelButton("CHECK", 292, 574, 131, 50, Hex("277c8e")) && int.TryParse(typedAnswer, out int check)) SubmitLearningValue(check);
         string[] keys = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "DEL", "0", "OK" };
         for (int i = 0; i < keys.Length; i++)
         {
-            if (!PixelButton(keys[i], 515 + i % 3 * 65, 480 + i / 3 * 27, 60, 24, i == 11 ? Hex("277c8e") : PanelLight)) continue;
+            if (!PixelButton(keys[i], 441 + i % 3 * 93, 481 + i / 3 * 48, 87, 44, i == 11 ? Hex("277c8e") : PanelLight)) continue;
             if (i == 9) { if (typedAnswer.Length > 0) typedAnswer = typedAnswer.Substring(0, typedAnswer.Length - 1); }
             else if (i == 11) { if (int.TryParse(typedAnswer, out int value)) SubmitLearningValue(value); }
             else if (typedAnswer.Length < 3) typedAnswer += keys[i];
@@ -459,7 +453,8 @@ public sealed partial class RuneholdGame
         {
             float angle = i * Mathf.PI * 2 / 80;
             Vector2 mark = at + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * 780;
-            if (mark.y < 100 || mark.y > 680 || mark.x < 0 || mark.x > 1280) continue;
+            Vector2 screen = WorldToScreen(mark);
+            if (screen.y < 90 || screen.y > 710 || screen.x < 0 || screen.x > 1280) continue;
             Fill(mark.x, mark.y, 5, 3, new Color(Cyan.r, Cyan.g, Cyan.b, .5f));
         }
         DrawBeam(at, corePosition, 2, new Color(Cyan.r, Cyan.g, Cyan.b, .3f));

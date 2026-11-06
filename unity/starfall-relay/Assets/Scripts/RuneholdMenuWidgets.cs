@@ -27,9 +27,25 @@ public sealed partial class RuneholdGame
                 if (rows[y][x] == '#') Fill(Mathf.Round(at.x + x * scale), Mathf.Round(at.y + y * scale), scale, scale, color);
     }
 
+    private bool BrightMenu => menuOpen && phase != Phase.Quiz;
+    private static readonly Color MenuInk = Hex("243859");
+    private static readonly Color MenuMuted = Hex("536988");
+    private Color MenuColor(Color color)
+    {
+        if (!BrightMenu || color == MenuInk || color == MenuMuted) return color;
+        float saturation = Mathf.Max(color.r, Mathf.Max(color.g, color.b)) - Mathf.Min(color.r, Mathf.Min(color.g, color.b));
+        Color result = saturation < .22f ? (color.grayscale > .75f ? MenuInk : MenuMuted)
+            : Color.Lerp(color, Hex("18335b"), .56f);
+        result.a = color.a; return result;
+    }
+    private GUIStyle DisplayStyle(GUIStyle source)
+    {
+        if (!BrightMenu) return source;
+        GUIStyle style = new GUIStyle(source); style.normal.textColor = MenuColor(source.normal.textColor); return style;
+    }
     private GUIStyle MenuType(int size, Color color, bool bold = false, TextAnchor alignment = TextAnchor.MiddleLeft)
         => new GUIStyle(GUI.skin.label) { font = bold ? academyFont : academyBodyFont, fontSize = size,
-            fontStyle = FontStyle.Normal, alignment = alignment, wordWrap = true, padding = new RectOffset(), normal = { textColor = color } };
+            fontStyle = FontStyle.Normal, alignment = alignment, wordWrap = true, padding = new RectOffset(), normal = { textColor = MenuColor(color) } };
 
     private void MenuText(string text, Rect rect, int size, Color color, bool bold = false, bool singleLine = false)
     {
@@ -42,11 +58,10 @@ public sealed partial class RuneholdGame
 
     private void MenuCard(Rect rect, Color accent, bool selected = false)
     {
-        Fill(rect.x, rect.y + 3, rect.width, rect.height, new Color(0, 0, 0, .24f));
-        Fill(rect.x, rect.y, rect.width, rect.height, selected ? Color.Lerp(accent, Hex("20374c"), .5f) : Hex("293c51"));
-        Fill(rect.x + 1, rect.y + 1, rect.width - 2, rect.height - 2, selected ? Hex("173247") : Hex("112438"));
-        Fill(rect.x + 2, rect.y + 2, rect.width - 4, 1, new Color(1, 1, 1, .035f));
-        Fill(rect.x + 12, rect.y, 27, 2, accent);
+        Fill(rect.x, rect.y + 4, rect.width, rect.height, new Color(.16f, .26f, .45f, .10f));
+        Fill(rect.x, rect.y, rect.width, rect.height, BrightMenu ? Hex("c5d6ed") : Hex("293c51"));
+        Fill(rect.x + 1, rect.y + 1, rect.width - 2, rect.height - 2, BrightMenu ? (selected ? Color.Lerp(accent, Color.white, .85f) : Hex("fcfdff")) : (selected ? Hex("173247") : Hex("112438")));
+        Fill(rect.x + 1, rect.y + 1, 4, rect.height - 2, accent);
     }
 
     private float MenuHoverAmount(Rect rect, bool hover)
@@ -70,6 +85,11 @@ public sealed partial class RuneholdGame
         float top = rect.y + (held ? 1 : 0);
         Color edge = available ? Color.Lerp(selected ? accent : Color.Lerp(accent, Hex("506178"), .5f), Cream, amount * .38f) : Hex("354354");
         Color face = available ? Color.Lerp(Color.Lerp(accent, Hex("0d2135"), selected ? .4f : .65f), Color.Lerp(accent, Hex("163247"), .35f), amount) : Hex("182636");
+        if (BrightMenu)
+        {
+            edge = available ? Color.Lerp(accent, Hex("9ab2d6"), .35f) : Hex("d6e0ef");
+            face = available ? Color.Lerp(accent, Color.white, selected ? .22f : .76f - amount * .18f) : Hex("e8eef7");
+        }
         Fill(rect.x + 1, rect.y + 3, rect.width - 2, rect.height, new Color(0, 0, 0, .33f));
         Fill(rect.x + 2, top, rect.width - 4, rect.height, edge);
         Fill(rect.x, top + 2, rect.width, rect.height - 4, edge);
@@ -93,7 +113,7 @@ public sealed partial class RuneholdGame
 
     private void MenuPill(string label, Rect rect, Color color)
     {
-        Fill(rect.x, rect.y, rect.width, rect.height, Color.Lerp(color, Hex("0e2031"), .82f));
+        Fill(rect.x, rect.y, rect.width, rect.height, BrightMenu ? Color.Lerp(color, Color.white, .78f) : Color.Lerp(color, Hex("0e2031"), .82f));
         MenuText(label, new Rect(rect.x + 8, rect.y, rect.width - 16, rect.height), 11, color, true, true);
     }
 

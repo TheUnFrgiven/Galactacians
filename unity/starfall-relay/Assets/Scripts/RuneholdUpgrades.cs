@@ -4,8 +4,8 @@ public sealed partial class RuneholdGame
 {
     private Texture2D shieldTexture, salvageRigTexture;
     private Rect turretUv, shieldUv, salvageRigUv;
-    private readonly Vector2[] shieldPads = { new Vector2(425, 365), new Vector2(855, 365) };
-    private readonly Vector2[] salvagePads = { new Vector2(505, 570), new Vector2(775, 570) };
+    private readonly Vector2[] shieldPads = { DeckPoint(188, 360), DeckPoint(1090, 360) };
+    private readonly Vector2[] salvagePads = { DeckPoint(640, 86), DeckPoint(640, 715) };
     private readonly float[] turretFireTimers = new float[4];
     private readonly float[] turretMuzzleFlash = new float[4];
     private Vector2 installationPosition;
@@ -89,7 +89,7 @@ public sealed partial class RuneholdGame
             }
         }
         if (found) OpenEquipmentBay(selectedUpgrade, installedCannon);
-        else { notice = "Press B for upgrades, or approach any cannon or construction pad and press E."; noticeTimer = 3; }
+        else { notice = "Tap Upgrades, a cannon sign or a construction pad."; noticeTimer = 3; }
     }
 
     private void DrawUpgradeArt(Upgrade upgrade, Vector2 position, float height, Color tint)
@@ -140,7 +140,7 @@ public sealed partial class RuneholdGame
                     DrawUpgradeArt(upgrade, position + new Vector2(0, -8), 76, new Color(color.r, color.g, color.b, .28f));
                     bool nearby = Vector2.Distance(pilotPosition, position) < 125;
                     if (nearby || (upgrade == Upgrade.IonTurret && turretCount == 0))
-                        TextCentered(nearby ? "[E] " + UpgradeName(upgrade) : "BUILD TURRET [B]", position.x - 105, position.y + 38, 210, 25,
+                        TextCentered(nearby ? " " + UpgradeName(upgrade) : "BUILD TURRET", position.x - 105, position.y + 38, 210, 25,
                             new GUIStyle(smallStyle) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold, normal = { textColor = color } });
                     if (!pauseOpen && !buildPanelOpen && !learningPanelOpen && GUI.Button(new Rect(position.x - 44, position.y - 50, 88, 90), "", GUIStyle.none))
                     { OpenEquipmentBay(upgrade); }
@@ -169,7 +169,7 @@ public sealed partial class RuneholdGame
             TextCentered("LV " + UpgradeLevel(systems[i]), x - 37, 343, 74, 23,
                 new GUIStyle(smallStyle) { alignment = TextAnchor.MiddleCenter, normal = { textColor = UpgradeLevel(systems[i]) > 0 ? Mint : Cream } });
         }
-        if (phase == Phase.Day && PixelButton("UPGRADES  [B]", 30, 391, 300, 40, Hex("24677a"))) buildPanelOpen = true;
+        if (phase == Phase.Day && PixelButton("UPGRADES", 30, 391, 300, 40, Hex("24677a"))) buildPanelOpen = true;
     }
 
     private void DrawEngineeringBay()
@@ -177,14 +177,14 @@ public sealed partial class RuneholdGame
         OverlayShade(.64f);
         MenuCard(new Rect(270, 135, 740, 530), Gold);
         Text("ASCENSION BAY", 300, 155, 500, 38, titleStyle);
-        if (PixelButton("DEFENSES", 302, 200, 180, 29, !astronautUpgradeTab ? Hex("277c8e") : PanelLight)) astronautUpgradeTab = false;
-        if (PixelButton("ASTRONAUT", 495, 200, 180, 29, astronautUpgradeTab ? Hex("277c8e") : PanelLight)) astronautUpgradeTab = true;
-        if (PixelButton("CLOSE  [B]", 840, 156, 138, 38, Hex("36485d"))) buildPanelOpen = false;
+        if (PixelButton("DEFENSES", 302, 194, 180, 38, !astronautUpgradeTab ? Hex("277c8e") : PanelLight)) astronautUpgradeTab = false;
+        if (PixelButton("ASTRONAUT", 495, 194, 180, 38, astronautUpgradeTab ? Hex("277c8e") : PanelLight)) astronautUpgradeTab = true;
+        if (PixelButton("CLOSE", 840, 150, 138, 44, Hex("36485d"))) buildPanelOpen = false;
         DrawUpgradeRow(astronautUpgradeTab ? Upgrade.PlasmaRifle : Upgrade.IonTurret, 235);
         DrawUpgradeRow(astronautUpgradeTab ? Upgrade.OrbitDrones : Upgrade.CoreShield, 357);
         DrawUpgradeRow(astronautUpgradeTab ? Upgrade.Regeneration : Upgrade.SalvageRig, 479);
         Text("FIRST-TRY REWARD: +1 alloy after each perfect calibration.", 302, 605, 660, 26, new GUIStyle(smallStyle) { normal = { textColor = Gold } });
-        Text("[1–3] buy · [T] new pad / boost all · [TAB] switch bays · math confirms upgrades.", 302, 635, 660, 21, smallStyle);
+        Text("Choose a system. Gather its materials, then solve its calibration.", 302, 635, 660, 21, smallStyle);
     }
 
     private void DrawUpgradeRow(Upgrade upgrade, int y)
@@ -210,7 +210,7 @@ public sealed partial class RuneholdGame
         Text(maxed ? UpgradeDetail(upgrade) : "COST  " + alloyCost + " ALLOY + " + crystalCost + " CRYSTAL", 401, y + 79, 360, 22,
             new GUIStyle(smallStyle) { normal = { textColor = color } });
         string buttonText = maxed ? "INSTALLED" : locked ? "TURRET FIRST" : canBuy ? (upgrade == Upgrade.IonTurret && turretMasteryPurchase ? "UPGRADE + MATH" : "INSTALL + MATH") : "GATHER SALVAGE";
-        if (PixelButton(buttonText, 790, y + 17, 170, 43, canBuy ? Hex("277c8e") : Hex("364253")))
+        if (PixelButton(buttonText, 790, y + 17, 170, 48, canBuy ? Hex("277c8e") : Hex("364253")))
         {
             selectedUpgrade = upgrade;
             if (canBuy) StartUpgrade(upgrade);
@@ -242,7 +242,7 @@ public sealed partial class RuneholdGame
         Text(installationRebate > 0 ? "INDEPENDENT CALIBRATION  +1 ALLOY" : "SUPPORTED CALIBRATION · hardware online", 50, 543, 300, 32,
             new GUIStyle(smallStyle) { fontStyle = FontStyle.Bold, normal = { textColor = installationRebate > 0 ? Gold : Mint } });
         Text("CONTROL LOAD: " + question.Answer + " cells · + " + (questionSupported ? 4 : 10) + " learning XP", 50, 570, 300, 21, new GUIStyle(smallStyle) { fontSize = 11 });
-        if (PixelButton("BACK TO DECK [ENTER]", 50, 590, 300, 39, Hex("277c8e"))) phase = Phase.Day;
+        if (PixelButton("BACK TO DECK", 50, 590, 300, 39, Hex("277c8e"))) phase = Phase.Day;
     }
 
     private void DrawWaveRewards()
@@ -263,7 +263,7 @@ public sealed partial class RuneholdGame
         TextCentered(dawnCleanDefense ? "CLEAN DEFENSE: +1 bonus crystal included." : "Keep the core undamaged next wave for +1 crystal.", 340, 478, 600, 32,
             new GUIStyle(smallStyle) { alignment = TextAnchor.MiddleCenter, normal = { textColor = dawnCleanDefense ? Mint : Cream } });
         TextCentered("All power kept · core repairs 20% · the expedition continues", 340, 521, 600, 28, new GUIStyle(smallStyle) { alignment = TextAnchor.MiddleCenter });
-        if (PixelButton("CLAIM + CONTINUE [ENTER]", 355, 575, 570, 52, Hex("277c8e"))) ClaimWaveRewards();
+        if (PixelButton("CLAIM + CONTINUE", 355, 575, 570, 52, Hex("277c8e"))) ClaimWaveRewards();
     }
 
     private void ClaimWaveRewards()
@@ -274,7 +274,7 @@ public sealed partial class RuneholdGame
         crystal += dawnCrystalReward;
         rewardHudFlash = 3;
         BeginNextDay();
-        notice = "REWARDS CLAIMED  +" + dawnAlloyReward + " alloy + " + dawnCrystalReward + " crystal · press B to upgrade.";
+        notice = "REWARDS CLAIMED  +" + dawnAlloyReward + " alloy + " + dawnCrystalReward + " crystal · open Upgrades to grow stronger.";
         noticeTimer = 5;
         SaveExpedition();
     }

@@ -52,6 +52,7 @@ public sealed partial class RuneholdGame
         for (int i = 0; i < turretCount; i++)
         {
             Vector2 at = WorldToScreen(turretPads[i] + new Vector2(0, 45));
+            if (at.x < 80 || at.x > 1200 || at.y < 135 || at.y > 550) continue;
             at.x += i % 2 == 0 ? -17 : 17;
             Rect sign = new Rect(at.x - 82, at.y, 164, 45);
             bool interactive = phase == Phase.Day;
@@ -70,19 +71,11 @@ public sealed partial class RuneholdGame
 
     private void DrawPowerForecast()
     {
-        ConsolePanel(new Rect(26, 155, 259, 245), ReadinessColor, Hex("0a1625"));
-        Text("RELAY SCAN  /  NIGHT " + night, 40, 164, 230, 25, new GUIStyle(labelStyle) { fontSize = 14, normal = { textColor = LearnerAccent } });
-        Text(ThreatName(night), 40, 192, 230, 26, new GUIStyle(labelStyle) { fontSize = 16 });
-        Text(SwarmCount(night).ToString("N0") + " contacts · " + EnemyHealthScale(night).ToString("0.00") + "× hull", 40, 222, 230, 24, smallStyle);
-        Text(ReadinessName, 40, 255, 231, 24, new GUIStyle(labelStyle) { fontSize = 14, normal = { textColor = ReadinessColor } });
-        ProgressBar(40, 286, 230, 11, ReadinessRatio / 1.5f, ReadinessColor);
-        Text("OUTPUT " + Mathf.RoundToInt(EstimatedDefenseOutput) + "  /  PRESSURE " + Mathf.RoundToInt(EstimatedPressure(night)), 40, 302, 230, 23,
-            new GUIStyle(smallStyle) { fontSize = 12 });
-        Text("Estimated damage/sec. Upgrade your build as the swarm grows. [N] opens briefing.", 40, 334, 230, 52, smallStyle);
-        ConsolePanel(new Rect(26, 414, 259, 157), Gold, Hex("0a1625"));
-        Text("ENGINEER'S ADVICE", 40, 424, 230, 25, new GUIStyle(labelStyle) { fontSize = 14, normal = { textColor = Gold } });
-        Text(BuildAdvice, 40, 457, 230, 73, smallStyle);
-        if (PixelButton("PLAN AN UPGRADE  [B]", 40, 533, 230, 28, Hex("24576c"))) OpenEquipmentBay(RecommendedUpgrade);
+        ConsolePanel(new Rect(26, 153, 280, 103), ReadinessColor, Hex("10273f"));
+        Text("NIGHT " + night + " · " + SwarmCount(night).ToString("N0") + " CONTACTS", 40, 161, 250, 23,
+            new GUIStyle(smallStyle) { normal = { textColor = Cyan } });
+        Text(ReadinessName, 40, 188, 250, 25, new GUIStyle(labelStyle) { fontSize = 16, normal = { textColor = ReadinessColor } });
+        ProgressBar(40, 226, 250, 10, ReadinessRatio / 1.5f, ReadinessColor);
     }
 
     private void DrawRaidBriefing()
@@ -104,9 +97,10 @@ public sealed partial class RuneholdGame
         Text(BuildAdvice, 248, 517, 780, 49, smallStyle);
         Text("Planning estimate: 5–9 targets per cannon blast, 1.6 rifle hits. Aim, spacing, pulse timing and core health still affect survival.", 248, 571, 780, 41,
             new GUIStyle(smallStyle) { fontSize = 12 });
-        if (PixelButton("UPGRADE FIRST  [B]", 248, 627, 370, 40, Hex("266a7e"))) OpenEquipmentBay(coreHp < coreMaxHp * .45f ? Upgrade.CoreShield : RecommendedUpgrade);
-        if (PixelButton((ReadinessRatio < 1.05f ? "LAUNCH ANYWAY  [ENTER]" : "LAUNCH NIGHT  [ENTER]"), 638, 627, 390, 40, ReadinessRatio < 1.05f ? Hex("97503f") : Hex("306c58"))) LaunchWarnedRaid();
-        TextCentered("[ESC] return to deck · preparation has no time limit", 248, 697, 780, 30, smallStyle);
+        if (PixelButton("UPGRADE FIRST", 248, 627, 370, 40, Hex("266a7e"))) OpenEquipmentBay(coreHp < coreMaxHp * .45f ? Upgrade.CoreShield : RecommendedUpgrade);
+        if (PixelButton((ReadinessRatio < 1.05f ? "LAUNCH ANYWAY" : "LAUNCH NIGHT"), 638, 627, 390, 40, ReadinessRatio < 1.05f ? Hex("97503f") : Hex("306c58"))) LaunchWarnedRaid();
+        if (MenuButton("Back to deck", new Rect(216, 703, 240, 46), Cyan)) raidBriefOpen = false;
+        Text("Preparation has no time limit.", 484, 709, 580, 34, smallStyle);
     }
 
     private void ConsolePanel(Rect rect, Color accent, Color fill)

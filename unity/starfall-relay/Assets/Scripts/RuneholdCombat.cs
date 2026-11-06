@@ -3,7 +3,7 @@ using UnityEngine;
 
 public sealed partial class RuneholdGame
 {
-    private readonly List<Meteor>[] swarmGrid = new List<Meteor>[40 * 24];
+    private readonly List<Meteor>[] swarmGrid = new List<Meteor>[64 * 48];
     private readonly float[] turretAngles = new float[4];
     private readonly int[] turretBarrels = new int[4];
     private Texture2D turretMountTexture, turretHeadTexture;
@@ -58,8 +58,7 @@ public sealed partial class RuneholdGame
         {
             float angle = opening ? i * 2.399963f : packAngle + UnityEngine.Random.Range(-.2f, .2f);
             float ring = UnityEngine.Random.Range(.83f, 1.06f);
-            Vector2 position = corePosition + new Vector2(Mathf.Cos(angle) * 760 * ring, Mathf.Sin(angle) * 360 * ring);
-            position.y = Mathf.Clamp(position.y, 14, 765);
+            Vector2 position = corePosition + new Vector2(Mathf.Cos(angle) * 1250 * ring, Mathf.Sin(angle) * 780 * ring);
             int element = (enemiesSpawned / 8) % 4;
             int armorRoll = UnityEngine.Random.Range(0, 100);
             int hp = armorRoll < 80 ? 1 : armorRoll < 97 ? 3 : 6;
@@ -72,7 +71,7 @@ public sealed partial class RuneholdGame
             int health = commander ? Mathf.CeilToInt((45 + night * 12) * EnemyHealthScale(night)) : Mathf.Max(1, Mathf.RoundToInt(hp * EnemyHealthScale(night)));
             meteors.Add(new Meteor {
                 Id = ++nextMeteorId, Position = position, Hp = health, MaxHp = health, Commander = commander, Role = role,
-                Radius = commander ? 35 : radius, Speed = (UnityEngine.Random.Range(15f, 21f) + Mathf.Min(35, night * 2)) * (commander ? .65f : role == 1 ? 1.6f : role == 2 ? .8f : 1),
+                Radius = commander ? 35 : radius, Speed = 1.75f * (UnityEngine.Random.Range(15f, 21f) + Mathf.Min(35, night * 2)) * (commander ? .65f : role == 1 ? 1.6f : role == 2 ? .8f : 1),
                 Angle = UnityEngine.Random.Range(0, 360), Spin = UnityEngine.Random.Range(-55, 55),
                 CoreDamage = commander ? 20 + night : (hp == 1 ? 1 : hp == 3 ? 2 : 4) + Mathf.Min(20, night / 10),
                 Tint = commander ? Gold : role == 1 ? Cyan : role == 2 ? Hex("bd9bff") : colors[element]
@@ -89,9 +88,9 @@ public sealed partial class RuneholdGame
 
     private int GridIndex(Vector2 position)
     {
-        int x = Mathf.Clamp(Mathf.FloorToInt((position.x + 256) / 48), 0, 39);
-        int y = Mathf.Clamp(Mathf.FloorToInt((position.y + 128) / 48), 0, 23);
-        return y * 40 + x;
+        int x = Mathf.Clamp(Mathf.FloorToInt((position.x + 896) / 48), 0, 63);
+        int y = Mathf.Clamp(Mathf.FloorToInt((position.y + 768) / 48), 0, 47);
+        return y * 64 + x;
     }
 
     private void RebuildSwarmGrid()
@@ -139,11 +138,11 @@ public sealed partial class RuneholdGame
             if (enemy.Role == 1)
                 toCore += new Vector2(-toCore.y, toCore.x).normalized * Mathf.Sin(nightElapsed * 3 + enemy.Id) * Mathf.Min(50, toCore.magnitude * .3f);
             Vector2 separation = Vector2.zero;
-            int cellIndex = GridIndex(enemy.Position), cx = cellIndex % 40, cy = cellIndex / 40, checkedNeighbors = 0;
-            for (int y = Mathf.Max(0, cy - 1); y <= Mathf.Min(23, cy + 1); y++)
-                for (int x = Mathf.Max(0, cx - 1); x <= Mathf.Min(39, cx + 1); x++)
+            int cellIndex = GridIndex(enemy.Position), cx = cellIndex % 64, cy = cellIndex / 64, checkedNeighbors = 0;
+            for (int y = Mathf.Max(0, cy - 1); y <= Mathf.Min(47, cy + 1); y++)
+                for (int x = Mathf.Max(0, cx - 1); x <= Mathf.Min(63, cx + 1); x++)
                 {
-                    List<Meteor> cell = swarmGrid[y * 40 + x];
+                    List<Meteor> cell = swarmGrid[y * 64 + x];
                     if (cell == null) continue;
                     foreach (Meteor other in cell)
                     {
@@ -418,7 +417,7 @@ public sealed partial class RuneholdGame
         previewRun = true;
         turretCount = 2; shieldLevels = 1; coreMaxHp = coreHp = 125;
         alloy = 6; crystal = 4; night = 2; tutorialStep = 2; showTutorial = false;
-        pilotPosition = new Vector2(640, 500);
+        pilotPosition = new Vector2(640, 670);
     }
 
     private void CaptureSwarmCheckpoint()

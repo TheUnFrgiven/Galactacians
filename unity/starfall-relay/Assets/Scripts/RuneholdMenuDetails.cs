@@ -39,7 +39,7 @@ public sealed partial class RuneholdGame
         GUI.SetNextControlName("CadetName");
         Color oldSelection = GUI.skin.settings.selectionColor, oldCursor = GUI.skin.settings.cursorColor;
         GUI.skin.settings.selectionColor = new Color(LearnerAccent.r, LearnerAccent.g, LearnerAccent.b, .35f);
-        GUI.skin.settings.cursorColor = Cream;
+        GUI.skin.settings.cursorColor = MenuInk;
         learningProfile.CadetName = GUI.TextField(name, learningProfile.CadetName, 20, input);
         GUI.skin.settings.selectionColor = oldSelection; GUI.skin.settings.cursorColor = oldCursor;
         if (finishName)
@@ -49,19 +49,19 @@ public sealed partial class RuneholdGame
         }
         MenuCard(new Rect(337, 345, 418, 307), LearnerAccent);
         MenuText("PLAY YOUR WAY", new Rect(359, 361, 373, 22), 11, LearnerAccent, true, true);
-        MenuText("Less motion  [R]", new Rect(359, 407, 230, 25), 17, Cream, true);
+        MenuText("Less motion", new Rect(359, 407, 230, 25), 17, Cream, true);
         MenuText("Quiet movement and menu effects", new Rect(359, 434, 245, 33), 12, Hex("b2c5d6"));
         if (MenuButton(reducedMotion ? "On" : "Off", new Rect(639, 412, 92, 34), reducedMotion ? LearnerAccent : Hex("465c71"), true, reducedMotion))
         { reducedMotion = !reducedMotion; learningProfile.ReducedMotion = reducedMotion; SaveLearningProfile(); }
         Fill(359, 481, 372, 1, Hex("293f54"));
-        MenuText("Answer input  [Q]", new Rect(359, 499, 235, 25), 17, Cream, true);
+        MenuText("Answer input", new Rect(359, 499, 235, 25), 17, Cream, true);
         MenuText("Choose how to answer questions", new Rect(359, 526, 240, 33), 12, Hex("b2c5d6"));
-        if (MenuButton(learningProfile.TypedAnswers ? "Type" : "Choices", new Rect(625, 504, 106, 34), LearnerAccent))
+        if (MenuButton(learningProfile.TypedAnswers ? "Number pad" : "Choices", new Rect(625, 504, 106, 34), LearnerAccent))
         { learningProfile.TypedAnswers = !learningProfile.TypedAnswers; SaveLearningProfile(); }
         Fill(359, 571, 372, 1, Hex("293f54"));
-        MenuText("Fullscreen  [F]", new Rect(359, 590, 230, 25), 17, Cream, true);
-        MenuText("Fill your display with the galaxy", new Rect(359, 617, 249, 20), 12, Hex("b2c5d6"));
-        if (MenuButton(Screen.fullScreen ? "On" : "Off", new Rect(639, 595, 92, 34), Screen.fullScreen ? LearnerAccent : Hex("465c71"))) Screen.fullScreen = !Screen.fullScreen;
+        MenuText("Landscape play", new Rect(359, 590, 230, 25), 17, Cream, true);
+        MenuText("Space to move, explore and defend", new Rect(359, 617, 249, 20), 12, Hex("b2c5d6"));
+        MenuPill("TOUCH", new Rect(639, 595, 92, 34), LearnerAccent);
         MenuCard(new Rect(773, 345, 424, 307), Gold);
         MenuText("SOUND OF THE RELAY", new Rect(795, 361, 380, 22), 11, Gold, true, true);
         pilotJournal.MusicVolume = DrawMenuVolume("Music", new Rect(795, 408, 378, 66), pilotJournal.MusicVolume, ref menuMusicRestore, Gold);
@@ -69,8 +69,8 @@ public sealed partial class RuneholdGame
         if (relayAudio != null) relayAudio.volume = pilotJournal.SoundVolume;
         MenuText("RELAY AFTERGLOW", new Rect(795, 596, 375, 20), 11, Gold, true, true);
         MenuText("An original, mellow synth groove · 96 BPM", new Rect(795, 621, 375, 20), 12, Hex("b2c5d6"), false, true);
-        MenuText("R motion  ·  Q answers  ·  F fullscreen  ·  1/2 mute  ·  Tab name / volume  ·  Ctrl/Cmd+S save", new Rect(337, 670, 860, 23), 13, Hex("becfdd"), false, true);
-        MenuText(Time.unscaledTime < menuSavedUntil ? menuSaveNote : "[M] return to your expedition whenever you're ready.", new Rect(337, 711, 574, 24), 13, Time.unscaledTime < menuSavedUntil ? menuSaveColor : Hex("afc4d6"));
+        MenuText("Touch controls · automatic aiming and salvage collection · landscape play", new Rect(337, 670, 860, 23), 13, Hex("becfdd"), false, true);
+        MenuText(Time.unscaledTime < menuSavedUntil ? menuSaveNote : "Tap Play to return to your expedition.", new Rect(337, 711, 574, 24), 13, Time.unscaledTime < menuSavedUntil ? menuSaveColor : Hex("afc4d6"));
         if (MenuButton("Save preferences", new Rect(943, 704, 254, 36), LearnerAccent, true, true))
         { SaveMenuPreferences(); }
     }

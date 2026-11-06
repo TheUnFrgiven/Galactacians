@@ -77,7 +77,7 @@ public sealed partial class RuneholdGame
             salvageMastery = Mathf.Clamp(save.SalvageMastery, 0, 10000); lastMilestoneNight = Mathf.Max(0, save.LastMilestone);
             correctAnswers = Mathf.Max(0, save.Calibrations); totalCalibrationAlloy = Mathf.Max(0, save.CalibrationAlloy);
             tutorialStep = Mathf.Clamp(save.Tutorial, 0, 2); showTutorial = !learningProfile.TutorialComplete;
-            pilotPosition = new Vector2(Mathf.Clamp(save.PilotX, 120, 1160), Mathf.Clamp(save.PilotY, 160, 660));
+            pilotPosition = NearestDeckPosition(new Vector2(save.PilotX, save.PilotY));
             if (save.Collected != null) for (int i = 0; i < Mathf.Min(nodes.Count, save.Collected.Length); i++) nodes[i].Collected = save.Collected[i];
             if (save.Dawn)
             {
@@ -168,9 +168,9 @@ public sealed partial class RuneholdGame
     {
         if (phase != Phase.Day && phase != Phase.Night) return;
         if (buildPanelOpen || learningPanelOpen || pauseOpen) return;
-        Fill(900, 93, 350, 42, new Color(.025f, .045f, .09f, .9f));
-        Text("LV " + astronautLevel + " · " + AscensionTitle, 910, 94, 330, 24, new GUIStyle(smallStyle) { normal = { textColor = Gold }, fontStyle = FontStyle.Bold });
-        ProgressBar(910, 123, 330, 5, experience / (float)ExperienceNeeded, Mint);
+        Fill(24, 93, 280, 42, new Color(.025f, .045f, .09f, .9f));
+        Text("LV " + astronautLevel + " · " + AscensionTitle, 34, 94, 260, 24, new GUIStyle(smallStyle) { normal = { textColor = Gold }, fontStyle = FontStyle.Bold });
+        ProgressBar(34, 123, 260, 5, experience / (float)ExperienceNeeded, Mint);
     }
 
     private void RecordContinuousMilestone()

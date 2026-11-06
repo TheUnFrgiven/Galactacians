@@ -173,7 +173,7 @@ public sealed partial class RuneholdGame
         Text("FLIGHT ACADEMY · " + (lesson + 1) + "/" + StarfallCurriculum.Names.Length, 48, 455, 270, 24, new GUIStyle(smallStyle) { normal = { textColor = Gold }, fontStyle = FontStyle.Bold });
         Text(StarfallCurriculum.Names[lesson], 48, 485, 270, 28, labelStyle);
         Text("Independent checks  " + Mathf.Min(2, learningProfile.Evidence[lesson]) + "/2\nPractised with help  " + learningProfile.Supported[lesson], 48, 523, 270, 45, smallStyle);
-        if (PixelButton("LESSONS + PRACTICE  [L]", 30, 595, 300, 39, Hex("665032"))) OpenAcademyMenu(HubPage.Galaxy);
+        if (PixelButton("LESSONS + PRACTICE", 30, 595, 300, 39, Hex("665032"))) OpenAcademyMenu(HubPage.Galaxy);
     }
 
     private void DrawLearningPanel() => OpenAcademyMenu(HubPage.Galaxy);
@@ -220,7 +220,7 @@ public sealed partial class RuneholdGame
     {
         if (questionIntro) { DrawQuestionIntroduction(); return; }
         if (studyResult) { DrawStudyAnswerResult(); return; }
-        OverlayShade(.78f); MenuCard(new Rect(245, 112, 790, 560), Gold);
+        OverlayShade(.78f); MenuCard(new Rect(245, 104, 790, 654), Gold);
         Text(learningPractice ? "FLIGHT ACADEMY · " + StarfallCurriculum.Names[question.Lesson] : "ENGINEERING · " + UpgradeName(selectedUpgrade), 278, 131, 720, 34, new GUIStyle(titleStyle) { fontSize = 23 });
         Text(learningPractice ? StarfallCurriculum.Topics[question.Lesson] + " · no answer timer" : CalibrationPurpose + " · set the control load", 278, 171, 710, 25, smallStyle);
         string prompt = questionExplained ? question.Text.Replace("?", question.Answer.ToString()) : question.Text;
@@ -245,20 +245,20 @@ public sealed partial class RuneholdGame
             else
             {
             for (int i = 0; i < 4; i++)
-                if (PixelButton("[" + (i + 1) + "]   " + question.Choices[i], 278 + (i % 2) * 235, 475 + (i / 2) * 57, 215, 47, selectedAnswer == i ? Hex("6b4c36") : PanelLight)) { selectedAnswer = i; Answer(i); }
+                if (PixelButton(question.Choices[i].ToString(), 278 + (i % 2) * 235, 475 + (i / 2) * 57, 215, 47, selectedAnswer == i ? Hex("6b4c36") : PanelLight)) { selectedAnswer = i; Answer(i); }
             }
-            if (PixelButton("SHOW A HINT [H]", 750, 475, 250, 45, Hex("665032"))) ShowTeachingHint();
-            if (PixelButton("WORK TOGETHER [J]", 750, 532, 250, 45, Hex("364e65"))) ExplainQuestion();
+            if (PixelButton("SHOW A HINT", 750, 475, 250, 45, Hex("665032"))) ShowTeachingHint();
+            if (PixelButton("WORK TOGETHER", 750, 532, 250, 45, Hex("364e65"))) ExplainQuestion();
         }
         else
         {
             Fill(278, 475, 450, 106, Panel);
             Text(question.Explanation, 295, 489, 415, 75, labelStyle);
-            if (PixelButton(learningPractice ? "CONTINUE [ENTER]" : "INSTALL [ENTER]", 750, 475, 250, 71, Hex("277c8e"))) FinishLearningResolution();
+            if (PixelButton(learningPractice ? "CONTINUE" : "INSTALL", 750, 475, 250, 71, Hex("277c8e"))) FinishLearningResolution();
             Text("Helped learning is recorded separately.\nNo first-try alloy bonus.", 752, 551, 245, 40, new GUIStyle(smallStyle) { fontSize = 12 });
         }
-        Text(answerFeedback, 278, 598, 535, 58, new GUIStyle(smallStyle) { normal = { textColor = answerFeedbackColor } });
-        if (PixelButton("BACK", 842, 620, 158, 32, PanelLight))
+        Text(answerFeedback, 278, 684, 535, 58, new GUIStyle(smallStyle) { normal = { textColor = answerFeedbackColor } });
+        if (PixelButton("BACK", 842, 704, 158, 44, PanelLight))
         { if (studySession) EndStudySession(false); else { phase = Phase.Day; buildPanelOpen = true; } }
     }
 

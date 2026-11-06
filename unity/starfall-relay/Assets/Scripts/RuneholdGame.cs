@@ -88,7 +88,7 @@ public sealed partial class RuneholdGame : MonoBehaviour
 
     private const float DesignWidth = 1280;
     private const float DesignHeight = 800;
-    private const float WorldZoom = .72f;
+    private const float WorldZoom = .62f;
     private const int MaxQuestionAttempts = 2;
     private readonly Vector2 corePosition = new Vector2(640, 360);
     private readonly List<Meteor> meteors = new List<Meteor>();
@@ -97,7 +97,7 @@ public sealed partial class RuneholdGame : MonoBehaviour
     private readonly List<SalvageNode> nodes = new List<SalvageNode>();
     private readonly List<PickupEffect> pickupEffects = new List<PickupEffect>();
     private readonly List<Vector2> turretPads = new List<Vector2> {
-        new Vector2(516, 294), new Vector2(764, 294), new Vector2(516, 456), new Vector2(764, 456)
+        DeckPoint(463, 182), DeckPoint(817, 182), DeckPoint(463, 541), DeckPoint(817, 541)
     };
 
     private Phase phase = Phase.Day;
@@ -106,7 +106,7 @@ public sealed partial class RuneholdGame : MonoBehaviour
     private readonly Rect[] pilotFrames = new Rect[4];
     private Rect alloyPickupUv, crystalPickupUv;
     private GUIStyle labelStyle, titleStyle, smallStyle, hugeStyle;
-    private Vector2 pilotPosition = new Vector2(640, 516);
+    private Vector2 pilotPosition = new Vector2(640, 670);
     private int pilotFacing;
     private bool pilotWalking;
     private float pilotWalkCycle;
@@ -140,7 +140,7 @@ public sealed partial class RuneholdGame : MonoBehaviour
     private bool showTutorial = true;
     private Upgrade selectedUpgrade;
     private MathQuestion question;
-    private string notice = "Move with WASD. Walk over salvage to gather it.";
+    private string notice = "Drag the move stick. Walk over salvage to gather it.";
     private string incomingText = "";
     private string answerFeedback = "";
     private Color answerFeedbackColor = Mint;
@@ -167,6 +167,10 @@ public sealed partial class RuneholdGame : MonoBehaviour
         else LoadExpedition();
         InitializeAcademyMenu();
         InitializeCombinedExpedition();
+        pilotPosition = NearestDeckPosition(pilotPosition);
+        worldCamera = pilotPosition;
+        Input.simulateMouseWithTouches = true;
+        Screen.orientation = ScreenOrientation.LandscapeLeft;
     }
 
     private void OnDestroy()
@@ -185,6 +189,8 @@ public sealed partial class RuneholdGame : MonoBehaviour
         corePulse += dt;
         UpdateExpeditionPresentation(dt);
         UpdateRelayMusic(dt);
+        UpdateTouchMovement();
+        worldCamera = Vector2.Lerp(worldCamera, pilotPosition + new Vector2(0, -65), 1 - Mathf.Exp(-dt * 5));
         if (UpdateAcademyNavigation()) return;
         noticeTimer = Mathf.Max(0, noticeTimer - dt);
         incomingBannerTimer = Mathf.Max(0, incomingBannerTimer - dt);
@@ -248,7 +254,7 @@ public sealed partial class RuneholdGame : MonoBehaviour
 
     private void MovePilot(float dt)
     {
-        Vector2 move = Vector2.zero;
+        Vector2 move = touchMove;
         if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow)) move.y -= 1;
         if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow)) move.y += 1;
         if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow)) move.x -= 1;
@@ -261,19 +267,17 @@ public sealed partial class RuneholdGame : MonoBehaviour
             if (phase != Phase.Night || pilotTargetId == 0) AimPilot(AimAngle(move), dt);
         }
         float speed = 218 + Mathf.Min(16, UpgradeLevel(Upgrade.SalvageRig)) * 10;
-        pilotPosition += move * speed * dt;
-        pilotPosition.x = Mathf.Clamp(pilotPosition.x, 52, 1228);
-        pilotPosition.y = Mathf.Clamp(pilotPosition.y, 132, 674);
+        MoveOnDeck(move * speed * dt);
         UpdatePilotAbilities(move, dt);
     }
 
     private void CreateNodes()
     {
         nodes.Clear();
-        nodes.Add(new SalvageNode { Position = new Vector2(385, 224), Kind = MaterialKind.Alloy, Amount = 3, Name = "Aster alloy", Color = Hex("70dbf0") });
-        nodes.Add(new SalvageNode { Position = new Vector2(932, 224), Kind = MaterialKind.Crystal, Amount = 2, Name = "Solar crystal", Color = Hex("ffc56a") });
-        nodes.Add(new SalvageNode { Position = new Vector2(350, 580), Kind = MaterialKind.Alloy, Amount = 3, Name = "Hull scrap", Color = Cyan });
-        nodes.Add(new SalvageNode { Position = new Vector2(930, 580), Kind = MaterialKind.Crystal, Amount = 2, Name = "Reactor crystal", Color = Gold });
+        nodes.Add(new SalvageNode { Position = DeckPoint(387, 231), Kind = MaterialKind.Alloy, Amount = 3, Name = "Aster alloy", Color = Hex("70dbf0") });
+        nodes.Add(new SalvageNode { Position = DeckPoint(892, 231), Kind = MaterialKind.Crystal, Amount = 2, Name = "Solar crystal", Color = Hex("ffc56a") });
+        nodes.Add(new SalvageNode { Position = DeckPoint(387, 514), Kind = MaterialKind.Alloy, Amount = 3, Name = "Hull scrap", Color = Cyan });
+        nodes.Add(new SalvageNode { Position = DeckPoint(892, 514), Kind = MaterialKind.Crystal, Amount = 2, Name = "Reactor crystal", Color = Gold });
     }
 
     private void CollectNearbyNodes()
@@ -492,9 +496,10 @@ public sealed partial class RuneholdGame : MonoBehaviour
 
     private void OnGUI()
     {
-        float scale = Mathf.Min(Screen.width / DesignWidth, Screen.height / DesignHeight);
-        float offsetX = (Screen.width - DesignWidth * scale) * .5f;
-        float offsetY = (Screen.height - DesignHeight * scale) * .5f;
+        Rect safe = Screen.safeArea;
+        float scale = Mathf.Min(safe.width / DesignWidth, safe.height / DesignHeight);
+        float offsetX = safe.x + (safe.width - DesignWidth * scale) * .5f;
+        float offsetY = Screen.height - safe.yMax + (safe.height - DesignHeight * scale) * .5f;
         Matrix4x4 previous = GUI.matrix;
         GUI.matrix = Matrix4x4.TRS(new Vector3(offsetX, offsetY, 0), Quaternion.identity, new Vector3(scale, scale, 1));
         InitStyles();
@@ -503,7 +508,7 @@ public sealed partial class RuneholdGame : MonoBehaviour
         bool controlsEnabled = GUI.enabled;
         if (raidBriefOpen) GUI.enabled = false;
         DrawOuterSpace();
-        GUI.matrix = interfaceMatrix * Matrix4x4.TRS(new Vector3(640 - 640 * WorldZoom, 396 - 400 * WorldZoom, 0), Quaternion.identity, new Vector3(WorldZoom, WorldZoom, 1));
+        GUI.matrix = interfaceMatrix * Matrix4x4.TRS(new Vector3(640 - worldCamera.x * WorldZoom, 400 - worldCamera.y * WorldZoom, 0), Quaternion.identity, new Vector3(WorldZoom, WorldZoom, 1));
         DrawWorld();
         DrawSalvageNodes();
         DrawTurrets();
@@ -520,7 +525,8 @@ public sealed partial class RuneholdGame : MonoBehaviour
         DrawExpeditionDirector();
         DrawRewardHudPulse();
         DrawAscensionHud();
-        DrawAbilityHud();
+        DrawTouchControls();
+        DrawDeckNavigator();
         if (phase == Phase.Warning) DrawRaidPopup();
         if (phase == Phase.Dawn) DrawDawnPopup();
         if (phase == Phase.Quiz) DrawQuizPopup();
@@ -548,24 +554,13 @@ public sealed partial class RuneholdGame : MonoBehaviour
 
     private void DrawWorld()
     {
-        float padding = (DesignWidth / WorldZoom - DesignWidth) * .5f;
-        if (deckTexture != null)
-        {
-            // Reflect the outer starfield and gantries across the wider camera view.
-            // Sampling meets at the same edge pixels, keeping the ship out of a visible image box.
-            GUI.DrawTextureWithTexCoords(new Rect(-padding, 0, padding, DesignHeight), deckTexture, new Rect(padding / DesignWidth, 0, -padding / DesignWidth, 1), false);
-            GUI.DrawTextureWithTexCoords(new Rect(DesignWidth, 0, padding, DesignHeight), deckTexture, new Rect(1, 0, -padding / DesignWidth, 1), false);
-            GUI.DrawTexture(new Rect(0, 0, DesignWidth, DesignHeight), deckTexture, ScaleMode.StretchToFill, false);
-        }
-        else Fill(0, 0, DesignWidth, DesignHeight, Hex("17263e"));
-        // A restrained night tint makes the same readable deck change mood at dusk.
+        DrawDeckBackdrop();
+        Rect deck = DeckRect;
+        if (deckTexture != null) GUI.DrawTexture(deck, deckTexture, ScaleMode.StretchToFill, false);
         if (phase == Phase.Warning || phase == Phase.Night)
-            Fill(-padding, 0, DesignWidth + padding * 2, DesignHeight, new Color(.035f, .055f, .12f, phase == Phase.Night ? .38f : .2f));
-        if (hurtFlash > 0) Fill(-padding, 0, DesignWidth + padding * 2, DesignHeight, new Color(.92f, .12f, .12f, .18f * hurtFlash));
-
-        // Core ring pulses and remains the central, readable loss condition.
-        float pulse = Mathf.Sin(corePulse * 2.3f) * 4;
-        Fill(corePosition.x - 52 - pulse, corePosition.y - 52 - pulse, 104 + pulse * 2, 104 + pulse * 2, new Color(.18f, .81f, .98f, .1f));
+            Fill(deck.x, deck.y, deck.width, deck.height, new Color(.035f, .055f, .12f, phase == Phase.Night ? .20f : .10f));
+        if (hurtFlash > 0) Fill(deck.x, deck.y, deck.width, deck.height, new Color(.92f, .12f, .12f, .18f * hurtFlash));
+        DrawDeckWayfinding();
     }
 
     private void DrawOuterSpace()
@@ -652,53 +647,47 @@ public sealed partial class RuneholdGame : MonoBehaviour
 
     private void DrawHud()
     {
-        Fill(0, 0, 1280, 106, new Color(.035f, .06f, .12f, .97f));
-        Fill(0, 104, 1280, 3, Gold);
-        Text("STARFALL", 24, 14, 220, 37, titleStyle);
-        Text("RELAY  //  " + learningProfile.CadetName.ToUpperInvariant(), 27, 53, 310, 24, smallStyle);
-        string phaseName = phase == Phase.Night || phase == Phase.Warning ? "NIGHT " + night : phase == Phase.Dawn ? "DAWN" : "DAY " + night;
-        // Keep the phase chip legible against its light text at every phase.
-        Color phaseColor = phase == Phase.Night || phase == Phase.Warning ? Hex("713d36") : phase == Phase.Dawn ? Hex("715a2c") : Hex("195765");
-        Chip(phaseName + " · ENDLESS", 374, 23, 184, 50, phaseColor);
-        Text("HELIOS CORE", 595, 15, 180, 25, smallStyle);
-        ProgressBar(595, 47, 205, 20, coreHp / (float)coreMaxHp, coreHp <= 35 ? Ember : Cyan);
-        Text(coreHp + " / " + coreMaxHp, 806, 43, 90, 27, labelStyle);
-        DrawMaterialCounter(MaterialKind.Alloy, alloy, new Rect(922, 23, 145, 50), Hex("34485d"));
-        DrawMaterialCounter(MaterialKind.Crystal, crystal, new Rect(1076, 23, 172, 50), Hex("514335"));
-
-        Fill(0, 686, 1280, 114, new Color(.035f, .06f, .12f, .98f));
-        Fill(0, 686, 1280, 3, Gold);
-        string objective = phase == Phase.Day
-            ? (night == 1 && tutorialStep == 0 ? "OBJECTIVE  ·  gather 3 alloy + 1 crystal for your first turret" : night == 1 && tutorialStep == 1 ? "OBJECTIVE  ·  press B and install your first Ion Turret" : "OBJECTIVE  ·  salvage, upgrade, then survive Night " + night)
-            : phase == Phase.Night || phase == Phase.Warning ? "OBJECTIVE  ·  turn the swarm into stardust" : phase == Phase.Dawn ? "OBJECTIVE  ·  claim supplies and keep growing" : phase == Phase.UpgradeReveal ? "OBJECTIVE  ·  new power installed" : "OBJECTIVE  ·  grow stronger and hold the relay";
-        Text(objective, 25, 698, 710, 27, labelStyle);
-        Text("WASD MOVE · SHIFT BOOST · SPACE NOVA · B BUILD · M MENU", 26, 736, 720, 22, smallStyle);
-        Text("RIFLE " + RifleDamage + " DMG · " + RifleStreams + " STREAMS · TURRETS " + turretCount + " · " + lifetimeKills + " KILLS", 26, 763, 720, 21, smallStyle);
-        if (phase == Phase.Day)
+        Fill(0, 0, 1280, 88, Hex("132b47"));
+        Fill(0, 86, 1280, 2, Cyan);
+        if (MenuButton("MENU", new Rect(22, 17, 102, 53), Cyan)) OpenAcademyMenu(HubPage.Home);
+        string day = phase == Phase.Night || phase == Phase.Warning ? "NIGHT " : phase == Phase.Dawn ? "DAWN " : "DAY ";
+        Text(day + night, 144, 16, 160, 30, new GUIStyle(titleStyle) { fontSize = 25 });
+        Text(phase == Phase.Night ? activeEnemyCount + " contacts" : "WAYFARER", 146, 47, 168, 24, smallStyle);
+        Text("HELIOS CORE  " + coreHp + "/" + coreMaxHp, 331, 15, 305, 28, labelStyle);
+        ProgressBar(332, 50, 302, 14, coreHp / (float)coreMaxHp, coreHp <= coreMaxHp * .35f ? Ember : Cyan);
+        DrawMaterialCounter(MaterialKind.Alloy, alloy, new Rect(775, 17, 208, 53), Hex("294964"));
+        DrawMaterialCounter(MaterialKind.Crystal, crystal, new Rect(997, 17, 256, 53), Hex("62533c"));
+        bool field = phase == Phase.Day || phase == Phase.Night;
+        if (field && !buildPanelOpen && !learningPanelOpen && !pauseOpen && !raidBriefOpen)
         {
-            if (PixelButton("UPGRADES  [B]", 801, 716, 210, 56, Gold)) buildPanelOpen = !buildPanelOpen;
-            bool canStart = turretCount > 0;
-            if (PixelButton("START NIGHT " + night + " [N]", 1024, 716, 226, 56, canStart ? Ember : Hex("3e4657")))
+            Fill(260, 717, 494, 57, new Color(.04f, .09f, .17f, .93f));
+            string objective = phase == Phase.Night ? "HOLD THE CORE · " + waveMeteorsDestroyed + "/" + enemyCountToSpawn
+                : tutorialStep == 0 && night == 1 ? "GATHER 3 ALLOY + 1 CRYSTAL" : "EXPLORE · UPGRADE · PREPARE";
+            Text(objective, 276, 723, 462, 24, new GUIStyle(labelStyle) { fontSize = 16 });
+            Text(phase == Phase.Night ? "Automatic fire · " + lifetimeKills + " enemies stopped" : "Walk over resources. Solve maths to power up.", 276, 750, 462, 20, smallStyle);
+            if (phase == Phase.Day)
             {
-                if (canStart) BeginWarning(); else { notice = "First install an Ion Turret: gather salvage, then solve its calibration."; noticeTimer = 3; }
+                if (MenuButton("UPGRADES", new Rect(778, 717, 210, 57), Gold)) { buildPanelOpen = true; touchMove = Vector2.zero; }
+                if (MenuButton("LAUNCH NIGHT " + night, new Rect(1002, 717, 250, 57), Ember)) RequestNightLaunch();
             }
+            else MenuPill("AUTO FIRE ONLINE", new Rect(1019, 728, 233, 35), Mint);
         }
-        else if (phase == Phase.Night)
-        {
-            Chip("SWARM " + activeEnemyCount + " LIVE\n" + waveMeteorsDestroyed + " / " + enemyCountToSpawn + " STOPPED", 1012, 718, 236, 52, Hex("6b3e45"));
-        }
-        else if (phase == Phase.Warning) Chip("IMPACT IN  " + Mathf.CeilToInt(warningTimer), 1012, 718, 236, 52, Ember);
-        else if (phase == Phase.Dawn) Chip("DAWN  ·  SECTOR CLEAR", 1012, 718, 236, 52, Mint);
         if (noticeTimer > 0 && !string.IsNullOrEmpty(notice))
         {
-            Fill(350, 144, 560, 38, new Color(.04f, .07f, .12f, .91f));
-            TextCentered(notice, 364, 148, 532, 30, smallStyle);
+            Fill(350, 108, 560, 42, new Color(.04f, .07f, .12f, .94f));
+            TextCentered(notice, 364, 111, 532, 36, smallStyle);
         }
+    }
+
+    private void RequestNightLaunch()
+    {
+        if (turretCount > 0) BeginWarning();
+        else { notice = "Install your first Ion Turret: gather salvage, then solve its calibration."; noticeTimer = 4; }
     }
 
     private void DrawTutorialCard()
     {
-        Vector2 target = new Vector2(906, 706);
+        Vector2 target = new Vector2(880, 706);
         if (tutorialStep == 0)
         {
             SalvageNode nearest = null;
@@ -711,6 +700,7 @@ public sealed partial class RuneholdGame : MonoBehaviour
             }
             if (nearest != null) target = WorldToScreen(nearest.Position) + new Vector2(0, -36);
         }
+        target = new Vector2(Mathf.Clamp(target.x, 310, 980), Mathf.Clamp(target.y, 160, 650));
         float bounce = Mathf.Round(Mathf.Sin(corePulse * 4) * 3);
         Fill(target.x - 2, target.y - 18 + bounce, 4, 13, Gold);
         Fill(target.x - 8, target.y - 9 + bounce, 16, 4, Gold);
@@ -720,8 +710,8 @@ public sealed partial class RuneholdGame : MonoBehaviour
         Fill(30, 128, 5, 106, Gold);
         Text("FLIGHT SCHOOL  ·  " + (tutorialStep + 1) + "/2", 50, 139, 260, 24, new GUIStyle(smallStyle) { normal = { textColor = Gold }, fontStyle = FontStyle.Bold });
         string instruction = tutorialStep == 0
-            ? "WASD to walk. Touch the cyan alloy and gold crystal caches."
-            : "Press B for upgrades. Install your first turret by solving its math lock.";
+            ? "Drag the move stick. Walk over the cyan alloy and gold crystal caches."
+            : "Tap Upgrades. Install your first turret by solving its math lock.";
         Text(instruction, 50, 169, 255, 58, new GUIStyle(labelStyle) { fontSize = 16 });
     }
 
@@ -737,7 +727,7 @@ public sealed partial class RuneholdGame : MonoBehaviour
         TextCentered("⚠  RAID WARNING", 375, 238, 530, 52, new GUIStyle(titleStyle) { alignment = TextAnchor.MiddleCenter, normal = { textColor = Ember } });
         TextCentered(enemyCountToSpawn + " ELEMENTAL CONTACTS DETECTED", 375, 296, 530, 33, labelStyle);
         TextCentered(ThreatName(night) + "\n" + ThreatDescription(night), 375, 335, 530, 60, smallStyle);
-        TextCentered("SHIFT boost · collect field cells · SPACE Nova Pulse", 375, 401, 530, 27, new GUIStyle(smallStyle) { alignment = TextAnchor.MiddleCenter, normal = { textColor = Cyan } });
+        TextCentered("Tap Boost to reposition. Collect field cells to recharge Nova.", 375, 401, 530, 27, new GUIStyle(smallStyle) { alignment = TextAnchor.MiddleCenter, normal = { textColor = Cyan } });
         ProgressBar(427, 438, 426, 18, warningTimer / 3.2f, Ember);
         TextCentered("IMPACT IN  " + Mathf.CeilToInt(warningTimer), 427, 472, 426, 38, titleStyle);
     }
@@ -749,9 +739,9 @@ public sealed partial class RuneholdGame : MonoBehaviour
         OverlayShade(.8f);
         MenuCard(new Rect(435, 260, 410, 266), Gold);
         TextCentered("PAUSED", 460, 290, 360, 46, titleStyle);
-        TextCentered("WASD to move · auto-fire is active", 460, 345, 360, 30, smallStyle);
-        if (PixelButton("RESUME  [ESC]", 478, 405, 324, 52, Hex("277c8e"))) pauseOpen = false;
-        if (PixelButton("MAIN MENU [M]", 478, 466, 324, 38, PanelLight)) OpenAcademyMenu(HubPage.Home);
+        TextCentered("Drag to move · your rifle fires automatically", 460, 345, 360, 30, smallStyle);
+        if (PixelButton("RESUME", 478, 405, 324, 52, Hex("277c8e"))) pauseOpen = false;
+        if (PixelButton("MAIN MENU", 478, 466, 324, 38, PanelLight)) OpenAcademyMenu(HubPage.Home);
     }
 
     private void DrawEndScreen(bool won) => DrawLearningEndScreen(won);
@@ -764,8 +754,8 @@ public sealed partial class RuneholdGame : MonoBehaviour
         GUI.color = old;
     }
 
-    private static Vector2 WorldToScreen(Vector2 position)
-        => new Vector2(640, 396) + (position - new Vector2(640, 400)) * WorldZoom;
+    private Vector2 WorldToScreen(Vector2 position)
+        => new Vector2(640, 400) + (position - worldCamera) * WorldZoom;
 
     private void CacheSpriteFrames()
     {
@@ -840,10 +830,10 @@ public sealed partial class RuneholdGame : MonoBehaviour
     }
 
     private void TextCentered(string text, float x, float y, float w, float h, GUIStyle style)
-        => GUI.Label(new Rect(x, y, w, h), text, new GUIStyle(style) { alignment = TextAnchor.MiddleCenter });
+        => GUI.Label(new Rect(x, y, w, h), text, new GUIStyle(DisplayStyle(style)) { alignment = TextAnchor.MiddleCenter });
 
     private void Text(string text, float x, float y, float w, float h, GUIStyle style)
-        => GUI.Label(new Rect(x, y, w, h), text, style);
+        => GUI.Label(new Rect(x, y, w, h), text, DisplayStyle(style));
 
     private void ProgressBar(float x, float y, float w, float h, float value, Color color)
     {
@@ -856,6 +846,8 @@ public sealed partial class RuneholdGame : MonoBehaviour
 
     private void Fill(float x, float y, float w, float h, Color color)
     {
+        if (BrightMenu && color.a > .5f && color.r < .25f && color.g < .4f && color.b < .55f)
+            color = Color.Lerp(Hex("e5eefb"), color, .06f);
         Color old = GUI.color; GUI.color = color;
         GUI.DrawTexture(new Rect(x, y, w, h), pixel);
         GUI.color = old;
