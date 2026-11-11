@@ -654,7 +654,7 @@ public sealed partial class RuneholdGame : MonoBehaviour
         {
             UiRound(new Rect(0, 682, 1280, 118), UiPaper, 0); Fill(0, 682, 1280, 2, UiLine);
             bool day = phase == Phase.Day; SalvageNode cache = NextHelpfulCache();
-            string title = !day ? "Protect the ship!" : turretCount == 0 && alloy >= 3 && crystal >= 1 ? "Build your first tower" : cache != null ? "Collect " + (cache.Kind == MaterialKind.Alloy ? "metal" : "crystals") : "Ready for an upgrade?";
+            string title = !day ? "Protect the ship!" : CanBuy(RecommendedUpgrade) ? (turretCount == 0 ? "Build your first tower" : "Ready for an upgrade?") : cache != null ? "Collect " + (cache.Kind == MaterialKind.Alloy ? "metal" : "crystals") : "Earn supplies tonight";
             UiCard(NextStepAction, Cyan);
             UiText(title, new Rect(270, 711, 380, 30), 23, true);
             UiText(!day ? waveMeteorsDestroyed + " of " + enemyCountToSpawn + " meteors stopped" : "Tap here for your next step", new Rect(270, 746, 380, 22), 18, false, UiMuted);

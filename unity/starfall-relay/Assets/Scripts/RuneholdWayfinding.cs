@@ -64,12 +64,16 @@ public sealed partial class RuneholdGame
         return delta.normalized * Mathf.Min(1, delta.magnitude / Mathf.Max(.01f, speed * dt));
     }
 
-    private SalvageNode NextHelpfulCache()
+    private SalvageNode NextHelpfulCache(Upgrade? forUpgrade = null)
     {
+        UpgradeCost(forUpgrade ?? RecommendedUpgrade, out int metal, out int gems);
+        bool needMetal = alloy < metal, needGems = crystal < gems;
         SalvageNode nearest = null; float distance = float.MaxValue;
         foreach (SalvageNode node in nodes)
         {
-            if (node.Collected || turretCount == 0 && alloy >= 3 && crystal < 1 && node.Kind != MaterialKind.Crystal) continue;
+            if (node.Collected) continue;
+            if (needMetal && !needGems && node.Kind != MaterialKind.Alloy) continue;
+            if (needGems && !needMetal && node.Kind != MaterialKind.Crystal) continue;
             float d = (node.Position - pilotPosition).sqrMagnitude;
             if (d < distance) { nearest = node; distance = d; }
         }
@@ -78,9 +82,18 @@ public sealed partial class RuneholdGame
 
     private void FollowNextStep()
     {
-        if (turretCount == 0 && alloy >= 3 && crystal >= 1) { OpenEquipmentBay(Upgrade.IonTurret); return; }
+        if (CanBuy(RecommendedUpgrade)) { OpenEquipmentBay(RecommendedUpgrade); return; }
         SalvageNode next = NextHelpfulCache();
-        if (next != null) NavigateToSalvage(next); else OpenEquipmentBay(RecommendedUpgrade);
+        if (next != null) NavigateToSalvage(next);
+        else if (turretCount > 0) BeginWarning();
+        else { notice = "Explore the deck for metal and crystals to build your first tower."; noticeTimer = 4; }
+    }
+
+    private void DrawObjectConnector(Vector2 anchor, Rect card)
+    {
+        Vector2 edge = new Vector2(Mathf.Clamp(anchor.x, card.x + 10, card.xMax - 10), Mathf.Clamp(anchor.y, card.y + 10, card.yMax - 10));
+        UiStroke(anchor, edge, 2, new Color(.14f, .42f, .7f, .85f));
+        UiDot(anchor, 4, UiBlue);
     }
 
     private void DrawResourceRoute()
@@ -129,6 +142,7 @@ public sealed partial class RuneholdGame
             if (at.x < 40 || at.x > 1240 || at.y < 125 || at.y > 620) continue;
             Rect label = PlaceWorldLabel(at); if (label.width == 0) continue;
             Color color = node.Kind == MaterialKind.Alloy ? Cyan : Gold;
+            DrawObjectConnector(at, label);
             UiCard(label, color);
             DrawPickup(node.Kind, new Vector2(label.x + 26, label.center.y), 36, Color.white);
             UiText((node.Kind == MaterialKind.Alloy ? "Metal +" : "Crystals +") + SalvageAmount(node), new Rect(label.x + 51, label.y + 7, label.width - 60, 26), 20, true);
@@ -147,6 +161,7 @@ public sealed partial class RuneholdGame
                 if (installed && kind != Upgrade.IonTurret && Vector2.Distance(pilotPosition, p) > 240) continue;
                 Rect label = PlaceWorldLabel(at, 204); if (label.width == 0) continue;
                 string title = installed ? (kind == Upgrade.IonTurret ? "Tower " + (i + 1) : FriendlyUpgrade(kind)) : "Build " + (kind == Upgrade.IonTurret ? "a tower" : kind == Upgrade.CoreShield ? "a shield" : "a helper");
+                DrawObjectConnector(at, label);
                 UiCard(label, UpgradeColor(kind));
                 UiText(title, new Rect(label.x + 13, label.y + 6, label.width - 26, 27), 20, true);
                 UiText(installed ? "Tap to upgrade" : "Tap to build", new Rect(label.x + 13, label.y + 34, label.width - 26, 22), 17, false, UiBlue);

@@ -195,7 +195,7 @@ public sealed partial class RuneholdGame
             {
                 selectedUpgrade = kind;
                 if (buy) StartUpgrade(kind);
-                else { buildPanelOpen = false; SalvageNode next = NextHelpfulCache(); if (next != null) NavigateToSalvage(next); else { notice = "Night rewards bring more resources. Your ship keeps growing."; noticeTimer = 4; } }
+                else { buildPanelOpen = false; SalvageNode next = NextHelpfulCache(kind); if (next != null) NavigateToSalvage(next); else { notice = "Night rewards bring more resources. Your ship keeps growing."; noticeTimer = 4; } }
             }
         }
         if (!astronautUpgradeTab && turretCount > 0 && turretCount < 4)
