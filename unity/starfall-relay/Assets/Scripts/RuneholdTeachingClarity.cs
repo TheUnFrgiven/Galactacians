@@ -8,7 +8,8 @@ public sealed partial class RuneholdGame
         UiRound(new Rect(0, 0, 1280, 98), UiPaper, 0);
         if (MenuButton("Back", new Rect(24, 20, 126, 58), Cyan)) LeaveTeaching();
         UiText(title, new Rect(176, 13, 834, 40), 30, true);
-        UiText(subtitle, new Rect(178, 57, 1035, 28), 20, false, UiMuted);
+        UiText(subtitle, new Rect(178, 57, 834, 28), 20, false, UiMuted);
+        DrawAskHelp(new Rect(1040, 20, 208, 58));
     }
 
     private void LeaveTeaching()

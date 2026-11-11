@@ -18,7 +18,10 @@ Shader "Hidden/Starfall/CalmDeck"
                 half3 color = lerp(light.xxx, source.rgb, .62);
                 // Quiet the painted scenery. Full-color interactive sprites are drawn above it.
                 color = lerp(color, half3(.12, .20, .32), .18);
-                return fixed4(color, source.a);
+                // Feather the painting into a full-screen sky instead of repeating a cropped strip.
+                half2 edge = min(input.uv, 1 - input.uv);
+                half fade = smoothstep(0, .025, min(edge.x, edge.y));
+                return fixed4(color, source.a * fade);
             }
             ENDCG
         }

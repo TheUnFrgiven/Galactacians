@@ -161,6 +161,7 @@ public sealed partial class RuneholdGame : MonoBehaviour
         pixel = new Texture2D(1, 1, TextureFormat.RGBA32, false);
         pixel.SetPixel(0, 0, Color.white);
         pixel.Apply();
+        InitializeSky();
         Application.targetFrameRate = 60;
         bestScore = PlayerPrefs.GetInt("starfall.best", 0);
         CreateNodes();
@@ -168,6 +169,8 @@ public sealed partial class RuneholdGame : MonoBehaviour
         else LoadExpedition();
         InitializeAcademyMenu();
         InitializeCombinedExpedition();
+        InitializeGuide();
+        shieldHp = Mathf.Clamp(shieldHp, 0, ShieldCapacity);
         pilotPosition = NearestDeckPosition(pilotPosition);
         worldCamera = pilotPosition;
         Input.simulateMouseWithTouches = true;
@@ -183,6 +186,7 @@ public sealed partial class RuneholdGame : MonoBehaviour
         if (relayMusicClip != null) Destroy(relayMusicClip);
         if (pixel != null) Destroy(pixel);
         if (readableDeck != null) Destroy(readableDeck);
+        if (spaceSky != null) Destroy(spaceSky);
     }
 
     private void Update()
@@ -193,6 +197,7 @@ public sealed partial class RuneholdGame : MonoBehaviour
         UpdateRelayMusic(dt);
         UpdateTouchMovement();
         worldCamera = Vector2.Lerp(worldCamera, pilotPosition + new Vector2(0, -65), 1 - Mathf.Exp(-dt * 5));
+        if (UpdateGuide()) return;
         if (UpdateAcademyNavigation()) return;
         noticeTimer = Mathf.Max(0, noticeTimer - dt);
         incomingBannerTimer = Mathf.Max(0, incomingBannerTimer - dt);
@@ -261,7 +266,6 @@ public sealed partial class RuneholdGame : MonoBehaviour
         if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow)) move.y += 1;
         if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow)) move.x -= 1;
         if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) move.x += 1;
-        move = ResolveRouteMove(move, dt);
         if (move.sqrMagnitude > 1) move.Normalize();
         pilotWalking = move.sqrMagnitude > 0;
         if (pilotWalking)
@@ -336,7 +340,6 @@ public sealed partial class RuneholdGame : MonoBehaviour
 
     private void BeginWarning()
     {
-        resourceRoute.Clear();
         buildPanelOpen = learningPanelOpen = false;
         pilotWalking = false;
         raidBriefOpen = true;
@@ -345,6 +348,7 @@ public sealed partial class RuneholdGame : MonoBehaviour
     private void LaunchWarnedRaid()
     {
         raidBriefOpen = false;
+        shieldHp = ShieldCapacity;
         CaptureSwarmCheckpoint();
         buildPanelOpen = false;
         learningPanelOpen = false;
@@ -370,7 +374,7 @@ public sealed partial class RuneholdGame : MonoBehaviour
     {
         phase = Phase.Night;
         SeedOpeningSwarm();
-        notice = "Night " + night + " · keep the HELIOS CORE standing until dawn.";
+        notice = "Night " + night + " · keep the SHIP standing until dawn.";
         noticeTimer = 4;
         SpawnBurst(corePosition, Cyan, 22);
     }
@@ -398,7 +402,7 @@ public sealed partial class RuneholdGame : MonoBehaviour
         night++;
         phase = Phase.Day;
         nodes.ForEach(n => n.Collected = false);
-        coreHp = Mathf.Min(coreMaxHp, coreHp + Mathf.Max(10, coreMaxHp / 5));
+        coreHp = Mathf.Min(coreMaxHp, coreHp + 10);
         notice = "DAY " + night + "  ·  salvage the new crystal fall, then choose an upgrade.";
         noticeTimer = 4;
         SaveExpedition();
@@ -441,8 +445,7 @@ public sealed partial class RuneholdGame : MonoBehaviour
             case Upgrade.CoreShield:
                 installationPosition = shieldPads[Mathf.Min(shieldLevels, 1)];
                 if (shieldLevels < 2) shieldLevels++; else shieldMastery++;
-                int integrity = 25 + UpgradeLevel(Upgrade.CoreShield) * 5;
-                coreMaxHp += integrity; coreHp = Mathf.Min(coreMaxHp, coreHp + integrity);
+                shieldHp = ShieldCapacity;
                 break;
             case Upgrade.SalvageRig:
                 installationPosition = salvagePads[Mathf.Min(salvageLevels, 1)];
@@ -505,18 +508,19 @@ public sealed partial class RuneholdGame : MonoBehaviour
         float offsetX = safe.x + (safe.width - DesignWidth * scale) * .5f;
         float offsetY = Screen.height - safe.yMax + (safe.height - DesignHeight * scale) * .5f;
         Matrix4x4 previous = GUI.matrix;
+        DrawScreenBackdrop();
+        bool originalEnabled = GUI.enabled;
+        GUI.enabled = originalEnabled && !guideOpen;
         GUI.matrix = Matrix4x4.TRS(new Vector3(offsetX, offsetY, 0), Quaternion.identity, new Vector3(scale, scale, 1));
         InitStyles();
-        if (menuOpen && phase != Phase.Quiz) { DrawAcademyMenu(); DrawExpeditionNotice(); GUI.matrix = previous; return; }
+        if (menuOpen && phase != Phase.Quiz) { DrawAcademyMenu(); DrawExpeditionNotice(); GUI.enabled = originalEnabled; DrawGuideDialogue(); GUI.matrix = previous; return; }
         Matrix4x4 interfaceMatrix = GUI.matrix;
-        bool controlsEnabled = GUI.enabled;
-        bool fieldBlocked = raidBriefOpen || pauseOpen || buildPanelOpen || learningPanelOpen ||
+        bool controlsEnabled = originalEnabled;
+        bool fieldBlocked = guideOpen || raidBriefOpen || pauseOpen || buildPanelOpen || learningPanelOpen ||
             phase == Phase.Quiz || phase == Phase.UpgradeReveal || phase == Phase.Dawn || phase == Phase.Warning || phase == Phase.Victory || phase == Phase.Defeat;
         GUI.enabled = controlsEnabled && !fieldBlocked;
-        DrawOuterSpace();
         GUI.matrix = interfaceMatrix * Matrix4x4.TRS(new Vector3(WorldOrigin.x, WorldOrigin.y, 0), Quaternion.identity, new Vector3(WorldZoom, WorldZoom, 1));
         DrawWorld();
-        DrawResourceRoute();
         DrawSalvageNodes();
         DrawTurrets();
 
@@ -527,14 +531,14 @@ public sealed partial class RuneholdGame : MonoBehaviour
         DrawPickupEffects();
         DrawFx();
         GUI.matrix = interfaceMatrix;
-        DrawHud();
         DrawWorldActions();
+        DrawHud();
         DrawExpeditionDirector();
         DrawRewardHudPulse();
 
         DrawTouchControls();
         DrawDeckNavigator();
-        GUI.enabled = controlsEnabled;
+        GUI.enabled = controlsEnabled && !guideOpen;
         if (phase == Phase.Warning) DrawRaidPopup();
         if (phase == Phase.Dawn) DrawDawnPopup();
         if (phase == Phase.Quiz) DrawQuizPopup();
@@ -544,10 +548,12 @@ public sealed partial class RuneholdGame : MonoBehaviour
         if (pauseOpen) DrawPause();
         if (phase == Phase.Victory) DrawEndScreen(true);
         if (phase == Phase.Defeat) DrawEndScreen(false);
-        if (showTutorial && phase == Phase.Day && night == 1 && tutorialStep < 2 && !buildPanelOpen && !learningPanelOpen && !pauseOpen) DrawTutorialCard();
         DrawExpeditionNotice();
-        GUI.enabled = controlsEnabled;
+        GUI.enabled = controlsEnabled && !guideOpen;
         if (raidBriefOpen) DrawRaidBriefing();
+        if (!guideOpen && !buildPanelOpen && phase != Phase.Quiz && (raidBriefOpen || pauseOpen || phase == Phase.UpgradeReveal || phase == Phase.Dawn || phase == Phase.Warning || phase == Phase.Defeat || phase == Phase.Victory)) DrawAskHelp(new Rect(1040, 20, 208, 58));
+        GUI.enabled = controlsEnabled;
+        DrawGuideDialogue();
         GUI.matrix = previous;
     }
 
@@ -562,12 +568,12 @@ public sealed partial class RuneholdGame : MonoBehaviour
 
     private void DrawWorld()
     {
-        DrawDeckBackdrop();
         Rect deck = DeckRect;
-        if (deckTexture != null) GUI.DrawTexture(deck, deckTexture, ScaleMode.StretchToFill, false);
+        Rect view = WorldViewport;
+        if (deckTexture != null) GUI.DrawTexture(deck, deckTexture, ScaleMode.StretchToFill, true);
         if (phase == Phase.Warning || phase == Phase.Night)
-            Fill(deck.x, deck.y, deck.width, deck.height, new Color(.035f, .055f, .12f, phase == Phase.Night ? .20f : .10f));
-        if (hurtFlash > 0) Fill(deck.x, deck.y, deck.width, deck.height, new Color(.92f, .12f, .12f, .18f * hurtFlash));
+            Fill(view.x, view.y, view.width, view.height, new Color(.035f, .055f, .12f, phase == Phase.Night ? .20f : .10f));
+        if (hurtFlash > 0) Fill(view.x, view.y, view.width, view.height, new Color(.92f, .12f, .12f, .18f * hurtFlash));
         DrawDeckWayfinding();
     }
 
@@ -644,21 +650,14 @@ public sealed partial class RuneholdGame : MonoBehaviour
         if (MenuButton("Home", MenuAction, Cyan)) OpenAcademyMenu(HubPage.Home);
         UiText((phase == Phase.Night || phase == Phase.Warning ? "Night " : "Day ") + night, new Rect(162, 13, 150, 36), 29, true);
         UiText("Pilot level " + astronautLevel, new Rect(164, 53, 160, 28), 19, false, UiMuted);
-        UiText("Ship health", new Rect(345, 13, 245, 30), 23, true);
-        UiText(coreHp + "/" + coreMaxHp, new Rect(592, 13, 126, 30), 22, true, UiBlue, TextAnchor.MiddleRight);
-        UiRound(new Rect(346, 56, 370, 19), Hex("dde8f2"), 8);
-        UiRound(new Rect(348, 58, Mathf.Max(16, 366 * coreHp / (float)coreMaxHp), 15), coreHp < coreMaxHp * .35f ? Ember : Hex("39bba0"), 7);
+        DrawHealthAndShield();
         DrawClearMaterial(MaterialKind.Alloy, alloy, new Rect(752, 18, 225, 60));
         DrawClearMaterial(MaterialKind.Crystal, crystal, new Rect(993, 18, 263, 60));
         if (FieldControlsAvailable)
         {
             UiRound(new Rect(0, 682, 1280, 118), UiPaper, 0); Fill(0, 682, 1280, 2, UiLine);
-            bool day = phase == Phase.Day; SalvageNode cache = NextHelpfulCache();
-            string title = !day ? "Protect the ship!" : CanBuy(RecommendedUpgrade) ? (turretCount == 0 ? "Build your first tower" : "Ready for an upgrade?") : cache != null ? "Collect " + (cache.Kind == MaterialKind.Alloy ? "metal" : "crystals") : "Earn supplies tonight";
-            UiCard(NextStepAction, Cyan);
-            UiText(title, new Rect(270, 711, 380, 30), 23, true);
-            UiText(!day ? waveMeteorsDestroyed + " of " + enemyCountToSpawn + " meteors stopped" : "Tap here for your next step", new Rect(270, 746, 380, 22), 18, false, UiMuted);
-            if (day && GUI.Button(NextStepAction, GUIContent.none, GUIStyle.none)) FollowNextStep();
+            bool day = phase == Phase.Day;
+            DrawGuideFooter();
             if (day)
             {
                 if (MenuButton("Build & upgrade", BuildAction, Cyan, true, true)) OpenEquipmentBay(RecommendedUpgrade);
@@ -668,7 +667,7 @@ public sealed partial class RuneholdGame : MonoBehaviour
             {
                 UiCard(new Rect(690, 702, 566, 72), Mint);
                 UiText("Your blaster fires automatically", new Rect(714, 710, 520, 32), 23, true);
-                UiText("Move, collect energy and use Nova when it is ready.", new Rect(714, 746, 520, 24), 18, false, UiMuted);
+                UiText("Move, collect energy and use Blast when it is ready.", new Rect(714, 746, 520, 24), 18, false, UiMuted);
             }
         }
         if (noticeTimer > 0 && !string.IsNullOrEmpty(notice) && !buildPanelOpen && phase != Phase.Quiz)
@@ -689,7 +688,7 @@ public sealed partial class RuneholdGame : MonoBehaviour
     private void RequestNightLaunch()
     {
         if (turretCount > 0) BeginWarning();
-        else { notice = "Install your first Ion Turret: gather salvage, then solve its calibration."; noticeTimer = 4; }
+        else { notice = "Install your first Tower: gather salvage, then solve its calibration."; noticeTimer = 4; }
     }
 
     private void DrawTutorialCard()
@@ -709,7 +708,7 @@ public sealed partial class RuneholdGame : MonoBehaviour
         UiText("Here come the meteors!", new Rect(332, 214, 616, 68), 36, true, UiInk, TextAnchor.MiddleCenter);
         UiText("Your blaster and towers shoot automatically.", new Rect(340, 300, 600, 70), 25, false, UiMuted, TextAnchor.MiddleCenter);
         UiText(Mathf.CeilToInt(warningTimer).ToString(), new Rect(340, 383, 600, 120), 82, true, UiBlue, TextAnchor.MiddleCenter);
-        UiText("Move with the stick. Tap Nova when it is ready.", new Rect(340, 522, 600, 50), 23, false, UiMuted, TextAnchor.MiddleCenter);
+        UiText("Move with the stick. Tap Blast when it is ready.", new Rect(340, 522, 600, 50), 23, false, UiMuted, TextAnchor.MiddleCenter);
     }
 
     private void DrawDawnPopup() => DrawWaveRewards();

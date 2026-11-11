@@ -44,14 +44,14 @@ public sealed partial class RuneholdGame
     private float nextShotSound;
     private sealed class CapacitorDrop { public Vector2 Position; public float Age; }
     private sealed class ExpeditionNotice { public string Title, Body; public Color Color; }
-    private static readonly string[] AchievementNames = { "First Defender", "First Dawn", "Field Engineer", "Pulse Pilot",
-        "Clean Orbit", "Swarm Hunter", "Learning Together", "Independent Signal", "Five-a-day", "Deep Expedition", "Star Reaper", "Immortal" };
+    private static readonly string[] AchievementNames = { "First tower", "First night", "Five upgrades", "Use Blast",
+        "No damage", "1,000 meteors", "Learn with help", "Solve it yourself", "Five puzzles", "Five nights", "Level 18", "Power 60" };
     private static readonly string[] AchievementCopy = { "Build your first meteor tower.", "Protect your ship through Night 1.", "Upgrade your tools 5 times.",
-        "Use Nova 3 times.", "Finish 3 nights without ship damage.", "Stop 1,000 meteors.",
+        "Use Blast 3 times.", "Finish 3 nights without ship damage.", "Stop 1,000 meteors.",
         "Work out 5 puzzles with help.", "Work out 10 puzzles yourself.", "Finish 5 maths puzzles in one day.",
         "Protect your ship through Night 5.", "Reach pilot level 18.", "Reach astronaut power 60." };
     private static readonly int[] AchievementRewards = { 1, 2, 1, 1, 2, 2, 1, 2, 1, 2, 2, 3 };
-    private static readonly string[] LiveryNames = { "RELAY ORIGINAL", "VERDANT WARDEN", "NEBULA RANGER", "SOLAR LEGEND" };
+    private static readonly string[] LiveryNames = { "Orange", "Green", "Purple", "Gold" };
     private static readonly int[] LiveryPrices = { 0, 2, 4, 6 };
     private string JournalPath => Path.Combine(Application.persistentDataPath, "starfall-pilot-v1.json");
     private static string LocalDay => DateTime.Now.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
@@ -257,7 +257,7 @@ public sealed partial class RuneholdGame
         UiCard(new Rect(334, 320, 282, 390), Cyan); DrawMenuPilot(new Vector2(475, 473), 0, 2.1f);
         UiText(learningProfile.CadetName, new Rect(354, 594, 242, 45), 28, true, UiInk, TextAnchor.MiddleCenter);
         UiText("Pilot level " + astronautLevel, new Rect(354, 646, 242, 40), 23, false, UiBlue, TextAnchor.MiddleCenter);
-        string[] labels = { "Nights protected", "Meteors stopped", "Tools upgraded", "Nova bursts", "Learning XP", "Maths solved" };
+        string[] labels = { "Nights protected", "Meteors stopped", "Tools upgraded", "Blast bursts", "Maths points", "Maths solved" };
         int[] values = { pilotJournal.HighestNight, lifetimeKills, InstalledRanks, pilotJournal.Pulses, learningProfile.LearningXp, TotalLearning(true) + TotalLearning(false) };
         for (int i = 0; i < 6; i++)
         {
@@ -313,16 +313,13 @@ public sealed partial class RuneholdGame
         UiText("Little steps add up. Keep exploring at your own pace.", new Rect(334, 741, 866, 35), 21, false, UiMuted);
     }
 
-    private string ThreatName(int wave) => wave % 3 == 0 ? "STORMHEART CONVOY" : wave % 3 == 2 ? "ION RUSH" : "EMBER DRIFT";
-    private string ThreatDescription(int wave) => wave % 3 == 0 ? "Armored fragments + a Stormheart. Cannons break the dense center."
-        : wave % 3 == 2 ? "Fast skaters cut through the swarm. Rifle spread and drones cover the edges."
-        : "Fragile fragments in packed clouds. Piercing rounds and cannon blasts clear groups.";
+    private string ThreatName(int wave) => wave % 3 == 0 ? "Big meteors" : wave % 3 == 2 ? "Fast meteors" : "Meteors";
 
-    private void DrawExpeditionDirector()
-    {
-        if (phase != Phase.Day || buildPanelOpen || learningPanelOpen || pauseOpen || raidBriefOpen || showTutorial && night == 1 && tutorialStep < 2) return;
-        DrawPowerForecast();
-    }
+    private string ThreatDescription(int wave) => wave % 3 == 0 ? "Tough meteors travel with a big meteor. Towers help stop the group."
+        : wave % 3 == 2 ? "Fast meteors arrive in groups. Blaster and Drones help cover the edges."
+        : "Small meteors arrive in big groups. Towers and Blaster help clear them.";
+
+    private void DrawExpeditionDirector() => DrawGuideTaskHint();
 
     private void UpdatePilotAbilities(Vector2 direction, float dt)
     {
@@ -354,7 +351,7 @@ public sealed partial class RuneholdGame
             int damage = 6 + RifleDamage * 2 + TurretDamage;
             foreach (Meteor enemy in meteors)
                 if (enemy.Alive && (enemy.Position - pulseOrigin).sqrMagnitude <= 420 * 420) DamageMeteor(enemy, damage, LearnerAccent);
-            SpawnBurst(pilotPosition, LearnerAccent, 35); Announce("NOVA PULSE", "Capacitors discharged. Sweep up field cells to recharge.", LearnerAccent);
+            SpawnBurst(pilotPosition, LearnerAccent, 35); Announce("BLAST!", "Collect energy to charge another Blast.", LearnerAccent);
             RefreshAchievements(); SavePilotJournal();
         }
         for (int i = capacitors.Count - 1; i >= 0; i--)
@@ -363,7 +360,7 @@ public sealed partial class RuneholdGame
             float distance = Vector2.Distance(drop.Position, pilotPosition);
             if (distance < 120) drop.Position = Vector2.MoveTowards(drop.Position, pilotPosition, dt * 340);
             if (distance < 28)
-            { pulseCharge = Mathf.Min(100, pulseCharge + 12); coreHp = Mathf.Min(coreMaxHp, coreHp + 1); SpawnBurst(drop.Position, LearnerAccent, 3); capacitors.RemoveAt(i); }
+            { pulseCharge = Mathf.Min(100, pulseCharge + 12); SpawnBurst(drop.Position, LearnerAccent, 3); capacitors.RemoveAt(i); }
             else if (drop.Age > 45) capacitors.RemoveAt(i);
         }
     }

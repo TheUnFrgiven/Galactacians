@@ -104,7 +104,7 @@ public sealed partial class RuneholdGame
             Rect card = new Rect(334 + i % 2 * 442, 320 + i / 2 * 204, 424, 190);
             bool owned = pilotJournal.Liveries.Contains(i), equipped = learningProfile.Accent == i, canUnlock = pilotJournal.Tokens >= LiveryPrices[i];
             UiCard(card, LiveryEnergy(i), equipped); DrawLiveryPortrait(i, new Vector2(card.x + 64, card.y + 98), 125);
-            string[] names = { "Space explorer", "Forest guardian", "Star ranger", "Solar hero" };
+            string[] names = { "Orange", "Green", "Purple", "Gold" };
             UiText(names[i], new Rect(card.x + 132, card.y + 15, 272, 37), 26, true);
             UiText("Astronaut, tools and lights", new Rect(card.x + 132, card.y + 63, 272, 53), 20, false, UiMuted);
             string action = equipped ? "Wearing these!" : owned ? "Wear these colors" : canUnlock ? "Unlock · " + LiveryPrices[i] + " credits" : "Need " + (LiveryPrices[i] - pilotJournal.Tokens) + " credits";

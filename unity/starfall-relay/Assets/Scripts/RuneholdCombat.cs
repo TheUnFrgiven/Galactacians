@@ -128,10 +128,7 @@ public sealed partial class RuneholdGame
             if (toCore.sqrMagnitude < 28 * 28)
             {
                 enemy.Alive = false; activeEnemyCount--;
-                coreHp = Mathf.Max(0, coreHp - enemy.CoreDamage);
-                waveCoreHit = true;
-                hurtFlash = .65f;
-                SpawnBurst(corePosition, Ember, 4);
+                ApplyShipDamage(enemy.CoreDamage);
                 if (coreHp <= 0) { phase = Phase.Defeat; return; }
                 continue;
             }
@@ -322,7 +319,7 @@ public sealed partial class RuneholdGame
                 ProgressBar(enemy.Position.x - 16, enemy.Position.y - 29, 32, 4, enemy.Hp / (float)enemy.MaxHp, enemy.Tint);
             if (enemy.Commander)
             {
-                TextCentered("STORMHEART", enemy.Position.x - 73, enemy.Position.y - 65, 146, 25, new GUIStyle(smallStyle) { normal = { textColor = Gold }, fontStyle = FontStyle.Bold });
+                TextCentered("BIG METEOR", enemy.Position.x - 73, enemy.Position.y - 65, 146, 25, new GUIStyle(smallStyle) { normal = { textColor = Gold }, fontStyle = FontStyle.Bold });
                 ProgressBar(enemy.Position.x - 45, enemy.Position.y - 39, 90, 7, enemy.Hp / (float)enemy.MaxHp, Gold);
             }
             else if (enemy.Role == 1) DrawBeam(enemy.Position - enemy.Velocity.normalized * 20, enemy.Position - enemy.Velocity.normalized * 9, 2, Cyan);
@@ -415,19 +412,20 @@ public sealed partial class RuneholdGame
     private void ConfigureSwarmPreview()
     {
         previewRun = true;
-        turretCount = 2; shieldLevels = 1; coreMaxHp = coreHp = 125;
+        turretCount = 2; shieldLevels = 1; coreMaxHp = coreHp = 125; shieldHp = ShieldCapacity;
         alloy = 6; crystal = 4; night = 2; tutorialStep = 2; showTutorial = false;
         pilotPosition = new Vector2(640, 670);
     }
 
     private void CaptureSwarmCheckpoint()
     {
-        checkpointCoreHp = coreHp; checkpointScore = score; swarmCheckpointReady = true;
+        checkpointCoreHp = coreHp; checkpointShieldHp = shieldHp; checkpointScore = score; swarmCheckpointReady = true;
     }
 
     private void RetrySwarmCheckpoint()
     {
-        coreHp = swarmCheckpointReady ? checkpointCoreHp : Mathf.Max(1, coreMaxHp / 2);
+        coreHp = swarmCheckpointReady ? checkpointCoreHp : Mathf.Max(1, coreHp);
+        shieldHp = swarmCheckpointReady ? checkpointShieldHp : ShieldCapacity;
         if (swarmCheckpointReady) score = checkpointScore;
         phase = Phase.Day;
         regenerationCharge = 0; droneTimer = 0;

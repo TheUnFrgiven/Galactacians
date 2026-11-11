@@ -15,7 +15,7 @@ public sealed partial class RuneholdGame
     private static readonly string[] HubLabels = { "Command deck", "Learning galaxy", "Practice lab", "Equipment", "Pilot profile", "Collection", "Settings" };
     private static readonly HubPage[] HubPages = { HubPage.Home, HubPage.Galaxy, HubPage.Practice, HubPage.Armory, HubPage.Progress, HubPage.Achievements, HubPage.Settings };
     private static readonly string[] SkillNames = { "Addition", "Subtraction", "Multiplication", "Division" };
-    private static readonly string[] LevelNames = { "First steps", "Explorer", "Challenge" };
+    private static readonly string[] LevelNames = { "Level 1", "Level 2", "Level 3" };
     private Color LearnerAccent => LiveryEnergy(learningProfile.Accent);
 
     private void InitializeAcademyMenu()
@@ -33,7 +33,6 @@ public sealed partial class RuneholdGame
 
     private void OpenAcademyMenu(HubPage page)
     {
-        resourceRoute.Clear(); routeStep = 0;
         if (phase == Phase.Quiz)
         {
             if (studySession) EndStudySession(false);
@@ -309,7 +308,7 @@ public sealed partial class RuneholdGame
         HubHeading("Nice work, " + learningProfile.CadetName + "!", "Five puzzles complete. Every step helps your maths grow.");
         UiCard(new Rect(334, 240, 866, 372), Gold);
         DrawClearIcon(5, new Vector2(1023, 283), 10, Hex("c99129"));
-        UiText("+" + studyXp + " learning XP", new Rect(364, 269, 570, 66), 38, true, UiBlue);
+        UiText("+" + studyXp + " maths points", new Rect(364, 269, 570, 66), 38, true, UiBlue);
         UiText(studyIndependent + " worked out yourself", new Rect(364, 362, 570, 45), 27, true);
         UiText(studySupported + " learned together", new Rect(364, 420, 570, 45), 27, true);
         UiText("Today: " + Mathf.Min(5, learningProfile.DailySolved) + " of 5 puzzles · " + MenuCount(learningProfile.Stars, "learning star"), new Rect(364, 506, 806, 65), 24, false, UiMuted);
@@ -352,7 +351,7 @@ public sealed partial class RuneholdGame
         UiText(question.Explanation, new Rect(56, 541, 612, 56), 22, true);
         UiCard(new Rect(720, 112, 528, 540), Gold);
         DrawClearIcon(5, new Vector2(919, 153), 9, Hex("d59a2d"));
-        UiText("+" + (questionSupported ? 4 : 10) + " learning XP", new Rect(748, 288, 472, 66), 35, true, UiBlue, TextAnchor.MiddleCenter);
+        UiText("+" + (questionSupported ? 4 : 10) + " maths points", new Rect(748, 288, 472, 66), 35, true, UiBlue, TextAnchor.MiddleCenter);
         UiText(questionSupported ? "We worked it out together.\nThat is learning too!" : "You worked it out yourself!", new Rect(758, 381, 452, 100), 27, false, UiInk, TextAnchor.MiddleCenter);
         UiText("Your spaceship is waiting safely.", new Rect(752, 546, 464, 53), 22, false, UiMuted, TextAnchor.MiddleCenter);
         if (MenuButton(studyIndex < 5 ? "Next question" : "See my progress", new Rect(720, 686, 528, 80), Cyan, true, true)) ContinueStudy();

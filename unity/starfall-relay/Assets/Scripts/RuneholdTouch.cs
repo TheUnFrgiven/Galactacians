@@ -6,7 +6,7 @@ public sealed partial class RuneholdGame
     private int moveFinger = -1;
     private bool mouseMoveStick, touchBoost, touchNova;
     private static readonly Vector2 StickCenter = new Vector2(124, 586);
-    private bool FieldControlsAvailable => !menuOpen && !pauseOpen && !raidBriefOpen && !buildPanelOpen && !learningPanelOpen && (phase == Phase.Day || phase == Phase.Night);
+    private bool FieldControlsAvailable => !guideOpen && !menuOpen && !pauseOpen && !raidBriefOpen && !buildPanelOpen && !learningPanelOpen && (phase == Phase.Day || phase == Phase.Night);
 
     private Vector2 InterfacePoint(Vector2 screen)
     {
@@ -28,11 +28,11 @@ public sealed partial class RuneholdGame
             {
                 if (BoostAction.Contains(at)) touchBoost = true;
                 if (phase == Phase.Night && NovaAction.Contains(at)) touchNova = true;
-                if (phase == Phase.Day && BuildAction.Contains(at)) { OpenEquipmentBay(RecommendedUpgrade); resourceRoute.Clear(); break; }
+                if (phase == Phase.Day && BuildAction.Contains(at)) { OpenEquipmentBay(RecommendedUpgrade); break; }
                 if (phase == Phase.Day && LaunchAction.Contains(at)) { RequestNightLaunch(); break; }
                 if (MenuAction.Contains(at)) { OpenAcademyMenu(HubPage.Home); break; }
             }
-            if (touch.phase == TouchPhase.Began && phase == Phase.Day && NextStepAction.Contains(at)) FollowNextStep();
+            if (touch.phase == TouchPhase.Began && GuideHelpAction.Contains(at)) OpenContextHelp();
             if (moveFinger < 0 && touch.phase == TouchPhase.Began && (at - StickCenter).sqrMagnitude < 105 * 105) moveFinger = touch.fingerId;
             if (touch.fingerId != moveFinger) continue;
             found = true;
@@ -73,7 +73,7 @@ public sealed partial class RuneholdGame
         UiDot(StickCenter + touchMove * 39, 28, UiBlue);
         UiText("Move", new Rect(70, 711, 108, 40), 23, true, UiInk, TextAnchor.MiddleCenter);
         if (MenuButton(dashCooldown <= 0 ? "Boost" : dashCooldown.ToString("0.0") + "s", BoostAction, Cyan, dashCooldown <= 0)) touchBoost = true;
-        if (phase == Phase.Night && MenuButton(pulseCharge >= 100 ? "Nova!" : Mathf.FloorToInt(pulseCharge) + "%", NovaAction, Gold, pulseCharge >= 100, pulseCharge >= 100)) touchNova = true;
-        if (phase == Phase.Night) UiText("Nova", new Rect(1148, 652, 108, 26), 19, true, Color.white, TextAnchor.MiddleCenter);
+        if (phase == Phase.Night && MenuButton(pulseCharge >= 100 ? "Blast!" : Mathf.FloorToInt(pulseCharge) + "%", NovaAction, Gold, pulseCharge >= 100, pulseCharge >= 100)) touchNova = true;
+        if (phase == Phase.Night) UiText("Blast", new Rect(1148, 652, 108, 26), 19, true, Color.white, TextAnchor.MiddleCenter);
     }
 }

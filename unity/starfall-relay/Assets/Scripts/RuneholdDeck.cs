@@ -67,22 +67,6 @@ public sealed partial class RuneholdGame
         return closest;
     }
 
-    private void DrawDeckBackdrop()
-    {
-        if (deckTexture == null) return;
-        // Sample only the star-and-nebula strip at the top of the painting.
-        // The wider corner crop contains asteroids; repeating it made obvious rows of rocks.
-        int left = Mathf.FloorToInt((worldCamera.x - 1100) / 420);
-        int top = Mathf.FloorToInt((worldCamera.y - 750) / 140);
-        for (int y = top; y < top + 12; y++)
-            for (int x = left; x < left + 6; x++)
-            {
-                bool flipX = (x & 1) != 0, flipY = (y & 1) != 0;
-                Rect uv = new Rect(flipX ? .265f : .19f, flipY ? 1 : .96f, flipX ? -.075f : .075f, flipY ? -.04f : .04f);
-                GUI.DrawTextureWithTexCoords(new Rect(x * 420, y * 140, 420, 140), deckTexture, uv, false);
-            }
-    }
-
     private void DrawDeckWayfinding()
     {
         // Floor color strips identify quarters; labels live on readable screen-space cards.

@@ -21,6 +21,19 @@ public sealed partial class RuneholdGame
         }
     }
 
+    private Rect WorldViewport
+    {
+        get
+        {
+            Rect safe = Screen.safeArea;
+            float scale = Mathf.Min(safe.width / DesignWidth, safe.height / DesignHeight);
+            float x = safe.x + (safe.width - DesignWidth * scale) * .5f;
+            float y = Screen.height - safe.yMax + (safe.height - DesignHeight * scale) * .5f;
+            return new Rect((-x / scale - WorldOrigin.x) / WorldZoom, (-y / scale - WorldOrigin.y) / WorldZoom,
+                Screen.width / (scale * WorldZoom), Screen.height / (scale * WorldZoom));
+        }
+    }
+
     private void UiRound(Rect rect, Color color, float radius = 12)
     {
         Color previous = GUI.color; GUI.color = Color.white;
@@ -90,9 +103,8 @@ public sealed partial class RuneholdGame
         }
     }
 
-    private string FriendlyUpgrade(Upgrade upgrade) => upgrade == Upgrade.IonTurret ? "Meteor tower" : upgrade == Upgrade.CoreShield ? "Ship shield" :
-        upgrade == Upgrade.SalvageRig ? "Resource helper" : upgrade == Upgrade.PlasmaRifle ? "Space blaster" : upgrade == Upgrade.OrbitDrones ? "Robot friends" : "Repair station";
+    private string FriendlyUpgrade(Upgrade upgrade) => UpgradeName(upgrade);
     private string FriendlyBenefit(Upgrade upgrade) => upgrade == Upgrade.IonTurret ? "Stops groups of meteors. More towers cover more of your ship." :
-        upgrade == Upgrade.CoreShield ? "Gives your ship more health and repairs damage." : upgrade == Upgrade.SalvageRig ? "Collects more metal and crystals each day." :
+        upgrade == Upgrade.CoreShield ? "Absorbs damage before Health. Recharges for each night." : upgrade == Upgrade.SalvageRig ? "Collects more metal and crystals each day." :
         upgrade == Upgrade.PlasmaRifle ? "Makes your astronaut's automatic shots stronger." : upgrade == Upgrade.OrbitDrones ? "Little robots help you shoot nearby meteors." : "Slowly repairs your ship during each meteor shower.";
 }

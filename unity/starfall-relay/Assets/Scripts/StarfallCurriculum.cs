@@ -17,6 +17,7 @@ public sealed class StarfallLearningProfile
     public int Version = 1;
     public int ActiveLesson, UnlockedLesson;
     public bool TutorialComplete;
+    public int GuideVersion, GuideStep;
     public int[] Independent = new int[3], Supported = new int[3], Evidence = new int[3], Wins = new int[3];
     public List<StarfallFactRecord> Facts = new List<StarfallFactRecord>();
     public string CadetName = "Aria", PracticeDate = "", LastPracticeStarDate = "";
@@ -93,10 +94,10 @@ public static class StarfallCurriculum
         => !string.IsNullOrEmpty(fact.ReviewOn) && string.CompareOrdinal(fact.ReviewOn, DateTime.Now.ToString("yyyy-MM-dd")) <= 0;
     public static int ReviewWeight(StarfallFactRecord fact)
         => Math.Max(1, 5 + Math.Min(8, Math.Max(0, fact.Mistakes + fact.Supported - fact.Independent)) * 3 - Math.Min(4, fact.Independent) + (ReviewDue(fact) ? 8 : 0));
-    public static readonly string[] Names = { "POWER SUMS", "SHIELD DIFFERENCES", "BRIDGE TO TWENTY", "EQUAL GROUPS", "FAIR SHARING", "COSMIC MIX" };
+    public static readonly string[] Names = { "Addition", "Subtraction", "Make ten", "Multiplication", "Division", "Mixed maths" };
     public static readonly string[] Topics = { "Join quantities · addition within 10", "Take quantities away · subtraction within 10", "Make ten · addition within 20",
         "Multiplication · repeated equal groups", "Division · exact equal shares", "Choose the operation · mixed facts" };
-    public static readonly string[] MissionNames = { "First Contact", "Moon Mail", "Make Ten", "The Ring Road", "Sharing Space", "Cosmic Mix" };
+    public static readonly string[] MissionNames = { "Addition", "Subtraction", "Make ten", "Multiplication", "Division", "Mixed maths" };
     public static readonly string[] Teachings = {
         "Addition joins two amounts. Keep the first group, then count on by the second amount.",
         "Subtraction takes an amount away. Start with the total and count what remains.",

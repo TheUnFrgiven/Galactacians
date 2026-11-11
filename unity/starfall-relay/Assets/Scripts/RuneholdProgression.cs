@@ -14,8 +14,8 @@ public sealed partial class RuneholdGame
     private int RifleStreams => Mathf.Min(7, 1 + rifleLevels / 3 + (astronautLevel - 1) / 8);
     private int TurretDamage => 2 + turretMastery * 2 + (astronautLevel - 1) / 4;
     private int AscensionPower => astronautLevel + rifleLevels + droneLevels + regenerationLevels;
-    private string AscensionTitle => AscensionPower < 8 ? "RELAY SCOUT" : AscensionPower < 18 ? "SWARM HUNTER"
-        : AscensionPower < 35 ? "STAR REAPER" : AscensionPower < 60 ? "VOID DEMIGOD" : "IMMORTAL";
+    private string AscensionTitle => AscensionPower < 8 ? "BEGINNER" : AscensionPower < 18 ? "EXPLORER"
+        : AscensionPower < 35 ? "DEFENDER" : AscensionPower < 60 ? "HERO" : "SPACE HERO";
     private int CrowdLimit => Mathf.Min(900, 280 + night * 40);
     private int SalvageAmount(SalvageNode node) => node.Amount + UpgradeLevel(Upgrade.SalvageRig) + night / 3;
     private string ExpeditionPath => Path.Combine(Application.persistentDataPath, "starfall-expedition-v1.json");
@@ -24,6 +24,7 @@ public sealed partial class RuneholdGame
     private sealed class ExpeditionSave
     {
         public int Version = 1, Night, Alloy, Crystal, CoreHp, CoreMaxHp, Score, Turrets, Shields, Rigs;
+        public int ShieldRules, ShieldHp;
         public int Level, Experience, Kills, Rifle, Drones, Regeneration, TurretMastery, ShieldMastery, SalvageMastery;
         public int Calibrations, CalibrationAlloy, Tutorial, LastMilestone, RewardAlloy, RewardCrystal, WaveKills, WaveTotal;
         public bool Dawn, Clean;
@@ -39,6 +40,7 @@ public sealed partial class RuneholdGame
         bool battle = swarmCheckpointReady && (savedPhase == Phase.Night || savedPhase == Phase.Warning || savedPhase == Phase.Defeat);
         var save = new ExpeditionSave {
             Night = night, Alloy = alloy, Crystal = crystal, CoreHp = battle ? checkpointCoreHp : coreHp, CoreMaxHp = coreMaxHp,
+            ShieldRules = 1, ShieldHp = battle ? checkpointShieldHp : shieldHp,
             Score = battle ? checkpointScore : score, Turrets = turretCount, Shields = shieldLevels, Rigs = salvageLevels,
             Level = astronautLevel, Experience = experience,
             Kills = lifetimeKills, Rifle = rifleLevels, Drones = droneLevels, Regeneration = regenerationLevels,
@@ -75,6 +77,7 @@ public sealed partial class RuneholdGame
             regenerationLevels = Mathf.Clamp(save.Regeneration, 0, 10000);
             turretMastery = Mathf.Clamp(save.TurretMastery, 0, 10000); shieldMastery = Mathf.Clamp(save.ShieldMastery, 0, 10000);
             salvageMastery = Mathf.Clamp(save.SalvageMastery, 0, 10000); lastMilestoneNight = Mathf.Max(0, save.LastMilestone);
+            shieldHp = save.ShieldRules == 0 ? ShieldCapacity : Mathf.Clamp(save.ShieldHp, 0, ShieldCapacity);
             correctAnswers = Mathf.Max(0, save.Calibrations); totalCalibrationAlloy = Mathf.Max(0, save.CalibrationAlloy);
             tutorialStep = Mathf.Clamp(save.Tutorial, 0, 2); showTutorial = !learningProfile.TutorialComplete;
             pilotPosition = NearestDeckPosition(new Vector2(save.PilotX, save.PilotY));

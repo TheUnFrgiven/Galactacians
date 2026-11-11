@@ -37,8 +37,8 @@ public sealed partial class RuneholdGame
     private static int UpgradeMaximum(Upgrade upgrade) => int.MaxValue;
     private int HardwareCount(Upgrade upgrade) => upgrade == Upgrade.IonTurret ? turretCount : upgrade == Upgrade.CoreShield ? shieldLevels : salvageLevels;
     private static int HardwareSlots(Upgrade upgrade) => upgrade == Upgrade.IonTurret ? 4 : 2;
-    private static string UpgradeName(Upgrade upgrade) => upgrade == Upgrade.IonTurret ? "ION TURRET" : upgrade == Upgrade.CoreShield ? "CORE SHIELD" :
-        upgrade == Upgrade.SalvageRig ? "SALVAGE RIG" : upgrade == Upgrade.PlasmaRifle ? "PLASMA RIFLE" : upgrade == Upgrade.OrbitDrones ? "ORBIT DRONES" : "REGEN REACTOR";
+    private static string UpgradeName(Upgrade upgrade) => upgrade == Upgrade.IonTurret ? "Tower" : upgrade == Upgrade.CoreShield ? "Shield" :
+        upgrade == Upgrade.SalvageRig ? "Collector" : upgrade == Upgrade.PlasmaRifle ? "Blaster" : upgrade == Upgrade.OrbitDrones ? "Drones" : "Repair";
     private static Color UpgradeColor(Upgrade upgrade) => upgrade == Upgrade.IonTurret || upgrade == Upgrade.PlasmaRifle ? Cyan :
         upgrade == Upgrade.CoreShield || upgrade == Upgrade.Regeneration ? Mint : Gold;
 
@@ -47,20 +47,20 @@ public sealed partial class RuneholdGame
         int level = UpgradeLevel(upgrade) + (next ? 1 : 0);
         if (upgrade == Upgrade.IonTurret)
         {
-            if (!next) return turretCount + " cannons · " + TurretDamage + " damage each";
-            return turretCount < 4 && !turretMasteryPurchase ? (turretCount + 1) + " cannons · " + TurretDamage + " damage each"
-                : "ALL cannons: " + (TurretDamage + 2) + " damage + faster / wider blasts";
+            if (!next) return turretCount + " Towers · " + TurretDamage + " damage each";
+            return turretCount < 4 && !turretMasteryPurchase ? (turretCount + 1) + " Towers · " + TurretDamage + " damage each"
+                : "ALL Towers: " + (TurretDamage + 2) + " damage + faster / wider blasts";
         }
-        if (upgrade == Upgrade.CoreShield) return (coreMaxHp + (next ? 25 + level * 5 : 0)) + " maximum core integrity";
+        if (upgrade == Upgrade.CoreShield) return ShieldCapacityForRank(level) + " Shield · recharges before each night";
         if (upgrade == Upgrade.PlasmaRifle) return (RifleDamage + (next ? 1 : 0)) + " damage · spread every 3 ranks";
         if (upgrade == Upgrade.OrbitDrones) return Mathf.Min(8, level == 0 ? 0 : level + 1) + " drones · " + (1 + level + astronautLevel / 5) + " damage";
-        if (upgrade == Upgrade.Regeneration) return level + " reactor ranks · repairs core during combat";
+        if (upgrade == Upgrade.Regeneration) return level + " Repair levels · repairs Health during combat";
         return (3 + level) + " metal / " + (2 + level) + " crystal per cache";
     }
 
     private static string UpgradeDetail(Upgrade upgrade)
-        => upgrade == Upgrade.IonTurret ? "Build more cannons or boost every installed cannon. No mastery cap."
-        : upgrade == Upgrade.CoreShield ? "Grow core capacity and restore the added integrity."
+        => upgrade == Upgrade.IonTurret ? "Build more Towers or boost every installed Tower. No mastery cap."
+        : upgrade == Upgrade.CoreShield ? "Absorb more damage. Shield recharges before each night; Health stays unchanged."
         : upgrade == Upgrade.SalvageRig ? "Increase all cache rewards and movement speed."
         : upgrade == Upgrade.PlasmaRifle ? "More damage, piercing, speed and spread; rank 8 adds blasts."
         : upgrade == Upgrade.OrbitDrones ? "Orbiting companions sweep nearby enemies automatically."
@@ -89,7 +89,7 @@ public sealed partial class RuneholdGame
             }
         }
         if (found) OpenEquipmentBay(selectedUpgrade, installedCannon);
-        else { notice = "Tap Upgrades, a cannon sign or a construction pad."; noticeTimer = 3; }
+        else { notice = "Tap Upgrades, a Tower sign or a construction pad."; noticeTimer = 3; }
     }
 
     private void DrawUpgradeArt(Upgrade upgrade, Vector2 position, float height, Color tint)
@@ -111,11 +111,11 @@ public sealed partial class RuneholdGame
     {
         if (shieldLevels > 0)
         {
-            Color shieldColor = new Color(.3f, .9f, 1f, .45f + .12f * Mathf.Sin(corePulse * 2));
+            Color shieldColor = new Color(.3f, .9f, 1f, shieldHp > 0 ? .55f : .08f);
             for (int i = 0; i < 48; i++)
             {
                 float a = i * Mathf.PI * 2 / 48;
-                Vector2 point = corePosition + new Vector2(Mathf.Cos(a) * 166, Mathf.Sin(a) * 148);
+                Vector2 point = corePosition + new Vector2(Mathf.Cos(a) * 282, Mathf.Sin(a) * 254);
                 Fill(Mathf.Round(point.x), Mathf.Round(point.y), 7, 4, shieldColor);
             }
         }
@@ -191,20 +191,21 @@ public sealed partial class RuneholdGame
             UiRound(new Rect(card.x + 20, card.y + 307, 348, 39), Hex("edf3fb"), 8);
             UiText(metal + " metal + " + gems + " crystals", new Rect(card.x + 28, card.y + 308, 332, 37), 22, true);
             bool locked = kind != Upgrade.IonTurret && turretCount == 0, buy = CanBuy(kind);
-            if (MenuButton(locked ? "Build a tower first" : buy ? "Solve & upgrade" : "Find resources", new Rect(card.x + 20, card.y + 363, 348, 65), UpgradeColor(kind), !locked, buy))
+            if (MenuButton(locked ? "Build a tower first" : buy ? "Solve & upgrade" : "Resource help", new Rect(card.x + 20, card.y + 363, 348, 65), UpgradeColor(kind), !locked, buy))
             {
                 selectedUpgrade = kind;
                 if (buy) StartUpgrade(kind);
-                else { buildPanelOpen = false; SalvageNode next = NextHelpfulCache(kind); if (next != null) NavigateToSalvage(next); else { notice = "Night rewards bring more resources. Your ship keeps growing."; noticeTimer = 4; } }
+                else { buildPanelOpen = false; OpenResourceHelp(kind); }
             }
         }
         if (!astronautUpgradeTab && turretCount > 0 && turretCount < 4)
         {
             if (MenuTab("Add a tower", new Rect(32, 699, 220, 64), !turretMasteryPurchase)) turretMasteryPurchase = false;
             if (MenuTab("Power up all towers", new Rect(270, 699, 260, 64), turretMasteryPurchase)) turretMasteryPurchase = true;
-            UiText(turretMasteryPurchase ? "This upgrade makes every installed tower stronger." : "A new tower protects another part of your ship.", new Rect(555, 697, 693, 68), 23, false, UiMuted);
+            UiText(turretMasteryPurchase ? "This upgrade makes every installed tower stronger." : "A new tower protects another part of your ship.", new Rect(555, 697, 435, 68), 23, false, UiMuted);
         }
-        else UiText("Maths powers every upgrade. Asking for help is always welcome.", new Rect(32, 699, 1216, 64), 23, false, UiMuted, TextAnchor.MiddleCenter);
+        else UiText("Maths powers every upgrade. Asking for help is always welcome.", new Rect(32, 699, 955, 64), 23, false, UiMuted, TextAnchor.MiddleCenter);
+        DrawAskHelp(new Rect(1008, 699, 240, 64));
     }
 
     private void DrawUpgradeRow(Upgrade upgrade, int y)
@@ -234,9 +235,9 @@ public sealed partial class RuneholdGame
         {
             selectedUpgrade = upgrade;
             if (canBuy) StartUpgrade(upgrade);
-            else { notice = maxed ? "All " + UpgradeName(upgrade) + " slots are installed." : locked ? "Install your first Ion Turret to unlock the other ship systems." : MissingMaterials(upgrade); noticeTimer = 4; }
+            else { notice = maxed ? "All " + UpgradeName(upgrade) + " slots are installed." : locked ? "Install your first Tower to unlock the other ship systems." : MissingMaterials(upgrade); noticeTimer = 4; }
         }
-        TextCentered(maxed ? "MAX LEVEL" : locked ? "Unlocks after first cannon" : canBuy ? "Materials ready" : MissingMaterials(upgrade), 786, y + 66, 178, 36,
+        TextCentered(maxed ? "MAX LEVEL" : locked ? "Unlocks after first Tower" : canBuy ? "Materials ready" : MissingMaterials(upgrade), 786, y + 66, 178, 36,
             new GUIStyle(smallStyle) { fontSize = 12, alignment = TextAnchor.MiddleCenter, normal = { textColor = canBuy ? Mint : Gold } });
     }
 
@@ -273,7 +274,7 @@ public sealed partial class RuneholdGame
             UiText("+" + (i == 0 ? dawnAlloyReward : dawnCrystalReward), new Rect(box.x + 132, box.y + 35, 224, 56), 42, true, UiBlue);
             UiText(i == 0 ? "Metal" : "Crystals", new Rect(box.x + 132, box.y + 102, 224, 44), 27, true);
         }
-        UiText(dawnCleanDefense ? "Bonus crystal! You protected every bit of ship health." : "Your ship repairs a little before the next adventure.", new Rect(250, 500, 780, 65), 24, false, UiMuted, TextAnchor.MiddleCenter);
+        UiText((dawnCleanDefense ? "Bonus Crystal for no Health damage. " : "Damage carries over. ") + "Health +" + Mathf.Min(10, coreMaxHp - coreHp) + ". Shield recharges before the next night.", new Rect(250, 500, 780, 65), 23, false, UiMuted, TextAnchor.MiddleCenter);
         if (MenuButton("Collect & keep exploring", new Rect(300, 610, 680, 76), Cyan, true, true)) ClaimWaveRewards();
     }
 
@@ -284,8 +285,9 @@ public sealed partial class RuneholdGame
         alloy += dawnAlloyReward;
         crystal += dawnCrystalReward;
         rewardHudFlash = 3;
+        int repaired = Mathf.Min(10, coreMaxHp - coreHp);
         BeginNextDay();
-        notice = "REWARDS CLAIMED  +" + dawnAlloyReward + " metal + " + dawnCrystalReward + " crystal · open Upgrades to grow stronger.";
+        notice = "Health +" + repaired + ". Supplies collected: +" + dawnAlloyReward + " Metal, +" + dawnCrystalReward + " Crystal.";
         noticeTimer = 5;
         SaveExpedition();
     }

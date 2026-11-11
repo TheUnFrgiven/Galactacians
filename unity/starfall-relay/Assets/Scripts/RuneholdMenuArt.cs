@@ -34,8 +34,9 @@ public sealed partial class RuneholdGame
             if (GUI.Button(row, GUIContent.none, GUIStyle.none)) { NavigateHub(pages[i]); PlayRelaySound(4, .55f); }
         }
         if (MenuButton("My space tools", new Rect(44, 706, 238, 54), Cyan)) NavigateHub(HubPage.Armory);
-        UiText("Your spaceship is waiting", new Rect(334, 39, 534, 31), 23, true, UiBlue);
-        UiText("Learn at your own pace.", new Rect(334, 76, 534, 26), 20, false, UiMuted);
+        UiText("Your spaceship is waiting", new Rect(334, 39, 350, 31), 23, true, UiBlue);
+        UiText("Learn at your own pace.", new Rect(334, 76, 350, 26), 20, false, UiMuted);
+        DrawAskHelp(new Rect(702, 41, 185, 60));
         if (MenuButton("Settings", new Rect(905, 41, 139, 60), Hex("bca4f2"))) NavigateHub(HubPage.Settings);
         if (MenuButton("Play", new Rect(1062, 41, 162, 60), Cyan, true, true)) ResumeExpedition();
         Fill(334, 117, 890, 2, UiLine);

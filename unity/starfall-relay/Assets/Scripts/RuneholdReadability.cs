@@ -34,14 +34,13 @@ public sealed partial class RuneholdGame
     private string ReadinessName => ReadinessRatio < .65f ? "CRITICAL POWER GAP" : ReadinessRatio < 1.05f ? "UPGRADES RECOMMENDED" : "READY TO CHALLENGE";
     private Color ReadinessColor => ReadinessRatio < .65f ? Ember : ReadinessRatio < 1.05f ? Gold : Mint;
     private Upgrade RecommendedUpgrade => turretCount < 4 ? Upgrade.IonTurret : night % 3 == 2 && droneLevels < 2 ? Upgrade.OrbitDrones : Upgrade.IonTurret;
-    private string BuildAdvice => coreHp < coreMaxHp * .45f ? "Your core is badly damaged. Upgrade Core Shield to add capacity and integrity."
-        : turretCount < 4 ? "Install another Ion Turret: a new cannon adds a whole extra stream of splash damage."
-        : night % 3 == 2 && droneLevels < 2 ? "Upgrade Orbit Drones to catch fast skaters at the edges."
-        : "Upgrade Ion mastery to strengthen every cannon. Rifle ranks add damage, piercing and spread.";
+    private string BuildAdvice => coreHp < coreMaxHp * .45f ? "Health is low. Upgrade Shield to absorb more hits; Repair can heal during a night."
+        : turretCount < 4 ? "Add a Tower to stop more meteors."
+        : night % 3 == 2 && droneLevels < 2 ? "Upgrade Drones to stop fast meteors near you."
+        : "Power up all Towers or upgrade your Blaster to stop more meteors.";
 
     private void OpenEquipmentBay(Upgrade upgrade, bool boostCannons = false)
     {
-        resourceRoute.Clear(); routeStep = 0;
         turretMasteryPurchase = boostCannons || turretCount >= 4;
         selectedUpgrade = upgrade; astronautUpgradeTab = upgrade >= Upgrade.PlasmaRifle;
         raidBriefOpen = learningPanelOpen = false; buildPanelOpen = true; pilotWalking = false;
@@ -88,7 +87,7 @@ public sealed partial class RuneholdGame
         UiText(ReadinessRatio < .65f ? "Let's give the ship more power" : ReadinessRatio < 1.05f ? "One more upgrade could help" : "Your ship is ready to try!", new Rect(196, 361, 888, 48), 30, true, UiBlue);
         string advice = ReadinessRatio < .65f ? "This shower is much stronger than your tools. Upgrade first to give your ship a chance. There is no rush."
             : ReadinessRatio < 1.05f ? "More meteors need more power. Build another tower or improve your tools before you start."
-            : "Keep moving and use Nova when it is ready. Later nights bring bigger showers, so keep learning and upgrading.";
+            : "Keep moving and use Blast when it is ready. Later nights bring bigger showers, so keep learning and upgrading.";
         UiText(advice, new Rect(196, 430, 888, 102), 26);
         UiText("A planning guide, not a promise. Your movement and timing matter too.", new Rect(196, 557, 888, 50), 20, false, UiMuted);
         if (MenuButton("Upgrade first", new Rect(196, 640, 430, 76), Cyan, true, true)) OpenEquipmentBay(coreHp < coreMaxHp * .45f ? Upgrade.CoreShield : RecommendedUpgrade);
