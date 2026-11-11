@@ -5,7 +5,7 @@ public sealed partial class RuneholdGame
     private Vector2 touchMove;
     private int moveFinger = -1;
     private bool mouseMoveStick, touchBoost, touchNova;
-    private static readonly Vector2 StickCenter = new Vector2(137, 624);
+    private static readonly Vector2 StickCenter = new Vector2(124, 586);
     private bool FieldControlsAvailable => !menuOpen && !pauseOpen && !raidBriefOpen && !buildPanelOpen && !learningPanelOpen && (phase == Phase.Day || phase == Phase.Night);
 
     private Vector2 InterfacePoint(Vector2 screen)
@@ -26,12 +26,13 @@ public sealed partial class RuneholdGame
             Vector2 at = InterfacePoint(touch.position);
             if (touch.phase == TouchPhase.Began)
             {
-                if (new Rect(1020, 602, 106, 68).Contains(at)) touchBoost = true;
-                if (phase == Phase.Night && new Rect(1140, 583, 112, 87).Contains(at)) touchNova = true;
-                if (phase == Phase.Day && new Rect(778, 717, 210, 57).Contains(at)) { buildPanelOpen = true; break; }
-                if (phase == Phase.Day && new Rect(1002, 717, 250, 57).Contains(at)) { RequestNightLaunch(); break; }
-                if (new Rect(22, 17, 102, 53).Contains(at)) { OpenAcademyMenu(HubPage.Home); break; }
+                if (BoostAction.Contains(at)) touchBoost = true;
+                if (phase == Phase.Night && NovaAction.Contains(at)) touchNova = true;
+                if (phase == Phase.Day && BuildAction.Contains(at)) { OpenEquipmentBay(RecommendedUpgrade); resourceRoute.Clear(); break; }
+                if (phase == Phase.Day && LaunchAction.Contains(at)) { RequestNightLaunch(); break; }
+                if (MenuAction.Contains(at)) { OpenAcademyMenu(HubPage.Home); break; }
             }
+            if (touch.phase == TouchPhase.Began && phase == Phase.Day && NextStepAction.Contains(at)) FollowNextStep();
             if (moveFinger < 0 && touch.phase == TouchPhase.Began && (at - StickCenter).sqrMagnitude < 105 * 105) moveFinger = touch.fingerId;
             if (touch.fingerId != moveFinger) continue;
             found = true;
@@ -61,21 +62,18 @@ public sealed partial class RuneholdGame
     private void DrawTouchControls()
     {
         if (!FieldControlsAvailable) return;
-        DrawPixelEllipse(StickCenter, 81, 81, new Color(.02f, .07f, .15f, .7f));
-        DrawPixelEllipse(StickCenter, 69, 69, new Color(.25f, .75f, 1, .15f));
+        UiDot(StickCenter, 83, new Color(.06f, .16f, .29f, .8f));
+        UiDot(StickCenter, 71, Hex("d7ecf9"));
         for (int i = 0; i < 4; i++)
         {
             float angle = i * Mathf.PI / 2;
-            Vector2 at = StickCenter + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * 57;
-            Fill(at.x - 3, at.y - 3, 6, 6, Cyan);
+            UiDot(StickCenter + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * 56, 4, UiBlue);
         }
-        DrawPixelEllipse(StickCenter + touchMove * 39, 27, 27, Hex("37628a"));
-        DrawPixelEllipse(StickCenter + touchMove * 39 - new Vector2(0, 3), 24, 24, Cyan);
-        TextCentered("MOVE", 83, 718, 108, 24, new GUIStyle(smallStyle) { fontSize = 13, normal = { textColor = Cyan } });
-        if (MenuButton(dashCooldown <= 0 ? "BOOST" : "BOOST  " + dashCooldown.ToString("0.0"), new Rect(1020, 602, 106, 68), Cyan, dashCooldown <= 0)) touchBoost = true;
-        if (phase == Phase.Night)
-        {
-            if (MenuButton(pulseCharge >= 100 ? "NOVA!" : "NOVA  " + Mathf.FloorToInt(pulseCharge) + "%", new Rect(1140, 583, 112, 87), Gold, pulseCharge >= 100, pulseCharge >= 100)) touchNova = true;
-        }
+        UiDot(StickCenter + touchMove * 39 + new Vector2(0, 4), 29, Hex("9bbbd9"));
+        UiDot(StickCenter + touchMove * 39, 28, UiBlue);
+        UiText("Move", new Rect(70, 711, 108, 40), 23, true, UiInk, TextAnchor.MiddleCenter);
+        if (MenuButton(dashCooldown <= 0 ? "Boost" : dashCooldown.ToString("0.0") + "s", BoostAction, Cyan, dashCooldown <= 0)) touchBoost = true;
+        if (phase == Phase.Night && MenuButton(pulseCharge >= 100 ? "Nova!" : Mathf.FloorToInt(pulseCharge) + "%", NovaAction, Gold, pulseCharge >= 100, pulseCharge >= 100)) touchNova = true;
+        if (phase == Phase.Night) UiText("Nova", new Rect(1148, 652, 108, 26), 19, true, Color.white, TextAnchor.MiddleCenter);
     }
 }

@@ -41,6 +41,7 @@ public sealed partial class RuneholdGame
 
     private void OpenEquipmentBay(Upgrade upgrade, bool boostCannons = false)
     {
+        resourceRoute.Clear(); routeStep = 0;
         turretMasteryPurchase = boostCannons || turretCount >= 4;
         selectedUpgrade = upgrade; astronautUpgradeTab = upgrade >= Upgrade.PlasmaRifle;
         raidBriefOpen = learningPanelOpen = false; buildPanelOpen = true; pilotWalking = false;
@@ -71,36 +72,28 @@ public sealed partial class RuneholdGame
 
     private void DrawPowerForecast()
     {
-        ConsolePanel(new Rect(26, 153, 280, 103), ReadinessColor, Hex("10273f"));
-        Text("NIGHT " + night + " · " + SwarmCount(night).ToString("N0") + " CONTACTS", 40, 161, 250, 23,
-            new GUIStyle(smallStyle) { normal = { textColor = Cyan } });
-        Text(ReadinessName, 40, 188, 250, 25, new GUIStyle(labelStyle) { fontSize = 16, normal = { textColor = ReadinessColor } });
-        ProgressBar(40, 226, 250, 10, ReadinessRatio / 1.5f, ReadinessColor);
+        UiCard(new Rect(24, 112, 316, 82), ReadinessColor);
+        UiText("Next meteor shower", new Rect(40, 122, 284, 29), 22, true);
+        UiText(ReadinessRatio < 1.05f ? "An upgrade can help your ship." : "Your ship is ready to try!", new Rect(40, 155, 284, 30), 18, false, UiMuted);
     }
 
     private void DrawRaidBriefing()
     {
-        OverlayShade(.88f);
-        ConsolePanel(new Rect(216, 115, 848, 574), ReadinessColor, Hex("101f32"));
-        Text("MISSION CONTROL  /  LAUNCH BRIEFING", 246, 133, 760, 26, new GUIStyle(labelStyle) { fontSize = 15, normal = { textColor = LearnerAccent } });
-        Text("NIGHT " + night + "  ·  " + ThreatName(night), 246, 176, 788, 45, titleStyle);
-        Text(ThreatDescription(night), 248, 226, 780, 50, labelStyle);
-        Text(ReadinessName, 248, 292, 780, 32, new GUIStyle(titleStyle) { fontSize = 23, normal = { textColor = ReadinessColor } });
-        Text(SwarmCount(night).ToString("N0") + " contacts    ·    " + EnemyHealthScale(night).ToString("0.00") + "× enemy hull    ·    core " + coreHp + "/" + coreMaxHp, 248, 335, 780, 27, labelStyle);
-        Text("YOUR OUTPUT  " + Mathf.RoundToInt(EstimatedDefenseOutput) + "     /     SWARM PRESSURE  " + Mathf.RoundToInt(EstimatedPressure(night)) + " estimated damage/sec", 248, 375, 780, 25, smallStyle);
-        ProgressBar(248, 411, 780, 15, ReadinessRatio / 1.5f, ReadinessColor);
-        string warning = ReadinessRatio < .65f
-            ? "Your firepower is far below this swarm's pressure. Without several effective upgrades, surviving will be almost impossible."
-            : ReadinessRatio < 1.05f ? "The swarm may overwhelm this build. Upgrade before launch, or accept a harder fight with careful movement and Nova Pulses."
-            : "Your build meets the planning target. Keep upgrading: later nights bring more enemies, tougher hulls and faster reinforcements.";
-        Text(warning, 248, 446, 780, 61, new GUIStyle(labelStyle) { fontSize = 18 });
-        Text(BuildAdvice, 248, 517, 780, 49, smallStyle);
-        Text("Planning estimate: 5–9 targets per cannon blast, 1.6 rifle hits. Aim, spacing, pulse timing and core health still affect survival.", 248, 571, 780, 41,
-            new GUIStyle(smallStyle) { fontSize = 12 });
-        if (PixelButton("UPGRADE FIRST", 248, 627, 370, 40, Hex("266a7e"))) OpenEquipmentBay(coreHp < coreMaxHp * .45f ? Upgrade.CoreShield : RecommendedUpgrade);
-        if (PixelButton((ReadinessRatio < 1.05f ? "LAUNCH ANYWAY" : "LAUNCH NIGHT"), 638, 627, 390, 40, ReadinessRatio < 1.05f ? Hex("97503f") : Hex("306c58"))) LaunchWarnedRaid();
-        if (MenuButton("Back to deck", new Rect(216, 703, 240, 46), Cyan)) raidBriefOpen = false;
-        Text("Preparation has no time limit.", 484, 709, 580, 34, smallStyle);
+        OverlayShade(.8f); UiCard(new Rect(160, 86, 960, 662), Gold);
+        UiText("Ready for night " + night + "?", new Rect(196, 110, 888, 55), 36, true);
+        UiText("A shower of " + SwarmCount(night).ToString("N0") + " elemental meteors is on its way.", new Rect(196, 180, 888, 52), 26);
+        UiText("Your tools", new Rect(196, 265, 340, 36), 25, true, UiBlue);
+        UiRound(new Rect(196, 315, 888, 24), Hex("e0e9f3"), 11);
+        UiRound(new Rect(196, 315, Mathf.Max(20, 888 * Mathf.Clamp01(ReadinessRatio / 1.5f)), 24), Hex("3eb5a2"), 11);
+        UiText(ReadinessRatio < .65f ? "Let's give the ship more power" : ReadinessRatio < 1.05f ? "One more upgrade could help" : "Your ship is ready to try!", new Rect(196, 361, 888, 48), 30, true, UiBlue);
+        string advice = ReadinessRatio < .65f ? "This shower is much stronger than your tools. Upgrade first to give your ship a chance. There is no rush."
+            : ReadinessRatio < 1.05f ? "More meteors need more power. Build another tower or improve your tools before you start."
+            : "Keep moving and use Nova when it is ready. Later nights bring bigger showers, so keep learning and upgrading.";
+        UiText(advice, new Rect(196, 430, 888, 102), 26);
+        UiText("A planning guide, not a promise. Your movement and timing matter too.", new Rect(196, 557, 888, 50), 20, false, UiMuted);
+        if (MenuButton("Upgrade first", new Rect(196, 640, 430, 76), Cyan, true, true)) OpenEquipmentBay(coreHp < coreMaxHp * .45f ? Upgrade.CoreShield : RecommendedUpgrade);
+        if (MenuButton("Start the shower", new Rect(644, 640, 440, 76), Gold)) LaunchWarnedRaid();
+        if (MenuButton("Back", new Rect(24, 20, 116, 58), Cyan)) raidBriefOpen = false;
     }
 
     private void ConsolePanel(Rect rect, Color accent, Color fill)

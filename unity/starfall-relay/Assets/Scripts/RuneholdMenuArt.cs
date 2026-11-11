@@ -11,83 +11,61 @@ public sealed partial class RuneholdGame
 
     private void DrawRelayMenuShell()
     {
-        Fill(0, 0, 1280, 800, Hex("eaf2ff"));
-        DrawPixelEllipse(new Vector2(1215, 24), 300, 210, Hex("e4e1ff"));
-        DrawPixelEllipse(new Vector2(13, 780), 355, 180, Hex("d5f3f2"));
-        for (int i = 0; i < 38; i++)
-        {
-            Vector2 at = new Vector2((i * 173 + 13) % 1280, (i * 103 + 17) % 800);
-            Fill(at.x - 3, at.y, 8, 2, Hex("bdcee8")); Fill(at.x, at.y - 3, 2, 8, Hex("bdcee8"));
-        }
-        Fill(24, 24, 1232, 752, Hex("f4f8ff"));
-        Fill(24, 24, 276, 752, Hex("e2edff"));
-        Color[] elements = { Hex("36c7ed"), Hex("ff9b66"), Hex("b294f5"), Hex("75d7ad") };
-        for (int i = 0; i < 4; i++) Fill(24 + i * 308, 24, 308, 5, elements[i]);
-        MenuText("STARFALL", new Rect(44, 49, 240, 38), 31, Cream, true, true);
-        MenuText("RELAY · ELEMENTAL EXPEDITION", new Rect(46, 90, 234, 23), 11, Cyan, true, true);
-        if (GUI.Button(new Rect(42, 43, 244, 73), GUIContent.none, GUIStyle.none)) NavigateHub(HubPage.Home);
-        Vector2 orbit = new Vector2(161, 211);
-        DrawPixelEllipse(orbit, 67, 67, Hex("c2d7fa")); DrawPixelEllipse(orbit, 62, 62, Hex("f8fbff"));
-        for (int i = 0; i < 4; i++) DrawMenuPlanet(orbit + new Vector2(i < 2 ? -65 : 65, i % 2 == 0 ? -25 : 25), i, 10, false, false);
-        DrawMenuPilot(new Vector2(160, 213), 0, 1.17f);
-        MenuText(learningProfile.CadetName, new Rect(44, 282, 238, 26), 20, Cream, true, true);
-        MenuText("LEVEL " + astronautLevel + " · " + AscensionTitle, new Rect(44, 311, 240, 21), 11, Cyan, true, true);
-        ProgressBar(44, 345, 238, 6, experience / (float)ExperienceNeeded, Hex("36c7ed"));
-        int selected = hubPage == HubPage.Lesson || hubPage == HubPage.Practice || hubPage == HubPage.Galaxy || hubPage == HubPage.Results ? 1
-            : hubPage == HubPage.Achievements ? 2 : hubPage == HubPage.Progress || hubPage == HubPage.Armory ? 3 : 0;
-        HubPage[] destinations = { HubPage.Home, HubPage.Galaxy, HubPage.Achievements, HubPage.Progress };
-        string[] names = { "Expedition", "Learn", "Collection", "Pilot" };
-        string[] subtitles = { "Your next adventure", "Discover & practise", "Milestones & colors", "Your growing story" };
+        Fill(0, 0, 1280, 800, Hex("edf4ff"));
+        UiRound(new Rect(20, 20, 286, 760), Hex("dceaff"), 22);
+        Color[] colors = { Cyan, Gold, Hex("bca4f2"), Mint };
+        UiText("STARFALL", new Rect(44, 43, 238, 42), 32, true);
+        UiText("A maths space adventure", new Rect(44, 92, 238, 54), 22, false, UiMuted);
+        UiDot(new Vector2(163, 215), 67, Hex("f4f9ff"));
+        DrawMenuPilot(new Vector2(163, 212), 0, 1.3f);
+        UiText(learningProfile.CadetName, new Rect(44, 296, 238, 36), 26, true);
+        UiText("Space explorer · Level " + astronautLevel, new Rect(44, 335, 238, 28), 19, false, UiMuted);
+        HubPage[] pages = { HubPage.Home, HubPage.Galaxy, HubPage.Achievements, HubPage.Progress };
+        string[] labels = { "My adventure", "Learn maths", "My rewards", "My progress" };
         int[] icons = { 0, 1, 5, 4 };
-        for (int i = 0; i < destinations.Length; i++)
+        int selected = hubPage == HubPage.Galaxy || hubPage == HubPage.Lesson || hubPage == HubPage.Practice || hubPage == HubPage.Results ? 1 : hubPage == HubPage.Achievements ? 2 : hubPage == HubPage.Progress ? 3 : 0;
+        for (int i = 0; i < 4; i++)
         {
-            Rect row = new Rect(40, 380 + i * 76, 244, 66);
-            bool active = selected == i && hubPage != HubPage.Settings;
-            MenuCard(row, elements[i], active);
-            MenuIcon(icons[i], new Vector2(row.x + 17, row.y + 21), 3, MenuColor(elements[i]));
-            MenuText(names[i], new Rect(row.x + 60, row.y + 8, 173, 27), 18, Cream, true);
-            MenuText(subtitles[i], new Rect(row.x + 60, row.y + 36, 173, 21), 12, Hex("aabbce"));
-            if (GUI.Button(row, GUIContent.none, GUIStyle.none)) { PlayRelaySound(4, .55f); NavigateHub(destinations[i]); }
+            Rect row = new Rect(38, 393 + i * 74, 250, 62);
+            bool current = selected == i && hubPage != HubPage.Settings && hubPage != HubPage.Armory;
+            UiCard(row, colors[i], current);
+            DrawClearIcon(icons[i], new Vector2(row.x + 16, row.y + 18), 3.3f, UiBlue);
+            UiText(labels[i], new Rect(row.x + 58, row.y, 180, row.height), 22, true);
+            if (GUI.Button(row, GUIContent.none, GUIStyle.none)) { NavigateHub(pages[i]); PlayRelaySound(4, .55f); }
         }
-        if (MenuButton("Equipment guide", new Rect(44, 698, 238, 45), Hex("b294f5"))) NavigateHub(HubPage.Armory);
-        MenuText("EXPLORE · LEARN · GROW", new Rect(44, 751, 238, 18), 10, Hex("aabbce"), true, true);
-        MenuText("FIRE  /  FROST  /  STORM  /  EARTH", new Rect(334, 46, 510, 21), 11, Cyan, true, true);
-        MenuText("Night " + night.ToString("00") + "  ·  " + MenuCount(lifetimeKills, "enemy stopped", "enemies stopped") + "  ·  " + MenuCount(learningProfile.Stars, "learning star"), new Rect(334, 74, 680, 24), 13, Hex("b7c8d8"), false, true);
-        if (MenuButton("Settings", new Rect(908, 48, 126, 46), Hex("b294f5"), true, hubPage == HubPage.Settings)) NavigateHub(HubPage.Settings);
-        if (MenuButton("Play", new Rect(1047, 48, 177, 46), Cyan, true, true)) ResumeExpedition();
-        Fill(334, 111, 890, 1, Hex("cfddf0"));
+        if (MenuButton("My space tools", new Rect(44, 706, 238, 54), Cyan)) NavigateHub(HubPage.Armory);
+        UiText("Your spaceship is waiting", new Rect(334, 39, 534, 31), 23, true, UiBlue);
+        UiText("Learn at your own pace.", new Rect(334, 76, 534, 26), 20, false, UiMuted);
+        if (MenuButton("Settings", new Rect(905, 41, 139, 60), Hex("bca4f2"))) NavigateHub(HubPage.Settings);
+        if (MenuButton("Play", new Rect(1062, 41, 162, 60), Cyan, true, true)) ResumeExpedition();
+        Fill(334, 117, 890, 2, UiLine);
     }
 
     private void DrawRelayHome()
     {
-        HubHeading("A whole universe of possibility.", "Brave the elements. Discover the maths. Build a brighter defense.");
-        Rect hero = new Rect(334, 225, 866, 260);
-        MenuCard(hero, Cyan);
-        Fill(913, 227, 285, 256, Hex("e0ecff"));
-        DrawPixelEllipse(new Vector2(1070, 348), 118, 109, Hex("d4e5ff"));
-        DrawPixelEllipse(new Vector2(1070, 348), 94, 88, Hex("eaf5ff"));
-        DrawElementalMenuRock(new Vector2(979, 267), 26, Hex("36c7ed"));
-        DrawElementalMenuRock(new Vector2(1128, 274), 32, Hex("ff9b66"));
-        DrawElementalMenuRock(new Vector2(977, 405), 22, Hex("b294f5"));
-        DrawElementalMenuRock(new Vector2(1142, 414), 24, Hex("75d7ad"));
-        MenuPill("NEXT EXPEDITION · NIGHT " + night, new Rect(358, 244, 290, 26), Gold);
-        MenuText(ThreatName(night), new Rect(358, 282, 545, 38), 29, Cream, true, true);
-        MenuText(SwarmCount(night).ToString("N0") + " elemental contacts. One extraordinary captain.", new Rect(358, 328, 533, 34), 16, Hex("c4d3df"));
-        MenuText("YOUR NEXT MILESTONE", new Rect(358, 374, 177, 20), 10, Cyan, true, true);
-        MenuText(NextMilestone(), new Rect(535, 370, 357, 29), 14, Cream, false, true);
-        if (MenuButton("LET'S EXPLORE", new Rect(358, 420, 300, 48), Cyan, true, true)) ResumeExpedition();
-        if (MenuButton("Practise maths", new Rect(676, 420, 216, 48), Gold)) NavigateHub(HubPage.Practice);
-        DrawPixelEllipse(new Vector2(1063, 428), 52, 11, Hex("bbd1f3"));
-        DrawMenuPilot(new Vector2(1063, 363), -14, 1.85f);
-        MenuPill("CAPTAIN ONLINE", new Rect(991, 451, 145, 23), Mint);
-        MenuText("Your learning galaxy", new Rect(334, 505, 640, 30), 21, Cream, true);
-        MenuText("Every destination is open for practice", new Rect(853, 510, 347, 23), 12, Hex("b2c4d4"), false, true);
-        DrawRouteNodes(540, true);
+        HubHeading("Ready, Captain " + learningProfile.CadetName + "?", "Explore space. Learn maths. Help your spaceship grow.");
+        UiCard(new Rect(334, 236, 866, 290), Cyan);
+        UiText("A little maths. A lot of possibility.", new Rect(358, 255, 520, 70), 31, true, UiBlue);
+        UiText("Collect resources, solve an energy puzzle and build something brilliant.", new Rect(358, 330, 510, 75), 25);
+        if (MenuButton("Play in space", new Rect(358, 432, 500, 68), Cyan, true, true)) ResumeExpedition();
+        UiDot(new Vector2(1050, 370), 108, Hex("e2eeff"));
+        DrawElementalMenuRock(new Vector2(964, 285), 22, Cyan);
+        DrawElementalMenuRock(new Vector2(1129, 303), 25, Hex("ffac7d"));
+        DrawElementalMenuRock(new Vector2(1132, 445), 20, Mint);
+        DrawMenuPilot(new Vector2(1052, 374), -12, 2.1f);
+        string[] titles = { "1. Explore", "2. Learn", "3. Build" };
+        string[] copy = { "Find metal and crystals.", "Try a maths puzzle.", "Power up your ship." };
+        for (int i = 0; i < 3; i++)
+        {
+            Rect card = new Rect(334 + i * 292, 554, 282, 146); UiCard(card, i == 1 ? Gold : Cyan);
+            UiText(titles[i], new Rect(card.x + 20, card.y + 14, 242, 36), 26, true);
+            UiText(copy[i], new Rect(card.x + 20, card.y + 57, 242, 56), 22, false, UiMuted);
+            UiText("Tap to " + (i == 0 ? "explore" : i == 1 ? "practise" : "see tools") + "  >", new Rect(card.x + 20, card.y + 112, 242, 25), 18, true, UiBlue);
+            if (GUI.Button(card, GUIContent.none, GUIStyle.none)) { PlayRelaySound(4, .55f); if (i == 0) ResumeExpedition(); else NavigateHub(i == 1 ? HubPage.Practice : HubPage.Armory); }
+        }
         RefreshPracticeDate();
-        Fill(334, 708, 866, 1, Hex("cfddf0"));
-        MenuText("DAILY DISCOVERY", new Rect(334, 716, 145, 22), 10, Gold, true, true);
-        ProgressBar(487, 724, 102, 6, Mathf.Min(5, learningProfile.DailySolved) / 5f, Gold);
-        MenuText(Mathf.Min(5, learningProfile.DailySolved) + "/5 · Earn a star + paint credit. Grow at your own pace.", new Rect(604, 713, 596, 24), 12, Hex("c3d1de"), false, true);
+        UiText("Today's learning: " + Mathf.Min(5, learningProfile.DailySolved) + " of 5 puzzles", new Rect(334, 722, 530, 32), 21, true);
+        UiText("Earn a star and a new color credit.", new Rect(868, 721, 332, 50), 18, false, UiMuted);
     }
     private void DrawElementalMenuRock(Vector2 at, float radius, Color element)
     {

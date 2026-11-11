@@ -46,10 +46,10 @@ public sealed partial class RuneholdGame
     private sealed class ExpeditionNotice { public string Title, Body; public Color Color; }
     private static readonly string[] AchievementNames = { "First Defender", "First Dawn", "Field Engineer", "Pulse Pilot",
         "Clean Orbit", "Swarm Hunter", "Learning Together", "Independent Signal", "Five-a-day", "Deep Expedition", "Star Reaper", "Immortal" };
-    private static readonly string[] AchievementCopy = { "Install your first Ion Turret.", "Survive Night 1.", "Install 5 equipment ranks.",
-        "Discharge your Nova Pulse 3 times.", "Finish 3 nights without a core impact.", "Stop 1,000 enemies.",
-        "Complete 5 questions with support.", "Solve 10 questions independently.", "Complete the daily five-solve goal.",
-        "Survive Night 5.", "Reach astronaut level 18.", "Reach 60 total ascension power." };
+    private static readonly string[] AchievementCopy = { "Build your first meteor tower.", "Protect your ship through Night 1.", "Upgrade your tools 5 times.",
+        "Use Nova 3 times.", "Finish 3 nights without ship damage.", "Stop 1,000 meteors.",
+        "Work out 5 puzzles with help.", "Work out 10 puzzles yourself.", "Finish 5 maths puzzles in one day.",
+        "Protect your ship through Night 5.", "Reach pilot level 18.", "Reach astronaut power 60." };
     private static readonly int[] AchievementRewards = { 1, 2, 1, 1, 2, 2, 1, 2, 1, 2, 2, 3 };
     private static readonly string[] LiveryNames = { "RELAY ORIGINAL", "VERDANT WARDEN", "NEBULA RANGER", "SOLAR LEGEND" };
     private static readonly int[] LiveryPrices = { 0, 2, 4, 6 };
@@ -127,18 +127,10 @@ public sealed partial class RuneholdGame
 
     private void DrawExpeditionNotice()
     {
-        if (currentExpeditionNotice == null || expeditionNoticeTime <= 0 || pauseOpen || buildPanelOpen || learningPanelOpen || raidBriefOpen || phase == Phase.Quiz || phase == Phase.UpgradeReveal || phase == Phase.Warning || phase == Phase.Dawn) return;
-        if (menuOpen)
-        {
-            Fill(337, 737, 860, 32, Ink); Fill(337, 737, 3, 32, currentExpeditionNotice.Color);
-            Text(currentExpeditionNotice.Title, 350, 739, 310, 26, new GUIStyle(smallStyle) { fontSize = 12, normal = { textColor = currentExpeditionNotice.Color } });
-            Text(currentExpeditionNotice.Body, 670, 739, 513, 26, new GUIStyle(smallStyle) { fontSize = 11 });
-            return;
-        }
-        float x = 930, y = 146;
-        Fill(x, y, 320, 86, Ink); Fill(x, y, 4, 86, currentExpeditionNotice.Color);
-        Text(currentExpeditionNotice.Title, x + 15, y + 8, 290, 25, new GUIStyle(labelStyle) { fontSize = 15, normal = { textColor = currentExpeditionNotice.Color } });
-        Text(currentExpeditionNotice.Body, x + 15, y + 36, 288, 43, new GUIStyle(smallStyle) { fontSize = 12 });
+        if (currentExpeditionNotice == null || expeditionNoticeTime <= 0 || !FieldControlsAvailable || noticeTimer > 0) return;
+        UiCard(new Rect(355, 110, 565, 82), Gold);
+        UiText(currentExpeditionNotice.Title.Replace("ACHIEVEMENT · ", "New badge: "), new Rect(373, 117, 529, 30), 23, true, UiBlue);
+        UiText(currentExpeditionNotice.Body.Replace("color credits", "color credits"), new Rect(373, 152, 529, 31), 18, false, UiMuted);
     }
 
     private int TotalLearning(bool independent)
@@ -175,7 +167,7 @@ public sealed partial class RuneholdGame
         {
             if (AchievementValue(i) < AchievementTarget(i) || pilotJournal.Achievements.Contains(AchievementId(i))) continue;
             pilotJournal.Achievements.Add(AchievementId(i)); pilotJournal.Tokens += AchievementRewards[i]; changed = true;
-            Announce("ACHIEVEMENT · " + AchievementNames[i], "+" + AchievementRewards[i] + (AchievementRewards[i] == 1 ? " paint credit. " : " paint credits. ") + "Open Collection to choose a livery.", Gold);
+            Announce("ACHIEVEMENT · " + AchievementNames[i], "+" + AchievementRewards[i] + (AchievementRewards[i] == 1 ? " color credit. " : " color credits. ") + "Open Collection to choose a livery.", Gold);
         }
         if (changed) SavePilotJournal();
     }
@@ -205,7 +197,7 @@ public sealed partial class RuneholdGame
         {
             learningProfile.Stars++; learningProfile.LastPracticeStarDate = learningProfile.PracticeDate;
             pilotJournal.Tokens++;
-            Announce("DAILY SIGNAL COMPLETE", "Five questions solved · +1 practice star and +1 paint credit.", Mint);
+            Announce("DAILY SIGNAL COMPLETE", "Five questions solved · +1 practice star and +1 color credit.", Mint);
         }
         RefreshAchievements(); SavePilotJournal();
     }
@@ -257,72 +249,68 @@ public sealed partial class RuneholdGame
 
     private void DrawPilotProfile()
     {
-        HubHeading(learningProfile.CadetName + " · Captain’s dossier", "Your expedition, equipment and learning journey, all in one place.");
-        string[] tabs = { "EXPEDITION", "LEARNING", "ACTIVITY" };
-        for (int i = 0; i < 3; i++)
-            if (MenuTab(tabs[i], new Rect(337 + i * 291, 229, 274, 38), profileTab == i)) profileTab = i;
+        HubHeading("Your explorer story", "Every puzzle and every adventure adds something new.");
+        string[] tabs = { "My adventure", "My learning", "My week" };
+        for (int i = 0; i < 3; i++) if (MenuTab(tabs[i], new Rect(334 + i * 292, 240, 282, 58), profileTab == i)) profileTab = i;
         if (profileTab == 1) { DrawFactProfile(); return; }
         if (profileTab == 2) { DrawActivityProfile(); return; }
-        MenuCard(new Rect(337, 288, 860, 170), LearnerAccent);
-        DrawMenuPilot(new Vector2(420, 370), -18, 1.3f);
-        Text("LV " + astronautLevel + " · " + AscensionTitle, 494, 297, 680, 35, hubLabel);
-        Text("Highest night survived: " + pilotJournal.HighestNight + "\nEnemies stopped: " + lifetimeKills + " · clean defenses: " + pilotJournal.CleanDefenses +
-            "\nInstalled ranks: " + InstalledRanks + " · Nova Pulses: " + pilotJournal.Pulses, 494, 342, 680, 89, hubCopy);
+        UiCard(new Rect(334, 320, 282, 390), Cyan); DrawMenuPilot(new Vector2(475, 473), 0, 2.1f);
+        UiText(learningProfile.CadetName, new Rect(354, 594, 242, 45), 28, true, UiInk, TextAnchor.MiddleCenter);
+        UiText("Pilot level " + astronautLevel, new Rect(354, 646, 242, 40), 23, false, UiBlue, TextAnchor.MiddleCenter);
+        string[] labels = { "Nights protected", "Meteors stopped", "Tools upgraded", "Nova bursts", "Learning XP", "Maths solved" };
+        int[] values = { pilotJournal.HighestNight, lifetimeKills, InstalledRanks, pilotJournal.Pulses, learningProfile.LearningXp, TotalLearning(true) + TotalLearning(false) };
         for (int i = 0; i < 6; i++)
         {
-            float x = 337 + i % 3 * 291, y = 468 + i / 3 * 84;
-            MenuCard(new Rect(x, y + 10, 274, 72), UpgradeColor((Upgrade)i)); DrawMenuEquipmentArt((Upgrade)i, new Vector2(x + 33, y + 46), 34); Text(UpgradeName((Upgrade)i), x + 60, y + 15, 201, 25, new GUIStyle(hubCopy) { fontSize = 12 });
-            Text("RANK " + UpgradeLevel((Upgrade)i), x + 60, y + 40, 201, 27, hubLabel);
+            Rect card = new Rect(634 + i % 2 * 292, 320 + i / 2 * 134, 274, 122); UiCard(card, i % 2 == 0 ? Cyan : Gold);
+            UiText(values[i].ToString(), new Rect(card.x + 20, card.y + 9, 234, 55), 38, true, UiBlue);
+            UiText(labels[i], new Rect(card.x + 20, card.y + 73, 234, 36), 22);
         }
-        Text("NEXT MILESTONE · " + NextMilestone(), 338, 669, 850, 63, hubCopy);
+        UiText("Next badge: " + NextMilestone(), new Rect(334, 726, 866, 52), 22, false, UiMuted);
     }
 
     private void DrawFactProfile()
     {
-        if (PixelButton(showFactRecords ? "Topic summary" : "Facts + review", 337, 285, 860, 33, PanelLight)) { showFactRecords = !showFactRecords; factPage = 0; }
+        if (MenuButton(showFactRecords ? "See lesson totals" : "See puzzles to revisit", new Rect(334, 320, 866, 58), Cyan)) { showFactRecords = !showFactRecords; factPage = 0; }
         if (!showFactRecords)
         {
-            Text(TotalLearning(true) + " independent · " + TotalLearning(false) + " supported · " + learningProfile.LearningXp + " learning XP", 338, 330, 850, 35, hubCopy);
+            UiText(TotalLearning(true) + " solved yourself · " + TotalLearning(false) + " learned with help", new Rect(334, 393, 866, 37), 23, true);
             for (int i = 0; i < 6; i++)
             {
-                float y = 369 + i * 47; MenuCard(new Rect(337, y, 860, 39), Hex("66849e"));
-                DrawMenuPlanet(new Vector2(365, y + 20), i, 9, false, false);
-                Text(StarfallCurriculum.Names[i], 387, y + 5, 344, 30, new GUIStyle(hubCopy) { fontSize = 14 });
-                Text(learningProfile.Independent[i] + " independent · " + learningProfile.Supported[i] + " helped", 755, y + 5, 427, 30, hubCopy);
+                Rect row = new Rect(334, 444 + i * 49, 866, 43); UiRound(row, i % 2 == 0 ? Hex("e4edfa") : UiPaper, 8);
+                UiText(StarfallCurriculum.Names[i], new Rect(350, row.y, 430, row.height), 21, true);
+                UiText(learningProfile.Independent[i] + " yourself · " + learningProfile.Supported[i] + " together", new Rect(784, row.y, 400, row.height), 20, false, UiMuted, TextAnchor.MiddleRight);
             }
-            Text("Learning records describe practice evidence. Combat success is recorded separately.", 338, 677, 850, 50, hubCopy);
             return;
         }
         var facts = new List<StarfallFactRecord>(learningProfile.Facts);
         facts.Sort((a, b) => StarfallCurriculum.ReviewWeight(b).CompareTo(StarfallCurriculum.ReviewWeight(a)));
-        if (facts.Count == 0) { MenuCard(new Rect(337, 342, 860, 280), LearnerAccent); MenuIcon(2, new Vector2(380, 392), 6, LearnerAccent); Text("Your first discovery is waiting.", 464, 380, 680, 42, hubLabel); Text("Complete an upgrade calculation or a practice question to start your fact record.", 464, 435, 660, 70, hubCopy); if (MenuButton("Visit the practice lab", new Rect(464, 540, 350, 42), LearnerAccent)) NavigateHub(HubPage.Practice); return; }
-        int pages = Mathf.Max(1, (facts.Count + 5) / 6); factPage = Mathf.Clamp(factPage, 0, pages - 1);
-        for (int row = 0; row < 6 && factPage * 6 + row < facts.Count; row++)
+        if (facts.Count == 0) { UiText("Your first discovery is waiting. Try a puzzle to begin!", new Rect(358, 427, 818, 120), 30, true); if (MenuButton("Let's practise", new Rect(358, 585, 818, 76), Cyan, true, true)) NavigateHub(HubPage.Practice); return; }
+        int pages = Mathf.Max(1, (facts.Count + 3) / 4); factPage = Mathf.Clamp(factPage, 0, pages - 1);
+        for (int row = 0; row < 4 && factPage * 4 + row < facts.Count; row++)
         {
-            StarfallFactRecord fact = facts[factPage * 6 + row]; float y = 339 + row * 54;
+            StarfallFactRecord fact = facts[factPage * 4 + row]; Rect card = new Rect(334, 400 + row * 73, 866, 61); UiCard(card, Cyan);
             string equation = fact.Key.Contains(":") ? fact.Key.Substring(fact.Key.IndexOf(':') + 1).Replace("*", " × ").Replace("/", " ÷ ").Replace("+", " + ").Replace("-", " − ") : fact.Key;
-            string stage = StarfallCurriculum.ReviewDue(fact) ? "REVIEW DUE" : fact.Mistakes + fact.Supported > fact.Independent ? "REVISIT WITH HELP" : fact.Independent >= 3 ? "FAMILIAR" : "BUILDING";
-            MenuCard(new Rect(337, y, 860, 47), LearnerAccent); Text(equation, 352, y + 6, 240, 34, hubLabel);
-            Text(fact.Independent + " independent / " + fact.Supported + " helped", 595, y + 6, 320, 34, hubCopy);
-            Text(stage, 945, y + 6, 240, 34, new GUIStyle(hubCopy) { fontSize = 12, normal = { textColor = Gold } });
+            UiText(equation, new Rect(card.x + 18, card.y + 6, 300, 49), 27, true);
+            UiText(fact.Independent + " yourself · " + fact.Supported + " with help", new Rect(card.x + 330, card.y + 6, 346, 49), 20, false, UiMuted);
+            UiText(StarfallCurriculum.ReviewDue(fact) ? "Revisit" : "Growing!", new Rect(card.x + 684, card.y + 6, 164, 49), 22, true, UiBlue, TextAnchor.MiddleRight);
         }
-        if (PixelButton("<", 337, 678, 100, 38, PanelLight)) factPage = (factPage + pages - 1) % pages;
-        TextCentered((factPage + 1) + " / " + pages + "  ·  Your fact review", 449, 679, 630, 38, hubCopy);
-        if (PixelButton(">", 1097, 678, 100, 38, PanelLight)) factPage = (factPage + 1) % pages;
+        if (MenuButton("Previous", new Rect(334, 709, 230, 58), Cyan)) factPage = (factPage + pages - 1) % pages;
+        UiText((factPage + 1) + " of " + pages, new Rect(584, 709, 366, 58), 22, false, UiMuted, TextAnchor.MiddleCenter);
+        if (MenuButton("Next", new Rect(970, 709, 230, 58), Cyan)) factPage = (factPage + 1) % pages;
     }
 
     private void DrawActivityProfile()
     {
-        Text("RECENT 7 DAYS · tracking started " + pilotJournal.TrackingSince, 338, 278, 850, 32, hubCopy);
+        UiText("This week", new Rect(334, 315, 866, 40), 27, true);
         for (int i = 0; i < 7; i++)
         {
-            string key = DateTime.Now.Date.AddDays(i - 6).ToString("yyyy-MM-dd");
+            DateTime date = DateTime.Now.Date.AddDays(i - 6); string key = date.ToString("yyyy-MM-dd");
             StarfallActivityDay day = pilotJournal.Days.Find(d => d.Date == key);
-            float y = 326 + i * 47; MenuCard(new Rect(337, y, 860, 39), Hex("66849e"));
-            Text(key.Substring(5), 351, y + 4, 110, 30, hubCopy);
-            Text(day == null ? "No recorded activity" : day.Solved + " solves · " + day.Builds + " builds · " + day.Kills + " enemies · " + day.Victories + " wins", 470, y + 4, 710, 30, hubCopy);
+            Rect row = new Rect(334, 375 + i * 51, 866, 44); UiRound(row, i % 2 == 0 ? Hex("e4edfa") : UiPaper, 8);
+            UiText(date.ToString("MMM d", System.Globalization.CultureInfo.InvariantCulture), new Rect(352, row.y, 132, row.height), 21, true);
+            UiText(day == null ? "A new day to discover" : day.Solved + " puzzles · " + day.Builds + " upgrades · " + day.Kills + " meteors · " + day.Victories + " nights", new Rect(504, row.y, 676, row.height), 20, false, UiMuted);
         }
-        Text("Each flight and practice session adds to your story. Keep exploring at your own pace.", 338, 680, 850, 56, hubCopy);
+        UiText("Little steps add up. Keep exploring at your own pace.", new Rect(334, 741, 866, 35), 21, false, UiMuted);
     }
 
     private string ThreatName(int wave) => wave % 3 == 0 ? "STORMHEART CONVOY" : wave % 3 == 2 ? "ION RUSH" : "EMBER DRIFT";
@@ -423,25 +411,7 @@ public sealed partial class RuneholdGame
         question.Operation == '/' ? "Share " + question.First + " control cells across " + question.Second + " equal emitters. Set cells per emitter." :
         "Combine banks of " + question.First + " and " + question.Second + " control cells to calibrate the " + UpgradeName(selectedUpgrade) + ".";
 
-    private void DrawNumberPad()
-    {
-        MenuCard(new Rect(278, 475, 450, 200), LearnerAccent);
-        Rect entry = new Rect(292, 489, 131, 67);
-        Fill(entry.x, entry.y, entry.width, entry.height, Hex("3b566b"));
-        Fill(entry.x + 1, entry.y + 1, entry.width - 2, entry.height - 2, Hex("0b1c2e"));
-        GUIStyle answer = MenuType(string.IsNullOrEmpty(typedAnswer) ? 18 : 30, Cream, true, TextAnchor.MiddleCenter);
-        answer.wordWrap = false;
-        GUI.Label(entry, string.IsNullOrEmpty(typedAnswer) ? learningPractice ? "Your answer" : "Enter load" : typedAnswer, answer);
-        if (PixelButton("CHECK", 292, 574, 131, 50, Hex("277c8e")) && int.TryParse(typedAnswer, out int check)) SubmitLearningValue(check);
-        string[] keys = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "DEL", "0", "OK" };
-        for (int i = 0; i < keys.Length; i++)
-        {
-            if (!PixelButton(keys[i], 441 + i % 3 * 93, 481 + i / 3 * 48, 87, 44, i == 11 ? Hex("277c8e") : PanelLight)) continue;
-            if (i == 9) { if (typedAnswer.Length > 0) typedAnswer = typedAnswer.Substring(0, typedAnswer.Length - 1); }
-            else if (i == 11) { if (int.TryParse(typedAnswer, out int value)) SubmitLearningValue(value); }
-            else if (typedAnswer.Length < 3) typedAnswer += keys[i];
-        }
-    }
+    private void DrawNumberPad() => DrawFriendlyNumberPad();
 
     private void DrawBuildRangePreview()
     {

@@ -55,7 +55,7 @@ public sealed partial class RuneholdGame
         if (upgrade == Upgrade.PlasmaRifle) return (RifleDamage + (next ? 1 : 0)) + " damage · spread every 3 ranks";
         if (upgrade == Upgrade.OrbitDrones) return Mathf.Min(8, level == 0 ? 0 : level + 1) + " drones · " + (1 + level + astronautLevel / 5) + " damage";
         if (upgrade == Upgrade.Regeneration) return level + " reactor ranks · repairs core during combat";
-        return (3 + level) + " alloy / " + (2 + level) + " crystal per cache";
+        return (3 + level) + " metal / " + (2 + level) + " crystal per cache";
     }
 
     private static string UpgradeDetail(Upgrade upgrade)
@@ -136,14 +136,11 @@ public sealed partial class RuneholdGame
                 else if (phase == Phase.Day && i == level)
                 {
                     Color color = UpgradeColor(upgrade);
-                    DrawPixelEllipse(position + new Vector2(0, 22), 36, 9, new Color(color.r, color.g, color.b, .17f));
-                    DrawUpgradeArt(upgrade, position + new Vector2(0, -8), 76, new Color(color.r, color.g, color.b, .28f));
-                    bool nearby = Vector2.Distance(pilotPosition, position) < 125;
-                    if (nearby || (upgrade == Upgrade.IonTurret && turretCount == 0))
-                        TextCentered(nearby ? " " + UpgradeName(upgrade) : "BUILD TURRET", position.x - 105, position.y + 38, 210, 25,
-                            new GUIStyle(smallStyle) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold, normal = { textColor = color } });
-                    if (!pauseOpen && !buildPanelOpen && !learningPanelOpen && GUI.Button(new Rect(position.x - 44, position.y - 50, 88, 90), "", GUIStyle.none))
-                    { OpenEquipmentBay(upgrade); }
+                    DrawPixelEllipse(position + new Vector2(0, 24), 48, 18, Ink);
+                    DrawPixelEllipse(position + new Vector2(0, 24), 43, 13, color);
+                    DrawUpgradeArt(upgrade, position + new Vector2(0, -10), 94, new Color(.85f, .94f, 1, .9f));
+                    Fill(position.x - 9, position.y + 22, 18, 5, Color.white);
+                    Fill(position.x - 3, position.y + 16, 6, 17, Color.white);
                 }
             }
         }
@@ -174,17 +171,40 @@ public sealed partial class RuneholdGame
 
     private void DrawEngineeringBay()
     {
-        OverlayShade(.64f);
-        MenuCard(new Rect(270, 135, 740, 530), Gold);
-        Text("ASCENSION BAY", 300, 155, 500, 38, titleStyle);
-        if (PixelButton("DEFENSES", 302, 194, 180, 38, !astronautUpgradeTab ? Hex("277c8e") : PanelLight)) astronautUpgradeTab = false;
-        if (PixelButton("ASTRONAUT", 495, 194, 180, 38, astronautUpgradeTab ? Hex("277c8e") : PanelLight)) astronautUpgradeTab = true;
-        if (PixelButton("CLOSE", 840, 150, 138, 44, Hex("36485d"))) buildPanelOpen = false;
-        DrawUpgradeRow(astronautUpgradeTab ? Upgrade.PlasmaRifle : Upgrade.IonTurret, 235);
-        DrawUpgradeRow(astronautUpgradeTab ? Upgrade.OrbitDrones : Upgrade.CoreShield, 357);
-        DrawUpgradeRow(astronautUpgradeTab ? Upgrade.Regeneration : Upgrade.SalvageRig, 479);
-        Text("FIRST-TRY REWARD: +1 alloy after each perfect calibration.", 302, 605, 660, 26, new GUIStyle(smallStyle) { normal = { textColor = Gold } });
-        Text("Choose a system. Gather its materials, then solve its calibration.", 302, 635, 660, 21, smallStyle);
+        Fill(0, 0, 1280, 800, Hex("edf4ff")); UiRound(new Rect(0, 0, 1280, 98), UiPaper, 0);
+        if (MenuButton("Back", new Rect(24, 20, 126, 58), Cyan)) buildPanelOpen = false;
+        UiText("Build & upgrade", new Rect(176, 13, 500, 40), 32, true);
+        UiText("Pick a tool. Solve its energy puzzle. Watch it grow!", new Rect(178, 57, 520, 30), 20, false, UiMuted);
+        DrawClearMaterial(MaterialKind.Alloy, alloy, new Rect(720, 18, 240, 60));
+        DrawClearMaterial(MaterialKind.Crystal, crystal, new Rect(976, 18, 280, 60));
+        if (MenuTab("Spaceship tools", new Rect(32, 120, 600, 60), !astronautUpgradeTab)) astronautUpgradeTab = false;
+        if (MenuTab("Astronaut tools", new Rect(650, 120, 598, 60), astronautUpgradeTab)) astronautUpgradeTab = true;
+        for (int i = 0; i < 3; i++)
+        {
+            Upgrade kind = (Upgrade)((astronautUpgradeTab ? 3 : 0) + i);
+            Rect card = new Rect(32 + i * 414, 208, 388, 450); UiCard(card, UpgradeColor(kind));
+            UiText(FriendlyUpgrade(kind), new Rect(card.x + 20, card.y + 14, 348, 54), 28, true);
+            DrawMenuEquipmentArt(kind, new Vector2(card.center.x, card.y + 126), 112);
+            UiText("Level " + UpgradeLevel(kind) + " → " + (UpgradeLevel(kind) + 1), new Rect(card.x + 20, card.y + 188, 348, 34), 23, true, UiBlue);
+            UiText(FriendlyBenefit(kind), new Rect(card.x + 20, card.y + 229, 348, 70), 21, false, UiMuted);
+            UpgradeCost(kind, out int metal, out int gems);
+            UiRound(new Rect(card.x + 20, card.y + 307, 348, 39), Hex("edf3fb"), 8);
+            UiText(metal + " metal + " + gems + " crystals", new Rect(card.x + 28, card.y + 308, 332, 37), 22, true);
+            bool locked = kind != Upgrade.IonTurret && turretCount == 0, buy = CanBuy(kind);
+            if (MenuButton(locked ? "Build a tower first" : buy ? "Solve & upgrade" : "Find resources", new Rect(card.x + 20, card.y + 363, 348, 65), UpgradeColor(kind), !locked, buy))
+            {
+                selectedUpgrade = kind;
+                if (buy) StartUpgrade(kind);
+                else { buildPanelOpen = false; SalvageNode next = NextHelpfulCache(); if (next != null) NavigateToSalvage(next); else { notice = "Night rewards bring more resources. Your ship keeps growing."; noticeTimer = 4; } }
+            }
+        }
+        if (!astronautUpgradeTab && turretCount > 0 && turretCount < 4)
+        {
+            if (MenuTab("Add a tower", new Rect(32, 699, 220, 64), !turretMasteryPurchase)) turretMasteryPurchase = false;
+            if (MenuTab("Power up all towers", new Rect(270, 699, 260, 64), turretMasteryPurchase)) turretMasteryPurchase = true;
+            UiText(turretMasteryPurchase ? "This upgrade makes every installed tower stronger." : "A new tower protects another part of your ship.", new Rect(555, 697, 693, 68), 23, false, UiMuted);
+        }
+        else UiText("Maths powers every upgrade. Asking for help is always welcome.", new Rect(32, 699, 1216, 64), 23, false, UiMuted, TextAnchor.MiddleCenter);
     }
 
     private void DrawUpgradeRow(Upgrade upgrade, int y)
@@ -207,7 +227,7 @@ public sealed partial class RuneholdGame
         }
         Text(maxed ? "All slots installed." : UpgradeBenefit(upgrade, false) + " → " + UpgradeBenefit(upgrade, true), 401, y + 36, 360, 36, smallStyle);
         UpgradeCost(upgrade, out int alloyCost, out int crystalCost);
-        Text(maxed ? UpgradeDetail(upgrade) : "COST  " + alloyCost + " ALLOY + " + crystalCost + " CRYSTAL", 401, y + 79, 360, 22,
+        Text(maxed ? UpgradeDetail(upgrade) : "COST  " + alloyCost + " METAL + " + crystalCost + " CRYSTAL", 401, y + 79, 360, 22,
             new GUIStyle(smallStyle) { normal = { textColor = color } });
         string buttonText = maxed ? "INSTALLED" : locked ? "TURRET FIRST" : canBuy ? (upgrade == Upgrade.IonTurret && turretMasteryPurchase ? "UPGRADE + MATH" : "INSTALL + MATH") : "GATHER SALVAGE";
         if (PixelButton(buttonText, 790, y + 17, 170, 48, canBuy ? Hex("277c8e") : Hex("364253")))
@@ -224,46 +244,37 @@ public sealed partial class RuneholdGame
     {
         UpgradeCost(upgrade, out int alloyCost, out int crystalCost);
         int missingAlloy = Mathf.Max(0, alloyCost - alloy), missingCrystal = Mathf.Max(0, crystalCost - crystal);
-        if (missingAlloy > 0 && missingCrystal > 0) return "Need " + missingAlloy + " alloy + " + missingCrystal + " crystal";
-        if (missingAlloy > 0) return "Need " + missingAlloy + " more alloy";
+        if (missingAlloy > 0 && missingCrystal > 0) return "Need " + missingAlloy + " metal + " + missingCrystal + " crystal";
+        if (missingAlloy > 0) return "Need " + missingAlloy + " more metal";
         if (missingCrystal > 0) return "Need " + missingCrystal + " more crystal";
         return "Materials ready";
     }
 
     private void DrawUpgradeReveal()
     {
-        Fill(30, 250, 340, 388, new Color(.025f, .045f, .09f, .98f));
-        Fill(30, 250, 340, 5, Mint);
-        Text("UPGRADE INSTALLED", 50, 268, 300, 33, new GUIStyle(titleStyle) { fontSize = 23, normal = { textColor = Mint } });
-        DrawUpgradeArt(selectedUpgrade, new Vector2(200, 354), 90, Color.white);
-        TextCentered(UpgradeName(selectedUpgrade), 50, 411, 300, 28, new GUIStyle(labelStyle) { alignment = TextAnchor.MiddleCenter });
-        Text(installationBefore + "\n→ " + installationAfter, 50, 448, 300, 54, smallStyle);
-        Text("PAID  " + installationAlloyCost + " alloy + " + installationCrystalCost + " crystal", 50, 512, 300, 22, smallStyle);
-        Text(installationRebate > 0 ? "INDEPENDENT CALIBRATION  +1 ALLOY" : "SUPPORTED CALIBRATION · hardware online", 50, 543, 300, 32,
-            new GUIStyle(smallStyle) { fontStyle = FontStyle.Bold, normal = { textColor = installationRebate > 0 ? Gold : Mint } });
-        Text("CONTROL LOAD: " + question.Answer + " cells · + " + (questionSupported ? 4 : 10) + " learning XP", 50, 570, 300, 21, new GUIStyle(smallStyle) { fontSize = 11 });
-        if (PixelButton("BACK TO DECK", 50, 590, 300, 39, Hex("277c8e"))) phase = Phase.Day;
+        OverlayShade(.78f); UiCard(new Rect(200, 100, 880, 618), Mint);
+        UiText("Your " + FriendlyUpgrade(selectedUpgrade).ToLowerInvariant() + " is ready!", new Rect(232, 121, 816, 66), 35, true, UiBlue, TextAnchor.MiddleCenter);
+        DrawMenuEquipmentArt(selectedUpgrade, new Vector2(640, 282), 160);
+        UiText("Your maths powered this upgrade.", new Rect(232, 385, 816, 40), 27, true, UiInk, TextAnchor.MiddleCenter);
+        UiText(installationAfter.Replace("maximum core integrity", "ship health").Replace("damage", "shot power"), new Rect(265, 436, 750, 64), 25, false, UiMuted, TextAnchor.MiddleCenter);
+        UiText(installationRebate > 0 ? "+1 metal bonus for solving it yourself!" : "Good teamwork! Your new tool is installed.", new Rect(250, 515, 780, 44), 23, true, UiBlue, TextAnchor.MiddleCenter);
+        if (MenuButton("Back to my spaceship", new Rect(300, 604, 680, 76), Cyan, true, true)) phase = Phase.Day;
     }
 
     private void DrawWaveRewards()
     {
-        OverlayShade(.72f);
-        Fill(310, 150, 660, 500, Ink); Fill(310, 150, 660, 6, Gold);
-        TextCentered("NIGHT " + night + " SURVIVED", 340, 176, 600, 54, new GUIStyle(hugeStyle) { fontSize = 34 });
-        TextCentered(waveMeteorsDestroyed + " / " + enemyCountToSpawn + " meteors destroyed · core " + coreHp + " / " + coreMaxHp, 340, 240, 600, 30,
-            new GUIStyle(labelStyle) { alignment = TextAnchor.MiddleCenter });
-        TextCentered("LEVEL " + astronautLevel + " · " + AscensionTitle + " · NEXT SWARM " + SwarmCount(night + 1), 340, 285, 600, 27, new GUIStyle(smallStyle) { alignment = TextAnchor.MiddleCenter, normal = { textColor = Gold } });
-        Fill(354, 326, 270, 134, Panel); Fill(656, 326, 270, 134, Panel);
-        DrawPickup(MaterialKind.Alloy, new Vector2(411, 385), 68, Color.white);
-        DrawPickup(MaterialKind.Crystal, new Vector2(713, 385), 68, Color.white);
-        Text("+" + dawnAlloyReward + " ALLOY", 463, 346, 150, 40, new GUIStyle(labelStyle) { normal = { textColor = Cyan } });
-        Text(alloy + " → " + (alloy + dawnAlloyReward) + " in hold", 463, 402, 150, 28, smallStyle);
-        Text("+" + dawnCrystalReward + " CRYSTAL", 765, 346, 150, 40, new GUIStyle(labelStyle) { normal = { textColor = Gold } });
-        Text(crystal + " → " + (crystal + dawnCrystalReward) + " in hold", 765, 402, 150, 28, smallStyle);
-        TextCentered(dawnCleanDefense ? "CLEAN DEFENSE: +1 bonus crystal included." : "Keep the core undamaged next wave for +1 crystal.", 340, 478, 600, 32,
-            new GUIStyle(smallStyle) { alignment = TextAnchor.MiddleCenter, normal = { textColor = dawnCleanDefense ? Mint : Cream } });
-        TextCentered("All power kept · core repairs 20% · the expedition continues", 340, 521, 600, 28, new GUIStyle(smallStyle) { alignment = TextAnchor.MiddleCenter });
-        if (PixelButton("CLAIM + CONTINUE", 355, 575, 570, 52, Hex("277c8e"))) ClaimWaveRewards();
+        OverlayShade(.8f); UiCard(new Rect(200, 100, 880, 620), Mint);
+        UiText("You kept the spaceship safe!", new Rect(232, 122, 816, 66), 36, true, UiInk, TextAnchor.MiddleCenter);
+        UiText("Night " + night + " complete · Your tools and learning are kept.", new Rect(232, 200, 816, 48), 24, false, UiMuted, TextAnchor.MiddleCenter);
+        for (int i = 0; i < 2; i++)
+        {
+            Rect box = new Rect(250 + i * 402, 288, 378, 180); UiRound(box, i == 0 ? Hex("e5f3fc") : Hex("fff0d4"));
+            DrawPickup((MaterialKind)i, new Vector2(box.x + 68, box.y + 86), 86, Color.white);
+            UiText("+" + (i == 0 ? dawnAlloyReward : dawnCrystalReward), new Rect(box.x + 132, box.y + 35, 224, 56), 42, true, UiBlue);
+            UiText(i == 0 ? "Metal" : "Crystals", new Rect(box.x + 132, box.y + 102, 224, 44), 27, true);
+        }
+        UiText(dawnCleanDefense ? "Bonus crystal! You protected every bit of ship health." : "Your ship repairs a little before the next adventure.", new Rect(250, 500, 780, 65), 24, false, UiMuted, TextAnchor.MiddleCenter);
+        if (MenuButton("Collect & keep exploring", new Rect(300, 610, 680, 76), Cyan, true, true)) ClaimWaveRewards();
     }
 
     private void ClaimWaveRewards()
@@ -274,7 +285,7 @@ public sealed partial class RuneholdGame
         crystal += dawnCrystalReward;
         rewardHudFlash = 3;
         BeginNextDay();
-        notice = "REWARDS CLAIMED  +" + dawnAlloyReward + " alloy + " + dawnCrystalReward + " crystal · open Upgrades to grow stronger.";
+        notice = "REWARDS CLAIMED  +" + dawnAlloyReward + " metal + " + dawnCrystalReward + " crystal · open Upgrades to grow stronger.";
         noticeTimer = 5;
         SaveExpedition();
     }

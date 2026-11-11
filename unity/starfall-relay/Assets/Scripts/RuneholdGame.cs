@@ -148,6 +148,7 @@ public sealed partial class RuneholdGame : MonoBehaviour
     private void Awake()
     {
         deckTexture = Resources.Load<Texture2D>("Art/StarshipDeck");
+        PrepareReadableArtwork();
         pilotTexture = Resources.Load<Texture2D>("Art/PilotCombatDirections");
         alloyPickupTexture = Resources.Load<Texture2D>("Art/AlloyPickup");
         crystalPickupTexture = Resources.Load<Texture2D>("Art/CrystalPickup");
@@ -181,6 +182,7 @@ public sealed partial class RuneholdGame : MonoBehaviour
         if (relayMusic != null) relayMusic.Stop();
         if (relayMusicClip != null) Destroy(relayMusicClip);
         if (pixel != null) Destroy(pixel);
+        if (readableDeck != null) Destroy(readableDeck);
     }
 
     private void Update()
@@ -259,6 +261,7 @@ public sealed partial class RuneholdGame : MonoBehaviour
         if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow)) move.y += 1;
         if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow)) move.x -= 1;
         if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) move.x += 1;
+        move = ResolveRouteMove(move, dt);
         if (move.sqrMagnitude > 1) move.Normalize();
         pilotWalking = move.sqrMagnitude > 0;
         if (pilotWalking)
@@ -274,7 +277,7 @@ public sealed partial class RuneholdGame : MonoBehaviour
     private void CreateNodes()
     {
         nodes.Clear();
-        nodes.Add(new SalvageNode { Position = DeckPoint(387, 231), Kind = MaterialKind.Alloy, Amount = 3, Name = "Aster alloy", Color = Hex("70dbf0") });
+        nodes.Add(new SalvageNode { Position = DeckPoint(387, 231), Kind = MaterialKind.Alloy, Amount = 3, Name = "Aster metal", Color = Hex("70dbf0") });
         nodes.Add(new SalvageNode { Position = DeckPoint(892, 231), Kind = MaterialKind.Crystal, Amount = 2, Name = "Solar crystal", Color = Hex("ffc56a") });
         nodes.Add(new SalvageNode { Position = DeckPoint(387, 514), Kind = MaterialKind.Alloy, Amount = 3, Name = "Hull scrap", Color = Cyan });
         nodes.Add(new SalvageNode { Position = DeckPoint(892, 514), Kind = MaterialKind.Crystal, Amount = 2, Name = "Reactor crystal", Color = Gold });
@@ -333,6 +336,7 @@ public sealed partial class RuneholdGame : MonoBehaviour
 
     private void BeginWarning()
     {
+        resourceRoute.Clear();
         buildPanelOpen = learningPanelOpen = false;
         pilotWalking = false;
         raidBriefOpen = true;
@@ -506,13 +510,16 @@ public sealed partial class RuneholdGame : MonoBehaviour
         if (menuOpen && phase != Phase.Quiz) { DrawAcademyMenu(); DrawExpeditionNotice(); GUI.matrix = previous; return; }
         Matrix4x4 interfaceMatrix = GUI.matrix;
         bool controlsEnabled = GUI.enabled;
-        if (raidBriefOpen) GUI.enabled = false;
+        bool fieldBlocked = raidBriefOpen || pauseOpen || buildPanelOpen || learningPanelOpen ||
+            phase == Phase.Quiz || phase == Phase.UpgradeReveal || phase == Phase.Dawn || phase == Phase.Warning || phase == Phase.Victory || phase == Phase.Defeat;
+        GUI.enabled = controlsEnabled && !fieldBlocked;
         DrawOuterSpace();
-        GUI.matrix = interfaceMatrix * Matrix4x4.TRS(new Vector3(640 - worldCamera.x * WorldZoom, 400 - worldCamera.y * WorldZoom, 0), Quaternion.identity, new Vector3(WorldZoom, WorldZoom, 1));
+        GUI.matrix = interfaceMatrix * Matrix4x4.TRS(new Vector3(WorldOrigin.x, WorldOrigin.y, 0), Quaternion.identity, new Vector3(WorldZoom, WorldZoom, 1));
         DrawWorld();
+        DrawResourceRoute();
         DrawSalvageNodes();
         DrawTurrets();
-        DrawBuildRangePreview();
+
         DrawMeteorsAndBolts();
         DrawPilot();
         DrawAscensionEffects();
@@ -521,12 +528,13 @@ public sealed partial class RuneholdGame : MonoBehaviour
         DrawFx();
         GUI.matrix = interfaceMatrix;
         DrawHud();
-        DrawEquipmentSigns();
+        DrawWorldActions();
         DrawExpeditionDirector();
         DrawRewardHudPulse();
-        DrawAscensionHud();
+
         DrawTouchControls();
         DrawDeckNavigator();
+        GUI.enabled = controlsEnabled;
         if (phase == Phase.Warning) DrawRaidPopup();
         if (phase == Phase.Dawn) DrawDawnPopup();
         if (phase == Phase.Quiz) DrawQuizPopup();
@@ -583,25 +591,9 @@ public sealed partial class RuneholdGame : MonoBehaviour
         {
             if (node.Collected) continue;
             Color color = node.Kind == MaterialKind.Alloy ? Cyan : Gold;
-            float bob = reducedMotion ? 0 : Mathf.Sin(corePulse * 2.6f + node.Position.x) * 3;
-            DrawPixelEllipse(node.Position + new Vector2(0, 20), 28, 8, new Color(.01f, .02f, .06f, .7f));
-            DrawPixelEllipse(node.Position + new Vector2(0, 18), 21, 5, new Color(color.r, color.g, color.b, .2f));
-            DrawPickup(node.Kind, node.Position + new Vector2(0, -9 + bob), 48, Color.white);
-            float glint = (corePulse * .45f + node.Position.x * .01f) % 1;
-            Vector2 sparkle = node.Position + new Vector2(25, -23 - glint * 10);
-            Color glintColor = new Color(color.r, color.g, color.b, Mathf.Sin(glint * Mathf.PI) * .85f);
-            Fill(sparkle.x - 3, sparkle.y, 7, 2, glintColor);
-            Fill(sparkle.x, sparkle.y - 3, 2, 7, glintColor);
-            bool nearby = Vector2.Distance(pilotPosition, node.Position) < 125;
-            if (nearby)
-            {
-                Fill(node.Position.x - 63, node.Position.y + 30, 126, 24, new Color(.025f, .045f, .09f, .9f));
-                TextCentered((node.Kind == MaterialKind.Alloy ? "ALLOY  +" : "CRYSTAL  +") + SalvageAmount(node), node.Position.x - 60, node.Position.y + 31, 120, 22,
-                    new GUIStyle(smallStyle) { alignment = TextAnchor.MiddleCenter, normal = { textColor = color } });
-            }
-            else
-                TextCentered("+" + SalvageAmount(node), node.Position.x - 20, node.Position.y + 24, 40, 23,
-                    new GUIStyle(smallStyle) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold, normal = { textColor = color } });
+            DrawPixelEllipse(node.Position + new Vector2(0, 22), 43, 15, Ink);
+            DrawPixelEllipse(node.Position + new Vector2(0, 22), 38, 11, color);
+            DrawPickup(node.Kind, node.Position + new Vector2(0, -8), 66, Color.white);
         }
     }
 
@@ -630,7 +622,7 @@ public sealed partial class RuneholdGame : MonoBehaviour
             Vector2 position = Vector2.Lerp(effect.Origin, pilotPosition, eased) + new Vector2(0, -Mathf.Sin(t * Mathf.PI) * 42 - 14);
             if (effect.Age < .55f) DrawPickup(effect.Kind, position, Mathf.Lerp(38, 17, t), Color.white);
             float alpha = Mathf.Clamp01((1.1f - effect.Age) / .35f);
-            TextCentered("+" + effect.Amount + (effect.Kind == MaterialKind.Alloy ? " ALLOY" : " CRYSTAL"), effect.Origin.x - 80, effect.Origin.y - 58 - effect.Age * 32, 160, 30,
+            TextCentered("+" + effect.Amount + (effect.Kind == MaterialKind.Alloy ? " METAL" : " CRYSTAL"), effect.Origin.x - 80, effect.Origin.y - 58 - effect.Age * 32, 160, 30,
                 new GUIStyle(labelStyle) { alignment = TextAnchor.MiddleCenter, normal = { textColor = new Color(color.r, color.g, color.b, alpha) } });
         }
     }
@@ -647,36 +639,51 @@ public sealed partial class RuneholdGame : MonoBehaviour
 
     private void DrawHud()
     {
-        Fill(0, 0, 1280, 88, Hex("132b47"));
-        Fill(0, 86, 1280, 2, Cyan);
-        if (MenuButton("MENU", new Rect(22, 17, 102, 53), Cyan)) OpenAcademyMenu(HubPage.Home);
-        string day = phase == Phase.Night || phase == Phase.Warning ? "NIGHT " : phase == Phase.Dawn ? "DAWN " : "DAY ";
-        Text(day + night, 144, 16, 160, 30, new GUIStyle(titleStyle) { fontSize = 25 });
-        Text(phase == Phase.Night ? activeEnemyCount + " contacts" : "WAYFARER", 146, 47, 168, 24, smallStyle);
-        Text("HELIOS CORE  " + coreHp + "/" + coreMaxHp, 331, 15, 305, 28, labelStyle);
-        ProgressBar(332, 50, 302, 14, coreHp / (float)coreMaxHp, coreHp <= coreMaxHp * .35f ? Ember : Cyan);
-        DrawMaterialCounter(MaterialKind.Alloy, alloy, new Rect(775, 17, 208, 53), Hex("294964"));
-        DrawMaterialCounter(MaterialKind.Crystal, crystal, new Rect(997, 17, 256, 53), Hex("62533c"));
-        bool field = phase == Phase.Day || phase == Phase.Night;
-        if (field && !buildPanelOpen && !learningPanelOpen && !pauseOpen && !raidBriefOpen)
+        UiRound(new Rect(0, 0, 1280, 98), UiPaper, 0);
+        Fill(0, 96, 1280, 2, UiLine);
+        if (MenuButton("Home", MenuAction, Cyan)) OpenAcademyMenu(HubPage.Home);
+        UiText((phase == Phase.Night || phase == Phase.Warning ? "Night " : "Day ") + night, new Rect(162, 13, 150, 36), 29, true);
+        UiText("Pilot level " + astronautLevel, new Rect(164, 53, 160, 28), 19, false, UiMuted);
+        UiText("Ship health", new Rect(345, 13, 245, 30), 23, true);
+        UiText(coreHp + "/" + coreMaxHp, new Rect(592, 13, 126, 30), 22, true, UiBlue, TextAnchor.MiddleRight);
+        UiRound(new Rect(346, 56, 370, 19), Hex("dde8f2"), 8);
+        UiRound(new Rect(348, 58, Mathf.Max(16, 366 * coreHp / (float)coreMaxHp), 15), coreHp < coreMaxHp * .35f ? Ember : Hex("39bba0"), 7);
+        DrawClearMaterial(MaterialKind.Alloy, alloy, new Rect(752, 18, 225, 60));
+        DrawClearMaterial(MaterialKind.Crystal, crystal, new Rect(993, 18, 263, 60));
+        if (FieldControlsAvailable)
         {
-            Fill(260, 717, 494, 57, new Color(.04f, .09f, .17f, .93f));
-            string objective = phase == Phase.Night ? "HOLD THE CORE · " + waveMeteorsDestroyed + "/" + enemyCountToSpawn
-                : tutorialStep == 0 && night == 1 ? "GATHER 3 ALLOY + 1 CRYSTAL" : "EXPLORE · UPGRADE · PREPARE";
-            Text(objective, 276, 723, 462, 24, new GUIStyle(labelStyle) { fontSize = 16 });
-            Text(phase == Phase.Night ? "Automatic fire · " + lifetimeKills + " enemies stopped" : "Walk over resources. Solve maths to power up.", 276, 750, 462, 20, smallStyle);
-            if (phase == Phase.Day)
+            UiRound(new Rect(0, 682, 1280, 118), UiPaper, 0); Fill(0, 682, 1280, 2, UiLine);
+            bool day = phase == Phase.Day; SalvageNode cache = NextHelpfulCache();
+            string title = !day ? "Protect the ship!" : turretCount == 0 && alloy >= 3 && crystal >= 1 ? "Build your first tower" : cache != null ? "Collect " + (cache.Kind == MaterialKind.Alloy ? "metal" : "crystals") : "Ready for an upgrade?";
+            UiCard(NextStepAction, Cyan);
+            UiText(title, new Rect(270, 711, 380, 30), 23, true);
+            UiText(!day ? waveMeteorsDestroyed + " of " + enemyCountToSpawn + " meteors stopped" : "Tap here for your next step", new Rect(270, 746, 380, 22), 18, false, UiMuted);
+            if (day && GUI.Button(NextStepAction, GUIContent.none, GUIStyle.none)) FollowNextStep();
+            if (day)
             {
-                if (MenuButton("UPGRADES", new Rect(778, 717, 210, 57), Gold)) { buildPanelOpen = true; touchMove = Vector2.zero; }
-                if (MenuButton("LAUNCH NIGHT " + night, new Rect(1002, 717, 250, 57), Ember)) RequestNightLaunch();
+                if (MenuButton("Build & upgrade", BuildAction, Cyan, true, true)) OpenEquipmentBay(RecommendedUpgrade);
+                if (MenuButton("Start night " + night, LaunchAction, Gold)) RequestNightLaunch();
             }
-            else MenuPill("AUTO FIRE ONLINE", new Rect(1019, 728, 233, 35), Mint);
+            else
+            {
+                UiCard(new Rect(690, 702, 566, 72), Mint);
+                UiText("Your blaster fires automatically", new Rect(714, 710, 520, 32), 23, true);
+                UiText("Move, collect energy and use Nova when it is ready.", new Rect(714, 746, 520, 24), 18, false, UiMuted);
+            }
         }
-        if (noticeTimer > 0 && !string.IsNullOrEmpty(notice))
+        if (noticeTimer > 0 && !string.IsNullOrEmpty(notice) && !buildPanelOpen && phase != Phase.Quiz)
         {
-            Fill(350, 108, 560, 42, new Color(.04f, .07f, .12f, .94f));
-            TextCentered(notice, 364, 111, 532, 36, smallStyle);
+            UiCard(new Rect(355, 110, 565, 58), Cyan);
+            UiText(notice, new Rect(372, 117, 531, 44), 19);
         }
+    }
+
+    private void DrawClearMaterial(MaterialKind kind, int amount, Rect rect)
+    {
+        UiRound(rect, kind == MaterialKind.Alloy ? Hex("e6f4fc") : Hex("fff0d5"));
+        DrawPickup(kind, new Vector2(rect.x + 32, rect.center.y), 40, Color.white);
+        UiText(amount.ToString(), new Rect(rect.x + 64, rect.y + 1, rect.width - 76, 33), 27, true);
+        UiText(kind == MaterialKind.Alloy ? "Metal" : "Crystals", new Rect(rect.x + 64, rect.y + 33, rect.width - 76, 24), 19, false, UiMuted);
     }
 
     private void RequestNightLaunch()
@@ -687,32 +694,9 @@ public sealed partial class RuneholdGame : MonoBehaviour
 
     private void DrawTutorialCard()
     {
-        Vector2 target = new Vector2(880, 706);
-        if (tutorialStep == 0)
-        {
-            SalvageNode nearest = null;
-            float distance = float.MaxValue;
-            foreach (SalvageNode node in nodes)
-            {
-                if (node.Collected || (alloy >= 3 && node.Kind == MaterialKind.Alloy)) continue;
-                float candidate = Vector2.Distance(pilotPosition, node.Position);
-                if (candidate < distance) { nearest = node; distance = candidate; }
-            }
-            if (nearest != null) target = WorldToScreen(nearest.Position) + new Vector2(0, -36);
-        }
-        target = new Vector2(Mathf.Clamp(target.x, 310, 980), Mathf.Clamp(target.y, 160, 650));
-        float bounce = Mathf.Round(Mathf.Sin(corePulse * 4) * 3);
-        Fill(target.x - 2, target.y - 18 + bounce, 4, 13, Gold);
-        Fill(target.x - 8, target.y - 9 + bounce, 16, 4, Gold);
-        Fill(target.x - 5, target.y - 5 + bounce, 10, 3, Gold);
-        Fill(target.x - 2, target.y - 2 + bounce, 4, 3, Gold);
-        Fill(30, 128, 300, 106, new Color(.04f, .07f, .12f, .95f));
-        Fill(30, 128, 5, 106, Gold);
-        Text("FLIGHT SCHOOL  ·  " + (tutorialStep + 1) + "/2", 50, 139, 260, 24, new GUIStyle(smallStyle) { normal = { textColor = Gold }, fontStyle = FontStyle.Bold });
-        string instruction = tutorialStep == 0
-            ? "Drag the move stick. Walk over the cyan alloy and gold crystal caches."
-            : "Tap Upgrades. Install your first turret by solving its math lock.";
-        Text(instruction, 50, 169, 255, 58, new GUIStyle(labelStyle) { fontSize = 16 });
+        UiCard(new Rect(24, 112, 316, 82), Cyan);
+        UiText("Let's help our spaceship!", new Rect(40, 122, 284, 29), 21, true);
+        UiText(tutorialStep == 0 ? "Tap a resource, or use the move stick." : "Tap Build & upgrade to make a tower.", new Rect(40, 155, 284, 30), 18, false, UiMuted);
     }
 
     private void DrawBuildPanel() => DrawEngineeringBay();
@@ -721,15 +705,11 @@ public sealed partial class RuneholdGame : MonoBehaviour
 
     private void DrawRaidPopup()
     {
-        OverlayShade(.53f);
-        Fill(345, 210, 590, 354, Ink);
-        Fill(345, 210, 590, 6, Ember);
-        TextCentered("⚠  RAID WARNING", 375, 238, 530, 52, new GUIStyle(titleStyle) { alignment = TextAnchor.MiddleCenter, normal = { textColor = Ember } });
-        TextCentered(enemyCountToSpawn + " ELEMENTAL CONTACTS DETECTED", 375, 296, 530, 33, labelStyle);
-        TextCentered(ThreatName(night) + "\n" + ThreatDescription(night), 375, 335, 530, 60, smallStyle);
-        TextCentered("Tap Boost to reposition. Collect field cells to recharge Nova.", 375, 401, 530, 27, new GUIStyle(smallStyle) { alignment = TextAnchor.MiddleCenter, normal = { textColor = Cyan } });
-        ProgressBar(427, 438, 426, 18, warningTimer / 3.2f, Ember);
-        TextCentered("IMPACT IN  " + Mathf.CeilToInt(warningTimer), 427, 472, 426, 38, titleStyle);
+        OverlayShade(.72f); UiCard(new Rect(300, 190, 680, 414), Gold);
+        UiText("Here come the meteors!", new Rect(332, 214, 616, 68), 36, true, UiInk, TextAnchor.MiddleCenter);
+        UiText("Your blaster and towers shoot automatically.", new Rect(340, 300, 600, 70), 25, false, UiMuted, TextAnchor.MiddleCenter);
+        UiText(Mathf.CeilToInt(warningTimer).ToString(), new Rect(340, 383, 600, 120), 82, true, UiBlue, TextAnchor.MiddleCenter);
+        UiText("Move with the stick. Tap Nova when it is ready.", new Rect(340, 522, 600, 50), 23, false, UiMuted, TextAnchor.MiddleCenter);
     }
 
     private void DrawDawnPopup() => DrawWaveRewards();
@@ -755,7 +735,7 @@ public sealed partial class RuneholdGame : MonoBehaviour
     }
 
     private Vector2 WorldToScreen(Vector2 position)
-        => new Vector2(640, 400) + (position - worldCamera) * WorldZoom;
+        => WorldOrigin + position * WorldZoom;
 
     private void CacheSpriteFrames()
     {
@@ -805,7 +785,7 @@ public sealed partial class RuneholdGame : MonoBehaviour
     {
         Chip("", rect.x, rect.y, rect.width, rect.height, background);
         DrawPickup(kind, new Vector2(rect.x + 24, rect.center.y), 29, Color.white);
-        Text(amount + (kind == MaterialKind.Alloy ? " ALLOY" : " CRYSTAL"), rect.x + 48, rect.y + 3, rect.width - 52, rect.height - 6, smallStyle);
+        Text(amount + (kind == MaterialKind.Alloy ? " METAL" : " CRYSTAL"), rect.x + 48, rect.y + 3, rect.width - 52, rect.height - 6, smallStyle);
     }
 
     private void DrawPixelEllipse(Vector2 center, float radiusX, float radiusY, Color color)
@@ -846,8 +826,6 @@ public sealed partial class RuneholdGame : MonoBehaviour
 
     private void Fill(float x, float y, float w, float h, Color color)
     {
-        if (BrightMenu && color.a > .5f && color.r < .25f && color.g < .4f && color.b < .55f)
-            color = Color.Lerp(Hex("e5eefb"), color, .06f);
         Color old = GUI.color; GUI.color = color;
         GUI.DrawTexture(new Rect(x, y, w, h), pixel);
         GUI.color = old;

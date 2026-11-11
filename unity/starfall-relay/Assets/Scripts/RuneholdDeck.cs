@@ -85,15 +85,10 @@ public sealed partial class RuneholdGame
 
     private void DrawDeckWayfinding()
     {
-        Color[] colors = { Cyan, Gold, Hex("c49aff"), Mint };
-        string[] names = { "FROST QUARTER", "SOLAR QUARTER", "STORM QUARTER", "VERDANT QUARTER" };
-        Vector2[] labels = { DeckPoint(445, 270), DeckPoint(835, 270), DeckPoint(445, 485), DeckPoint(835, 485) };
-        for (int i = 0; i < labels.Length; i++)
-        {
-            Vector2 at = labels[i];
-            Fill(at.x - 100, at.y, 200, 3, new Color(colors[i].r, colors[i].g, colors[i].b, .6f));
-            TextCentered(names[i], at.x - 115, at.y + 7, 230, 24, new GUIStyle(smallStyle) { fontSize = 15, normal = { textColor = colors[i] } });
-        }
+        // Floor color strips identify quarters; labels live on readable screen-space cards.
+        Color[] colors = { Cyan, Gold, Hex("bca4f2"), Mint };
+        Vector2[] at = { DeckPoint(445, 270), DeckPoint(835, 270), DeckPoint(445, 485), DeckPoint(835, 485) };
+        for (int i = 0; i < at.Length; i++) Fill(at[i].x - 70, at[i].y, 140, 6, new Color(colors[i].r, colors[i].g, colors[i].b, .6f));
         DrawDeckGate(DeckPoint(30, 356), true); DrawDeckGate(DeckPoint(1250, 356), true);
         DrawDeckGate(DeckPoint(640, 24), false); DrawDeckGate(DeckPoint(640, 774), false);
     }
@@ -108,20 +103,21 @@ public sealed partial class RuneholdGame
     private void DrawDeckNavigator()
     {
         if (!FieldControlsAvailable) return;
-        Rect panel = new Rect(1050, 117, 202, 151);
-        ConsolePanel(panel, Cyan, Hex("122c48"));
-        Text("WAYFARER", 1062, 121, 170, 22, new GUIStyle(smallStyle) { fontSize = 12, normal = { textColor = Cyan } });
-        Rect map = new Rect(1060, 148, 182, 108);
-        Color old = GUI.color; GUI.color = new Color(1, 1, 1, .8f);
-        if (deckTexture != null) GUI.DrawTexture(map, deckTexture, ScaleMode.StretchToFill); GUI.color = old;
-        foreach (SalvageNode node in nodes) if (!node.Collected && phase == Phase.Day) NavigatorDot(map, node.Position, node.Color, 4);
-        for (int i = 0; i < turretCount; i++) NavigatorDot(map, turretPads[i], Gold, 4);
-        NavigatorDot(map, corePosition, Gold, 7); NavigatorDot(map, pilotPosition, Color.white, 6);
-        Vector2 core = WorldToScreen(corePosition);
-        if (core.x < 95 || core.x > 1185 || core.y < 115 || core.y > 645)
+        if (MenuButton(navigatorOpen ? "Close map" : "Ship map", new Rect(1094, 112, 162, 54), Cyan)) navigatorOpen = !navigatorOpen;
+        if (navigatorOpen)
         {
-            Vector2 at = new Vector2(Mathf.Clamp(core.x, 220, 970), Mathf.Clamp(core.y, 145, 630));
-            MenuPill("HELIOS CORE", new Rect(at.x - 65, at.y - 14, 130, 28), Gold);
+            UiCard(new Rect(1048, 178, 208, 144), Cyan);
+            Rect map = new Rect(1059, 188, 186, 122);
+            if (deckTexture != null) GUI.DrawTexture(map, deckTexture, ScaleMode.StretchToFill);
+            foreach (SalvageNode node in nodes) if (!node.Collected && phase == Phase.Day) NavigatorDot(map, node.Position, node.Color, 6);
+            for (int i = 0; i < turretCount; i++) NavigatorDot(map, turretPads[i], Gold, 5);
+            NavigatorDot(map, corePosition, Gold, 9); NavigatorDot(map, pilotPosition, Color.white, 8);
+        }
+        Vector2 core = WorldToScreen(corePosition);
+        if (core.x < 95 || core.x > 1185 || core.y < 120 || core.y > 640)
+        {
+            Vector2 at = new Vector2(Mathf.Clamp(core.x, 250, 975), Mathf.Clamp(core.y, 210, 625));
+            MenuPill("Your ship", new Rect(at.x - 75, at.y - 19, 150, 38), Gold);
         }
     }
 

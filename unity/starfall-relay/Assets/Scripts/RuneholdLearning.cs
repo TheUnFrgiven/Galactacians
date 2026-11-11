@@ -102,14 +102,14 @@ public sealed partial class RuneholdGame
     private void ShowTeachingHint()
     {
         questionSupported = questionHintVisible = true;
-        answerFeedback = "Use the cells to see why it works. Helped answers are recorded separately.";
+        answerFeedback = "Move the cells and look for a pattern. We can think together.";
         answerFeedbackColor = Gold;
     }
 
     private void ExplainQuestion()
     {
         ShowTeachingHint(); questionExplained = true; visualSteps = VisualStepTarget;
-        answerFeedback = "Follow the worked example, then continue with support.";
+        answerFeedback = "Follow the example. Then we can keep going together.";
     }
 
     private void ResolveLearningAnswer(int choiceIndex)
@@ -132,7 +132,7 @@ public sealed partial class RuneholdGame
         else
         {
             ShowTeachingHint();
-            answerFeedback = "Let's use the cells together. You have one retry on this question.";
+            answerFeedback = "Let's look at the cells together, then try once more.";
         }
     }
 
@@ -180,112 +180,22 @@ public sealed partial class RuneholdGame
 
     private Vector2 CellPosition(int index) => new Vector2(297 + (index % 10) * 24, 329 + (index / 10) * 25);
 
-    private void DrawTeachingCells()
-    {
-        if (question.Operation == '*' || question.Operation == '/') { DrawEqualGroupModel(); return; }
-        Fill(278, 285, 450, 170, Panel);
-        bool subtract = question.Operation == '-';
-        Text(subtract ? "START WITH " + question.First : "START WITH " + question.First + " · ADD " + question.Second, 293, 293, 420, 25, smallStyle);
-        int occupied = subtract ? question.First : question.First + visualSteps;
-        for (int i = 0; i < (question.First + question.Second > 10 ? 20 : 10); i++)
-        {
-            Vector2 position = CellPosition(i);
-            Fill(position.x, position.y, 19, 19, Hex("0b1628"));
-            if (i >= occupied) continue;
-            bool removed = subtract && i >= question.First - visualSteps;
-            Color color = removed ? Hex("445064") : !subtract && i >= question.First ? Gold : Cyan;
-            Fill(position.x + 2, position.y + 2, 15, 15, color);
-            Fill(position.x + 3, position.y + 3, 8, 2, new Color(1, 1, 1, .5f));
-        }
-        Text(subtract ? "USED TRAY" : "CELLS TO JOIN", 293, 382, 270, 22, smallStyle);
-        int trayCount = subtract ? visualSteps : question.Second - visualSteps;
-        for (int i = 0; i < trayCount; i++) Fill(297 + i * 24, 411, 17, 17, Gold);
-        if (visualSteps < question.Second && !questionExplained && PixelButton(subtract ? "TAKE ONE" : "JOIN ONE", 567, 394, 143, 40, Hex("277c8e")))
-        {
-            ShowTeachingHint();
-            int index = subtract ? question.First - visualSteps - 1 : question.First + visualSteps;
-            visualMoveFrom = subtract ? CellPosition(index) : new Vector2(297 + (question.Second - visualSteps - 1) * 24, 411);
-            visualMoveTo = subtract ? new Vector2(297 + visualSteps * 24, 411) : CellPosition(index);
-            visualSteps++; visualMovedAt = corePulse;
-        }
-        float t = reducedMotion ? 1 : (corePulse - visualMovedAt) / .35f;
-        if (t >= 0 && t < 1)
-        {
-            Vector2 position = Vector2.Lerp(visualMoveFrom, visualMoveTo, t) + new Vector2(0, -Mathf.Sin(t * Mathf.PI) * 25);
-            Fill(position.x, position.y, 18, 18, Cream);
-        }
-    }
+    private void DrawTeachingCells() => DrawFriendlyModel(new Rect(56, 242, 612, 290), false);
 
     private void DrawTeachingQuestion()
     {
         if (questionIntro) { DrawQuestionIntroduction(); return; }
         if (studyResult) { DrawStudyAnswerResult(); return; }
-        OverlayShade(.78f); MenuCard(new Rect(245, 104, 790, 654), Gold);
-        Text(learningPractice ? "FLIGHT ACADEMY · " + StarfallCurriculum.Names[question.Lesson] : "ENGINEERING · " + UpgradeName(selectedUpgrade), 278, 131, 720, 34, new GUIStyle(titleStyle) { fontSize = 23 });
-        Text(learningPractice ? StarfallCurriculum.Topics[question.Lesson] + " · no answer timer" : CalibrationPurpose + " · set the control load", 278, 171, 710, 25, smallStyle);
-        string prompt = questionExplained ? question.Text.Replace("?", question.Answer.ToString()) : question.Text;
-        TextCentered(prompt, 278, 205, 450, 62, hugeStyle);
-        if (!learningPractice)
-        {
-            DrawUpgradeArt(selectedUpgrade, new Vector2(878, 231), 57, Color.white);
-            UpgradeCost(selectedUpgrade, out int alloyCost, out int crystalCost);
-            TextCentered(UpgradeName(selectedUpgrade) + " · " + alloyCost + " alloy + " + crystalCost + " crystal", 750, 264, 250, 32, new GUIStyle(smallStyle) { fontSize = 12 });
-        }
-        else TextCentered("PRACTICE " + (studyIndex + 1) + "/5\n" + LevelNames[learningProfile.PracticeDifficulty] + " · no cost", 750, 211, 250, 65, labelStyle);
-        DrawTeachingCells();
-        Fill(750, 302, 250, 153, Panel);
-        Text(questionExplained ? "WORKED EXAMPLE" : questionHintVisible ? "TRY THIS STRATEGY" : "THINK IT THROUGH", 766, 315, 222, 25, new GUIStyle(smallStyle) { normal = { textColor = Gold }, fontStyle = FontStyle.Bold });
-        Text(questionExplained ? question.Explanation : questionHintVisible ? question.Hint : !learningPractice ? CalibrationContext : "Take your time. Use a hint or the model to reason it out.", 766, 350, 217, 92, smallStyle);
-        if (!questionExplained)
-        {
-            if (learningProfile.TypedAnswers)
-            {
-                DrawNumberPad();
-            }
-            else
-            {
-            for (int i = 0; i < 4; i++)
-                if (PixelButton(question.Choices[i].ToString(), 278 + (i % 2) * 235, 475 + (i / 2) * 57, 215, 47, selectedAnswer == i ? Hex("6b4c36") : PanelLight)) { selectedAnswer = i; Answer(i); }
-            }
-            if (PixelButton("SHOW A HINT", 750, 475, 250, 45, Hex("665032"))) ShowTeachingHint();
-            if (PixelButton("WORK TOGETHER", 750, 532, 250, 45, Hex("364e65"))) ExplainQuestion();
-        }
-        else
-        {
-            Fill(278, 475, 450, 106, Panel);
-            Text(question.Explanation, 295, 489, 415, 75, labelStyle);
-            if (PixelButton(learningPractice ? "CONTINUE" : "INSTALL", 750, 475, 250, 71, Hex("277c8e"))) FinishLearningResolution();
-            Text("Helped learning is recorded separately.\nNo first-try alloy bonus.", 752, 551, 245, 40, new GUIStyle(smallStyle) { fontSize = 12 });
-        }
-        Text(answerFeedback, 278, 684, 535, 58, new GUIStyle(smallStyle) { normal = { textColor = answerFeedbackColor } });
-        if (PixelButton("BACK", 842, 704, 158, 44, PanelLight))
-        { if (studySession) EndStudySession(false); else { phase = Phase.Day; buildPanelOpen = true; } }
+        DrawFriendlyQuestion();
     }
 
     private void DrawLearningEndScreen(bool won)
     {
-        OverlayShade(.84f); Fill(300, 140, 680, 520, Ink); Fill(300, 140, 680, 6, won ? Gold : Ember);
-        int lesson = learningProfile.ActiveLesson;
-        TextCentered(won ? "RELAY SURVIVED" : "THE SWARM BROKE THROUGH", 330, 166, 620, 64, new GUIStyle(hugeStyle) { fontSize = 33 });
-        TextCentered(StarfallCurriculum.Names[lesson], 330, 238, 620, 32, labelStyle);
-        TextCentered("Independent checks " + Mathf.Min(2, learningProfile.Evidence[lesson]) + "/2 · helped learning " + learningProfile.Supported[lesson], 330, 284, 620, 34, labelStyle);
-        TextCentered("Enemies stopped " + waveMeteorsDestroyed + " / " + enemyCountToSpawn + " · hold score " + score, 330, 334, 620, 30, smallStyle);
-        if (won)
-        {
-            bool needsCheck = learningProfile.Evidence[lesson] < 2;
-            TextCentered("Your expedition continues. All earned power is kept.", 335, 385, 610, 50, smallStyle);
-            TextCentered(learningFeedback, 335, 442, 610, 30, new GUIStyle(smallStyle) { normal = { textColor = Mint } });
-            if (PixelButton(needsCheck ? "TARGETED PRACTICE" : lesson < StarfallCurriculum.Names.Length - 1 ? "START NEXT LESSON" : "CONTINUE EXPEDITION", 385, 494, 510, 54, Hex("277c8e")))
-            {
-                if (needsCheck) BeginLearningPractice(true);
-                else { AdvanceLearningInPlace(); SaveLearningProfile(); phase = Phase.Day; SaveExpedition(); }
-            }
-        }
-        else
-        {
-            TextCentered("Your earned upgrades and completed math are kept for this wave retry.", 335, 390, 610, 54, smallStyle);
-            if (PixelButton("RETRY THIS NIGHT", 385, 494, 510, 54, Hex("277c8e"))) RetrySwarmCheckpoint();
-        }
-        TextCentered("No forced reset · your expedition is saved", 390, 593, 500, 36, smallStyle);
+        OverlayShade(.8f); UiCard(new Rect(240, 130, 800, 550), Cyan);
+        UiText(won ? "Your adventure keeps growing!" : "Let's try a new plan", new Rect(276, 154, 728, 78), 35, true, UiInk, TextAnchor.MiddleCenter);
+        DrawMenuPilot(new Vector2(640, 326), 0, 1.5f);
+        UiText("Your tools, levels and completed maths are safe.", new Rect(290, 426, 700, 70), 27, false, UiMuted, TextAnchor.MiddleCenter);
+        if (MenuButton(won ? "Keep exploring" : "Prepare & try again", new Rect(320, 554, 640, 80), Cyan, true, true))
+        { if (won) { AdvanceLearningInPlace(); SaveLearningProfile(); phase = Phase.Day; SaveExpedition(); } else RetrySwarmCheckpoint(); }
     }
 }

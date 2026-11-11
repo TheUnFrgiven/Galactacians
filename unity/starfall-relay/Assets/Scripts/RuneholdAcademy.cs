@@ -15,7 +15,7 @@ public sealed partial class RuneholdGame
     private static readonly string[] HubLabels = { "Command deck", "Learning galaxy", "Practice lab", "Equipment", "Pilot profile", "Collection", "Settings" };
     private static readonly HubPage[] HubPages = { HubPage.Home, HubPage.Galaxy, HubPage.Practice, HubPage.Armory, HubPage.Progress, HubPage.Achievements, HubPage.Settings };
     private static readonly string[] SkillNames = { "Addition", "Subtraction", "Multiplication", "Division" };
-    private static readonly string[] LevelNames = { "Starter", "Explorer", "Challenger" };
+    private static readonly string[] LevelNames = { "First steps", "Explorer", "Challenge" };
     private Color LearnerAccent => LiveryEnergy(learningProfile.Accent);
 
     private void InitializeAcademyMenu()
@@ -33,6 +33,7 @@ public sealed partial class RuneholdGame
 
     private void OpenAcademyMenu(HubPage page)
     {
+        resourceRoute.Clear(); routeStep = 0;
         if (phase == Phase.Quiz)
         {
             if (studySession) EndStudySession(false);
@@ -80,7 +81,7 @@ public sealed partial class RuneholdGame
         if (hubPage == HubPage.Progress && profileTab == 1)
         {
             if (Input.GetKeyDown(KeyCode.F)) { showFactRecords = !showFactRecords; factPage = 0; }
-            if (showFactRecords && Input.GetKeyDown(KeyCode.RightArrow)) factPage = Mathf.Min(Mathf.Max(0, (learningProfile.Facts.Count - 1) / 6), factPage + 1);
+            if (showFactRecords && Input.GetKeyDown(KeyCode.RightArrow)) factPage = Mathf.Min(Mathf.Max(0, (learningProfile.Facts.Count - 1) / 4), factPage + 1);
             if (showFactRecords && Input.GetKeyDown(KeyCode.LeftArrow)) factPage = Mathf.Max(0, factPage - 1);
         }
         int navigation = Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S) ? 1 : Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W) ? -1 : 0;
@@ -105,7 +106,7 @@ public sealed partial class RuneholdGame
         if (hubPage == HubPage.Armory && Input.GetKeyDown(KeyCode.Space)) showWeaponPoses = !showWeaponPoses;
         if (hubPage == HubPage.Progress && Input.GetKeyDown(KeyCode.Tab)) profileTab = (profileTab + 1) % 3;
         if (hubPage == HubPage.Achievements && Input.GetKeyDown(KeyCode.Tab)) collectionTab = 1 - collectionTab;
-        if (hubPage == HubPage.Achievements && collectionTab == 0 && (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.RightArrow))) achievementPage = 1 - achievementPage;
+        if (hubPage == HubPage.Achievements && collectionTab == 0 && (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.RightArrow))) achievementPage = (achievementPage + (Input.GetKeyDown(KeyCode.LeftArrow) ? 2 : 1)) % 3;
         if (hubPage == HubPage.Achievements && collectionTab == 1)
             for (int i = 0; i < 4; i++)
                 if (Input.GetKeyDown((KeyCode)((int)KeyCode.Alpha1 + i))) EquipLivery(i);
@@ -121,8 +122,8 @@ public sealed partial class RuneholdGame
     {
         if (menuClearFocus) { GUIUtility.keyboardControl = 0; GUI.FocusControl(""); menuClearFocus = false; }
         hubTitle = MenuType(30, Cream, true);
-        hubCopy = MenuType(15, Hex("becddd"));
-        hubLabel = MenuType(19, Cream, true);
+        hubCopy = MenuType(20, Hex("becddd"));
+        hubLabel = MenuType(22, Cream, true);
         DrawRelayMenuShell();
         switch (hubPage)
         {
@@ -141,8 +142,8 @@ public sealed partial class RuneholdGame
 
     private void HubHeading(string title, string description)
     {
-        MenuText(title, new Rect(334, 130, 866, 40), 30, Cream, true, true);
-        MenuText(description, new Rect(335, 180, 864, 37), 15, Hex("b7c9d9"));
+        UiText(title, new Rect(334, 135, 866, 45), 32, true);
+        UiText(description, new Rect(334, 184, 866, 42), 21, false, UiMuted);
     }
 
     private void DrawHubHome()
@@ -152,61 +153,45 @@ public sealed partial class RuneholdGame
 
     private void DrawGalaxyRoute()
     {
-        HubHeading("Choose your next discovery.", "Explore a lesson, see its teaching, then apply it to upgrades. Changing lessons never resets the expedition.");
-        DrawRouteNodes(246, false);
-        int lesson = selectedLesson;
-        MenuCard(new Rect(334, 421, 866, 302), LearnerAccent);
-        Text(StarfallCurriculum.MissionNames[lesson] + " · " + StarfallCurriculum.Names[lesson], 358, 441, 800, 35, hubLabel);
-        Text(StarfallCurriculum.Teachings[lesson], 358, 489, 800, 68, hubCopy);
-        Text("Upgrade checks: " + Mathf.Min(2, learningProfile.Evidence[lesson]) + "/2 · milestones: " + learningProfile.Wins[lesson] +
-            "\nUnlock: a third-night milestone + two different independent upgrade calibrations.", 358, 582, 800, 58, hubCopy);
-        if (PixelButton("OPEN TEACHING + QUESTIONS", 358, 656, 510, 45, Hex("277c8e"))) hubPage = HubPage.Lesson;
+        HubHeading("Where shall we learn?", "Pick a planet. Every lesson is open for practice.");
+        DrawRouteNodes(240, false);
+        UiCard(new Rect(334, 638, 866, 119), Cyan);
+        UiText(StarfallCurriculum.Names[selectedLesson], new Rect(358, 650, 500, 37), 25, true);
+        UiText(selectedLesson <= learningProfile.UnlockedLesson ? "Use this maths for your space upgrades." : "Practise here. Space milestones unlock its upgrades.", new Rect(358, 692, 500, 52), 20, false, UiMuted);
+        if (MenuButton("Open lesson", new Rect(886, 666, 290, 64), Cyan, true, true)) NavigateHub(HubPage.Lesson);
     }
 
     private void DrawRouteNodes(float top, bool compact)
     {
-        Vector2[] points = new Vector2[6];
-        for (int i = 0; i < 6; i++) points[i] = new Vector2(400 + i * 145, top + 39 + (i % 2 == 0 ? 0 : 16));
-        for (int i = 0; i < 5; i++) DrawBeam(points[i], points[i + 1], 1, Hex("486279"));
+        string[] titles = { "Adding", "Taking away", "Making ten", "Equal groups", "Sharing", "Mixed puzzles" };
         for (int i = 0; i < 6; i++)
         {
-            bool unlocked = i <= learningProfile.UnlockedLesson;
-            bool complete = learningProfile.Evidence[i] >= 2 && learningProfile.Wins[i] > 0;
-            bool selected = compact ? i == learningProfile.ActiveLesson : i == selectedLesson;
-            Vector2 at = points[i]; Rect hit = new Rect(at.x - 65, top + 4, 130, 147);
-            bool hover = hit.Contains(Event.current.mousePosition);
-            if (selected || hover)
-            {
-                Fill(hit.x, hit.y, hit.width, hit.height, new Color(.48f, .72f, .96f, hover ? .22f : .12f));
-                Fill(hit.x + 10, hit.yMax - 1, hit.width - 20, 1, selected ? Gold : LearnerAccent);
-            }
-            DrawMenuPlanet(at, i, 21, selected, complete);
-            MenuText(StarfallCurriculum.MissionNames[i], new Rect(at.x - 62, top + 83, 124, 32), 13, Cream, true);
-            MenuText(complete ? "CHECKPOINT CLEAR" : unlocked ? "UPGRADES + PRACTICE" : "PRACTICE OPEN", new Rect(at.x - 62, top + 122, 124, 18), 10, selected ? Gold : Hex("acc1d3"), false, true);
-            if (GUI.Button(hit, GUIContent.none, GUIStyle.none))
-            { selectedLesson = i; PlayRelaySound(4, .5f); NavigateHub(compact ? HubPage.Lesson : HubPage.Galaxy); }
+            Rect card = new Rect(334 + i % 3 * 292, top + i / 3 * 194, 282, 176);
+            bool selected = i == selectedLesson; UiCard(card, i % 2 == 0 ? Cyan : Gold, selected);
+            DrawMenuPlanet(new Vector2(card.x + 43, card.y + 49), i, 25, selected, learningProfile.Wins[i] > 0);
+            UiText(titles[i], new Rect(card.x + 87, card.y + 19, 177, 65), 25, true);
+            UiText("Lesson " + (i + 1) + " · Tap to explore", new Rect(card.x + 20, card.y + 106, 242, 52), 20, false, UiMuted);
+            if (GUI.Button(card, GUIContent.none, GUIStyle.none)) { selectedLesson = i; PlayRelaySound(4, .5f); NavigateHub(HubPage.Lesson); }
         }
     }
 
     private void DrawPracticeLab()
     {
-        HubHeading("A little practice. A bigger possibility.", "Choose a skill and try five questions at your pace. No enemies, no material costs, no survival pressure.");
+        HubHeading("Let's try some maths", "Pick a skill, then solve five puzzles. You can always ask for help.");
         for (int level = 0; level < 3; level++)
-            if (MenuTab(LevelNames[level], new Rect(337 + level * 291, 228, 278, 42), learningProfile.PracticeDifficulty == level))
+            if (MenuTab(LevelNames[level], new Rect(334 + level * 292, 240, 282, 58), learningProfile.PracticeDifficulty == level))
             { learningProfile.PracticeDifficulty = level; SaveLearningProfile(); }
         string[] symbols = { "+", "−", "×", "÷" };
-        string[] copy = { "Join amounts and count forward.", "Take away and count what remains.", "Build and count equal groups.", "Share a total into equal groups." };
+        string[] copy = { "Put amounts together.", "Find what is left.", "Make equal groups.", "Share things fairly." };
         for (int i = 0; i < 4; i++)
         {
-            float x = 337 + i % 2 * 438, y = 300 + i / 2 * 180;
-            MenuCard(new Rect(x, y, 414, 159), i < 2 ? LearnerAccent : Gold);
-            Text(symbols[i], x + 20, y + 15, 60, 60, hugeStyle);
-            Text(SkillNames[i], x + 98, y + 17, 285, 30, hubLabel);
-            Text(copy[i], x + 98, y + 56, 285, 42, hubCopy);
-            if (PixelButton("Learn + practise", x + 98, y + 108, 285, 35, Hex("277c8e")))
-            { practiceSkill = i; selectedLesson = SkillLesson(i); NavigateHub(HubPage.Lesson); }
+            Rect card = new Rect(334 + i % 2 * 442, 320 + i / 2 * 206, 424, 187); UiCard(card, i < 2 ? Cyan : Gold);
+            UiText(symbols[i], new Rect(card.x + 19, card.y + 17, 62, 62), 55, true, UiBlue, TextAnchor.MiddleCenter);
+            UiText(SkillNames[i], new Rect(card.x + 99, card.y + 17, 305, 36), 26, true);
+            UiText(copy[i], new Rect(card.x + 99, card.y + 60, 305, 45), 22, false, UiMuted);
+            if (MenuButton("Let's practise", new Rect(card.x + 99, card.y + 118, 305, 53), Cyan)) { practiceSkill = i; selectedLesson = SkillLesson(i); NavigateHub(HubPage.Lesson); }
         }
-        Text("Tap a skill to begin. Learning XP and stars are separate from combat power.", 338, 691, 845, 47, hubCopy);
+        UiText("No timer. Your space adventure stays safe while you learn.", new Rect(334, 744, 866, 32), 21, false, UiMuted);
     }
 
     private static int SkillLesson(int skill) => skill < 2 ? skill : skill == 2 ? 3 : 4;
@@ -214,52 +199,39 @@ public sealed partial class RuneholdGame
     private void DrawLessonBrief()
     {
         int lesson = selectedLesson;
-        HubHeading(StarfallCurriculum.MissionNames[lesson], StarfallCurriculum.Topics[lesson]);
-        MenuCard(new Rect(334, 236, 866, 302), LearnerAccent);
-        Text("LEARN IT", 358, 244, 800, 30, hubLabel);
-        Text(StarfallCurriculum.Teachings[lesson], 358, 287, 794, 78, hubLabel);
+        HubHeading(StarfallCurriculum.Names[lesson], "Read the idea. Look at the example. Then have a go!");
+        UiCard(new Rect(334, 240, 866, 182), Cyan);
+        UiText("Think about it this way", new Rect(358, 252, 818, 38), 24, true, UiBlue);
+        UiText(StarfallCurriculum.Teachings[lesson], new Rect(358, 298, 818, 105), 26);
         StarfallQuestion example = StarfallCurriculum.CreateSkill(lesson, 0, 271 + lesson);
-        Text("TRY THIS EXAMPLE", 358, 383, 790, 27, hubCopy);
-        Text(example.Explanation, 358, 421, 790, 90, hubLabel);
-        Text("Help is always available. One retry, then a worked example. Helped and independent answers are recorded separately.", 338, 556, 847, 60, hubCopy);
-        if (PixelButton("TRY 5 QUESTIONS", 337, 639, 385, 51, Hex("277c8e"))) StartStudySession(lesson);
-        bool open = lesson <= learningProfile.UnlockedLesson;
-        if (MenuButton(open ? "Use for my upgrades" : "Unlock through expedition", new Rect(745, 639, 452, 51), Gold, open))
-        {
-            learningProfile.ActiveLesson = lesson; learningProfile.LessonSeen[lesson] = true;
-            SaveLearningProfile(); ResumeExpedition();
-        }
-        Text("Your current gear stays equipped.", 338, 710, 840, 30, hubCopy);
+        UiCard(new Rect(334, 440, 866, 160), Gold);
+        UiText("An example", new Rect(358, 451, 818, 36), 24, true);
+        UiText(example.Explanation, new Rect(358, 493, 818, 88), 26);
+        if (MenuButton("Try 5 puzzles", new Rect(334, 630, 415, 74), Cyan, true, true)) StartStudySession(lesson);
+        bool unlocked = lesson <= learningProfile.UnlockedLesson;
+        if (MenuButton(unlocked ? "Use in my adventure" : "Space lesson locked", new Rect(767, 630, 433, 74), Gold, unlocked))
+        { learningProfile.ActiveLesson = lesson; learningProfile.LessonSeen[lesson] = true; SaveLearningProfile(); ResumeExpedition(); }
+        UiText(unlocked ? "Your astronaut and all your tools are kept." : "Practice is open. Protect your ship and solve upgrade puzzles to unlock this space lesson.", new Rect(334, 721, 866, 55), 20, false, UiMuted);
     }
 
     private void DrawDefenderGuide()
     {
-        HubHeading("Built for the next great defense.", "Discover each system's job. Buy its next rank from the Ascension Bay on the deck.");
-        if (PixelButton(showWeaponPoses ? "System guide" : "Rifle handling", 337, 214, 860, 35, Hex("277c8e"))) showWeaponPoses = !showWeaponPoses;
+        HubHeading("Your space tools", "Collect resources. Solve an energy puzzle. Make a helpful upgrade.");
         if (showWeaponPoses)
         {
-            MenuCard(new Rect(337, 272, 860, 375), LearnerAccent);
-            float[] angles = { 0, -90, 180, 90 };
-            string[] labels = { "RIGHT", "UP", "LEFT", "DOWN" };
-            for (int i = 0; i < 4; i++)
-            {
-                DrawMenuPilot(new Vector2(447 + i * 213, 445), angles[i], 1.7f);
-                TextCentered(labels[i], 358 + i * 213, 552, 177, 40, hubLabel);
-            }
-            Text("Drag the move stick. Your rifle tracks nearby enemies automatically. Upgrade it for damage, piercing and spread.", 358, 598, 815, 42, hubCopy);
-            return;
+            UiCard(new Rect(334, 240, 866, 425), Cyan);
+            float[] angles = { 0, -90, 180, 90 }; string[] labels = { "Right", "Up", "Left", "Down" };
+            for (int i = 0; i < 4; i++) { DrawMenuPilot(new Vector2(440 + i * 214, 422), angles[i], 1.9f); UiText(labels[i], new Rect(350 + i * 214, 546, 180, 46), 24, true, UiInk, TextAnchor.MiddleCenter); }
+            UiText("Your blaster aims and shoots automatically.", new Rect(358, 606, 818, 40), 24, false, UiMuted);
         }
-        for (int i = 0; i < 6; i++)
+        else for (int i = 0; i < 6; i++)
         {
-            Upgrade upgrade = (Upgrade)i;
-            float x = 337 + i % 3 * 291, y = 270 + i / 3 * 220;
-            MenuCard(new Rect(x, y, 272, 200), UpgradeColor(upgrade));
-            DrawMenuEquipmentArt(upgrade, new Vector2(x + 43, y + 49), 46);
-            Text(UpgradeName(upgrade), x + 87, y + 19, 173, 51, new GUIStyle(hubLabel) { fontSize = 16 });
-            Text("RANK " + UpgradeLevel(upgrade) + (pilotJournal.Setpoints[i] > 0 ? " · LOAD " + pilotJournal.Setpoints[i] : ""), x + 20, y + 88, 230, 27, hubCopy);
-            Text(UpgradeDetail(upgrade), x + 20, y + 123, 232, 66, hubCopy);
+            Upgrade kind = (Upgrade)i; Rect card = new Rect(334 + i % 3 * 292, 240 + i / 3 * 228, 282, 210);
+            UiCard(card, UpgradeColor(kind)); DrawMenuEquipmentArt(kind, new Vector2(card.x + 49, card.y + 48), 60);
+            UiText(FriendlyUpgrade(kind), new Rect(card.x + 94, card.y + 14, 172, 68), 24, true);
+            UiText(FriendlyBenefit(kind), new Rect(card.x + 18, card.y + 99, 246, 96), 20, false, UiMuted);
         }
-        Text("Add cannons for coverage. Boost them for stronger blasts, and use rifle or drone upgrades to cover the edges.", 338, 698, 841, 40, hubCopy);
+        if (MenuButton(showWeaponPoses ? "Back to my tools" : "See my space blaster", new Rect(334, 708, 866, 58), Cyan)) showWeaponPoses = !showWeaponPoses;
     }
 
     private void DrawLearningProgress()
@@ -334,17 +306,16 @@ public sealed partial class RuneholdGame
 
     private void DrawStudyResults()
     {
-        HubHeading("NICE WORK, " + learningProfile.CadetName.ToUpperInvariant() + ".", "Your five-question practice is complete. Your expedition is ready whenever you are.");
-        MenuCard(new Rect(337, 239, 860, 300), Gold);
-        Text("+" + studyXp + " LEARNING XP", 370, 264, 650, 55, hubTitle);
-        DrawPixelEllipse(new Vector2(1064, 385), 62, 62, Hex("2d3440"));
-        DrawPixelEllipse(new Vector2(1064, 385), 53, 53, Hex("4b4030"));
-        MenuIcon(5, new Vector2(1028, 349), 9, Gold);
-        MenuText("PRACTICE COMPLETE", new Rect(962, 461, 205, 25), 12, Gold, true, true);
-        Text(studyIndependent + " independently solved\n" + studySupported + " completed with support\nToday: " + Mathf.Min(5, learningProfile.DailySolved) + "/5 solved · " + MenuCount(learningProfile.Stars, "practice star"), 370, 345, 780, 142, hubLabel);
-        if (PixelButton("PRACTISE AGAIN", 337, 590, 414, 52, Hex("277c8e"))) StartStudySession(selectedLesson);
-        if (PixelButton("BACK TO EXPEDITION", 775, 590, 422, 52, Hex("665032"))) ResumeExpedition();
-        Text("Helped answers are useful practice. They are never labelled independent.", 338, 682, 840, 50, hubCopy);
+        HubHeading("Nice work, " + learningProfile.CadetName + "!", "Five puzzles complete. Every step helps your maths grow.");
+        UiCard(new Rect(334, 240, 866, 372), Gold);
+        DrawClearIcon(5, new Vector2(1023, 283), 10, Hex("c99129"));
+        UiText("+" + studyXp + " learning XP", new Rect(364, 269, 570, 66), 38, true, UiBlue);
+        UiText(studyIndependent + " worked out yourself", new Rect(364, 362, 570, 45), 27, true);
+        UiText(studySupported + " learned together", new Rect(364, 420, 570, 45), 27, true);
+        UiText("Today: " + Mathf.Min(5, learningProfile.DailySolved) + " of 5 puzzles · " + MenuCount(learningProfile.Stars, "learning star"), new Rect(364, 506, 806, 65), 24, false, UiMuted);
+        if (MenuButton("Try more puzzles", new Rect(334, 650, 415, 76), Cyan)) StartStudySession(selectedLesson);
+        if (MenuButton("Back to space", new Rect(767, 650, 433, 76), Gold, true, true)) ResumeExpedition();
+        UiText("Learning with help counts too. Keep going at your own pace.", new Rect(334, 740, 866, 38), 20, false, UiMuted);
     }
 
     private int VisualStepTarget => question.Operation == '*' ? question.First : question.Operation == '/' ? question.Answer : question.Second;
@@ -356,50 +327,34 @@ public sealed partial class RuneholdGame
 
     private void DrawQuestionIntroduction()
     {
-        OverlayShade(.82f); MenuCard(new Rect(245, 125, 790, 550), LearnerAccent);
-        Text("LEARN BEFORE YOU UPGRADE", 278, 151, 720, 40, titleStyle);
-        Text(StarfallCurriculum.Topics[question.Lesson], 278, 205, 720, 34, labelStyle);
-        Fill(278, 263, 720, 246, Panel);
-        Text(StarfallCurriculum.Teachings[question.Lesson], 302, 284, 670, 102, labelStyle);
+        TeachingBackdrop("Let's learn it first", "A little practice can give your spaceship a lot of power.");
+        UiCard(new Rect(32, 128, 790, 516), Cyan);
+        UiText(StarfallCurriculum.Topics[question.Lesson], new Rect(64, 154, 726, 60), 32, true, UiBlue);
+        UiText(StarfallCurriculum.Teachings[question.Lesson], new Rect(64, 234, 726, 142), 27);
         StarfallQuestion example = StarfallCurriculum.CreateSkill(question.Lesson, 0, 271 + question.Lesson);
-        Text("EXAMPLE: " + example.Explanation, 302, 407, 670, 84, labelStyle);
-        Text("No timer. You can move the cells, ask for a hint, or work through an example together.", 278, 530, 720, 58, smallStyle);
-        if (PixelButton("I'M READY", 278, 604, 470, 45, Hex("277c8e"))) DismissQuestionIntro();
-        if (PixelButton("BACK", 770, 604, 228, 45, PanelLight)) { phase = Phase.Day; buildPanelOpen = true; }
+        UiRound(new Rect(64, 402, 726, 206), Hex("eaf4fc"));
+        UiText("Try thinking about this", new Rect(86, 417, 680, 41), 25, true);
+        UiText(example.Explanation, new Rect(86, 475, 680, 112), 27);
+        DrawMenuPilot(new Vector2(1030, 369), 0, 2.5f);
+        UiText("I'll wait while you think!", new Rect(867, 515, 337, 64), 26, true, UiBlue, TextAnchor.MiddleCenter);
+        if (MenuButton("I'm ready to try", new Rect(32, 684, 790, 80), Cyan, true, true)) DismissQuestionIntro();
+        UiText("No timer. We can work together.", new Rect(866, 684, 338, 80), 22, false, UiMuted, TextAnchor.MiddleCenter);
     }
 
-    private void DrawEqualGroupModel()
-    {
-        Fill(278, 285, 450, 170, Panel);
-        bool share = question.Operation == '/';
-        int groups = share ? question.Second : question.First;
-        int each = share ? question.Answer : question.Second;
-        Text(share ? "SHARE " + question.First + " INTO " + groups + " GROUPS" : groups + " GROUPS OF " + each, 293, 291, 420, 25, smallStyle);
-        for (int i = 0; i < groups; i++)
-        {
-            float x = 294 + i % 3 * 130, y = 323 + i / 3 * 30;
-            Fill(x, y, 118, 24, Hex("0b1628"));
-            int filled = share ? visualSteps : i < visualSteps ? each : 0;
-            for (int j = 0; j < each; j++)
-                Fill(x + 5 + j * 10, y + 7, 7, 9, j < filled ? i % 2 == 0 ? Cyan : Gold : Hex("344659"));
-        }
-        if (visualSteps < VisualStepTarget && !questionExplained)
-        {
-            if (PixelButton(share ? "SHARE A ROUND" : "BUILD A GROUP", 493, 420, 216, 28, Hex("277c8e")))
-            { ShowTeachingHint(); visualSteps++; }
-        }
-        else Text("COUNT THE CELLS IN EACH GROUP", 294, 420, 414, 28, smallStyle);
-    }
+    private void DrawEqualGroupModel() => DrawFriendlyGroups(new Rect(56, 242, 612, 290));
 
     private void DrawStudyAnswerResult()
     {
-        OverlayShade(.8f); MenuCard(new Rect(245, 112, 790, 560), LearnerAccent);
-        Text(questionSupported ? "LEARNED WITH SUPPORT" : "SOLVED INDEPENDENTLY", 278, 133, 720, 40, titleStyle);
-        Text("QUESTION " + studyIndex + "/5 · +" + (questionSupported ? 4 : 10) + " LEARNING XP", 278, 187, 720, 30, smallStyle);
-        TextCentered(question.Text.Replace("?", question.Answer.ToString()), 278, 226, 720, 58, hugeStyle);
-        DrawTeachingCells();
-        Text(question.Explanation, 750, 306, 250, 144, labelStyle);
-        Text("Today: " + Mathf.Min(5, learningProfile.DailySolved) + "/5 solved · " + MenuCount(learningProfile.Stars, "cosmetic star") + "\nYour ship materials and combat XP are unchanged.", 278, 495, 720, 68, labelStyle);
-        if (PixelButton(studyIndex < 5 ? "NEXT QUESTION" : "SEE MY PROGRESS", 278, 594, 720, 49, Hex("277c8e"))) ContinueStudy();
+        TeachingBackdrop("Good thinking!", "Question " + studyIndex + " of 5 complete. Every step is practice.");
+        UiText(question.Text.Replace("?", question.Answer.ToString()), new Rect(32, 112, 660, 96), 64, true, UiBlue, TextAnchor.MiddleCenter);
+        UiCard(new Rect(32, 224, 660, 388), Cyan);
+        DrawFriendlyModel(new Rect(56, 242, 612, 290), false);
+        UiText(question.Explanation, new Rect(56, 541, 612, 56), 22, true);
+        UiCard(new Rect(720, 112, 528, 540), Gold);
+        DrawClearIcon(5, new Vector2(919, 153), 9, Hex("d59a2d"));
+        UiText("+" + (questionSupported ? 4 : 10) + " learning XP", new Rect(748, 288, 472, 66), 35, true, UiBlue, TextAnchor.MiddleCenter);
+        UiText(questionSupported ? "We worked it out together.\nThat is learning too!" : "You worked it out yourself!", new Rect(758, 381, 452, 100), 27, false, UiInk, TextAnchor.MiddleCenter);
+        UiText("Your spaceship is waiting safely.", new Rect(752, 546, 464, 53), 22, false, UiMuted, TextAnchor.MiddleCenter);
+        if (MenuButton(studyIndex < 5 ? "Next question" : "See my progress", new Rect(720, 686, 528, 80), Cyan, true, true)) ContinueStudy();
     }
 }

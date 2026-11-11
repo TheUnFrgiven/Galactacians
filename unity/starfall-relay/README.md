@@ -2,6 +2,10 @@
 
 A C# Unity pixel-art action-defense prototype: Captain Aria walks the Wayfarer’s outer deck, salvages material during the day, solves a short math calibration to authorize upgrades, and fights elemental meteor waves at night while the Helios Core must survive.
 
+## Child-friendly readability — 11 November 2026
+
+The UI now separates clean, smooth controls from the pixel artwork: larger type and buttons, simpler tool names, less scenery competition, clear object signs, optional tap-to-collect routes, and a consistent action bar. Maths uses a dedicated teaching screen with one large equation, countable models, a large keypad, hints and worked examples. Menus, learning, rewards, progress, settings and upgrade screens have been reorganized. See [child-readability-pass.md](Docs/child-readability-pass.md) for changes and the limits of desktop review.
+
 ## Run
 
 Open this project with Unity 6000.6.7f1. Press Play from `Assets/Scenes/Moonvale.unity`. The player build is in `Build/Runehold.app`.
@@ -10,7 +14,7 @@ Open this project with Unity 6000.6.7f1. Press Play from `Assets/Scenes/Moonvale
 
 Designed for landscape play. Drag the left move stick; the rifle aims and shoots automatically. Tap **Boost** to reposition and **Nova** when its charge is full at night. Kills and magnetic field cells recharge Nova; cells also restore one core integrity. The stick owns one touch independently, so a second finger can trigger either ability.
 
-Tap **Menu**, **Upgrades**, or **Launch Night**. Tap cannon signs or construction pads to inspect their upgrades. Walk over salvage to collect it. During the untimed day, choose an upgrade and solve its calibration to install it. The on-screen number pad, hints, worked examples, navigation and launch briefing work without a keyboard. The interface and input use the same safe-area transform.
+Tap **Menu**, **Upgrades**, or **Launch Night**. Tap cannon signs or construction pads to inspect their upgrades. Walk over salvage to collect it, or tap a resource card to follow a valid collection route. During the untimed day, choose an upgrade and solve its calibration to install it. The on-screen number pad, hints, worked examples, navigation and launch briefing work without a keyboard. The interface and input use the same safe-area transform.
 
 The enlarged station has four elemental quarters, side bridges and north/south service routes. Floor, rails, crystal beds, reactor exclusion and bridge gates share the map illustration's coordinate system. Walking and boosting both use swept floor collision. A following camera, ship navigator and off-screen core indicator help orientation. Existing saved progression is retained; old off-floor player positions are moved to a valid floor point.
 

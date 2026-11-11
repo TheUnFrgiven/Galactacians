@@ -20,12 +20,7 @@ public sealed partial class RuneholdGame
     };
 
     private void MenuIcon(int glyph, Vector2 at, float scale, Color color)
-    {
-        string[] rows = MenuGlyphs[Mathf.Clamp(glyph, 0, MenuGlyphs.Length - 1)];
-        for (int y = 0; y < rows.Length; y++)
-            for (int x = 0; x < rows[y].Length; x++)
-                if (rows[y][x] == '#') Fill(Mathf.Round(at.x + x * scale), Mathf.Round(at.y + y * scale), scale, scale, color);
-    }
+        => DrawClearIcon(glyph, at, scale, color);
 
     private bool BrightMenu => menuOpen && phase != Phase.Quiz;
     private static readonly Color MenuInk = Hex("243859");
@@ -49,20 +44,14 @@ public sealed partial class RuneholdGame
 
     private void MenuText(string text, Rect rect, int size, Color color, bool bold = false, bool singleLine = false)
     {
-        GUIStyle style = MenuType(size, color, bold);
+        GUIStyle style = MenuType(Mathf.Max(17, size), color, bold);
         style.wordWrap = !singleLine;
-        int minimum = singleLine ? Mathf.Max(10, size - 8) : Mathf.Max(11, size - 5);
+        int minimum = 17;
         while (style.fontSize > minimum && (singleLine ? style.CalcSize(new GUIContent(text)).x > rect.width : style.CalcHeight(new GUIContent(text), rect.width) > rect.height)) style.fontSize--;
         GUI.Label(rect, text, style);
     }
 
-    private void MenuCard(Rect rect, Color accent, bool selected = false)
-    {
-        Fill(rect.x, rect.y + 4, rect.width, rect.height, new Color(.16f, .26f, .45f, .10f));
-        Fill(rect.x, rect.y, rect.width, rect.height, BrightMenu ? Hex("c5d6ed") : Hex("293c51"));
-        Fill(rect.x + 1, rect.y + 1, rect.width - 2, rect.height - 2, BrightMenu ? (selected ? Color.Lerp(accent, Color.white, .85f) : Hex("fcfdff")) : (selected ? Hex("173247") : Hex("112438")));
-        Fill(rect.x + 1, rect.y + 1, 4, rect.height - 2, accent);
-    }
+    private void MenuCard(Rect rect, Color accent, bool selected = false) => UiCard(rect, accent, selected);
 
     private float MenuHoverAmount(Rect rect, bool hover)
     {
@@ -78,32 +67,22 @@ public sealed partial class RuneholdGame
 
     private bool MenuButton(string label, Rect rect, Color accent, bool enabled = true, bool selected = false)
     {
+        if (rect.height < 48) { rect.y -= (48 - rect.height) * .5f; rect.height = 48; }
         bool available = enabled && GUI.enabled;
         bool hover = available && rect.Contains(Event.current.mousePosition);
-        float amount = MenuHoverAmount(rect, hover);
-        bool held = hover && Input.GetMouseButton(0);
-        float top = rect.y + (held ? 1 : 0);
-        Color edge = available ? Color.Lerp(selected ? accent : Color.Lerp(accent, Hex("506178"), .5f), Cream, amount * .38f) : Hex("354354");
-        Color face = available ? Color.Lerp(Color.Lerp(accent, Hex("0d2135"), selected ? .4f : .65f), Color.Lerp(accent, Hex("163247"), .35f), amount) : Hex("182636");
-        if (BrightMenu)
-        {
-            edge = available ? Color.Lerp(accent, Hex("9ab2d6"), .35f) : Hex("d6e0ef");
-            face = available ? Color.Lerp(accent, Color.white, selected ? .22f : .76f - amount * .18f) : Hex("e8eef7");
-        }
-        Fill(rect.x + 1, rect.y + 3, rect.width - 2, rect.height, new Color(0, 0, 0, .33f));
-        Fill(rect.x + 2, top, rect.width - 4, rect.height, edge);
-        Fill(rect.x, top + 2, rect.width, rect.height - 4, edge);
-        Fill(rect.x + 1, top + 3, rect.width - 2, rect.height - 6, face);
-        Fill(rect.x + 3, top + 1, rect.width - 6, rect.height - 2, face);
-        Fill(rect.x + 5, top + 2, rect.width - 10, 1, new Color(1, 1, 1, .07f + amount * .1f));
-        GUIStyle style = MenuType(rect.height < 33 ? 12 : 15, available ? Cream : Hex("95a5b6"), true, TextAnchor.MiddleCenter);
-        style.wordWrap = false;
-        while (style.fontSize > 11 && style.CalcSize(new GUIContent(label)).x > rect.width - 20) style.fontSize--;
-        GUI.Label(new Rect(rect.x + 8, top, rect.width - 16, rect.height), label, style);
+        bool pressed = hover && Input.GetMouseButton(0);
+        if (accent.maxColorComponent < .65f) accent = UiBlue;
+        Color face = !available ? Hex("e6ebf2") : selected ? UiBlue : Color.Lerp(accent, Color.white, hover ? .68f : .84f);
+        Color text = !available ? Hex("66758a") : selected ? Color.white : UiInk;
+        UiRound(new Rect(rect.x, rect.y + 4, rect.width, rect.height), new Color(.12f, .24f, .4f, .16f));
+        Rect drawn = new Rect(rect.x, rect.y + (pressed ? 2 : 0), rect.width, rect.height);
+        UiRound(drawn, available ? Color.Lerp(accent, UiLine, .65f) : UiLine);
+        UiRound(new Rect(drawn.x + 1.5f, drawn.y + 1.5f, drawn.width - 3, drawn.height - 3), face, 11);
+        GUIStyle type = UiStyle(rect.height >= 64 ? 23 : 19, text, true, TextAnchor.MiddleCenter);
+        while (type.fontSize > 17 && type.CalcSize(new GUIContent(label)).x > rect.width - 24) type.fontSize--;
+        GUI.Label(new Rect(drawn.x + 10, drawn.y + 2, drawn.width - 20, drawn.height - 4), label, type);
         bool previous = GUI.enabled; GUI.enabled = available;
-        // Keep the input rectangle fixed while the drawn face depresses.
-        bool clicked = GUI.Button(rect, GUIContent.none, GUIStyle.none);
-        GUI.enabled = previous;
+        bool clicked = GUI.Button(rect, GUIContent.none, GUIStyle.none); GUI.enabled = previous;
         if (clicked) { PlayRelaySound(4, .55f); menuClearFocus = true; }
         return clicked;
     }
@@ -113,8 +92,8 @@ public sealed partial class RuneholdGame
 
     private void MenuPill(string label, Rect rect, Color color)
     {
-        Fill(rect.x, rect.y, rect.width, rect.height, BrightMenu ? Color.Lerp(color, Color.white, .78f) : Color.Lerp(color, Hex("0e2031"), .82f));
-        MenuText(label, new Rect(rect.x + 8, rect.y, rect.width - 16, rect.height), 11, color, true, true);
+        UiRound(rect, Color.Lerp(color, Color.white, .83f), 8);
+        UiText(label, new Rect(rect.x + 10, rect.y, rect.width - 20, rect.height), 17, true, Color.Lerp(color, UiInk, .65f));
     }
 
     private void DrawMenuPlanet(Vector2 center, int lesson, float radius, bool current, bool complete)
