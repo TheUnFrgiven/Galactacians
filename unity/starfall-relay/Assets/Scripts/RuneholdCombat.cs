@@ -71,6 +71,7 @@ public sealed partial class RuneholdGame
             int health = commander ? Mathf.CeilToInt((45 + night * 12) * EnemyHealthScale(night)) : Mathf.Max(1, Mathf.RoundToInt(hp * EnemyHealthScale(night)));
             meteors.Add(new Meteor {
                 Id = ++nextMeteorId, Position = position, Hp = health, MaxHp = health, Commander = commander, Role = role,
+                Element = commander ? 3 : role == 1 ? 1 : role == 2 ? 2 : element,
                 Radius = commander ? 35 : radius, Speed = 1.75f * (UnityEngine.Random.Range(15f, 21f) + Mathf.Min(35, night * 2)) * (commander ? .65f : role == 1 ? 1.6f : role == 2 ? .8f : 1),
                 Angle = UnityEngine.Random.Range(0, 360), Spin = UnityEngine.Random.Range(-55, 55),
                 CoreDamage = commander ? 20 + night : (hp == 1 ? 1 : hp == 3 ? 2 : 4) + Mathf.Min(20, night / 10),
@@ -313,8 +314,9 @@ public sealed partial class RuneholdGame
         foreach (Meteor enemy in meteors)
         {
             if (!enemy.Alive) continue;
-            Color tint = enemy.Flash > 0 ? Color.white : Color.Lerp(Color.white, enemy.Tint, .65f);
-            DrawRotatedSprite(meteorTexture, meteorUv, enemy.Position, enemy.Radius * 2.6f, enemy.Angle, tint);
+            int element = enemy.Element;
+            DrawRotatedSprite(elementalArt[element], elementalUv[element], enemy.Position, enemy.Radius * 2.6f, enemy.Angle, Color.white);
+            if (enemy.Flash > 0) PixelSpark(enemy.Position, enemy.Radius * .8f, Hex("fff7d7"));
             if (enemy.MaxHp >= 6)
                 ProgressBar(enemy.Position.x - 16, enemy.Position.y - 29, 32, 4, enemy.Hp / (float)enemy.MaxHp, enemy.Tint);
             if (enemy.Commander)
@@ -359,8 +361,7 @@ public sealed partial class RuneholdGame
         if (turretMuzzleFlash[index] > 0)
         {
             Vector2 direction = AimDirection(turretAngles[index]), muzzle = TurretMuzzle(index);
-            DrawBeam(muzzle, muzzle + direction * 20, 9, Gold);
-            DrawBeam(muzzle, muzzle + direction * 13, 4, Color.white);
+            DrawPixelMuzzle(muzzle, direction, 20, Cyan);
         }
     }
 
@@ -389,8 +390,7 @@ public sealed partial class RuneholdGame
         if (pilotMuzzleFlash > 0)
         {
             Vector2 direction = AimDirection(pilotAimAngle);
-            DrawBeam(PilotMuzzle, PilotMuzzle + direction * 9, 5, energy);
-            DrawBeam(PilotMuzzle, PilotMuzzle + direction * 6, 2, Color.white);
+            DrawPixelMuzzle(PilotMuzzle, direction, 10, energy);
         }
     }
 

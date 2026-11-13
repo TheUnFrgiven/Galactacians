@@ -152,7 +152,7 @@ public sealed partial class RuneholdGame
 
     private void DrawGalaxyRoute()
     {
-        HubHeading("Where shall we learn?", "Pick a planet. Every lesson is open for practice.");
+        HubHeading("Where shall we learn?", "Pick a lesson. Every lesson is open for practice.");
         DrawRouteNodes(240, false);
         UiCard(new Rect(334, 638, 866, 119), Cyan);
         UiText(StarfallCurriculum.Names[selectedLesson], new Rect(358, 650, 500, 37), 25, true);

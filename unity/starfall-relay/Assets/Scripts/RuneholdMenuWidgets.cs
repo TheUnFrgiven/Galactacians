@@ -9,16 +9,6 @@ public sealed partial class RuneholdGame
     private float menuSavedUntil;
     private readonly Dictionary<int, float> menuHover = new Dictionary<int, float>();
     private readonly Dictionary<int, Texture2D> menuPortraits = new Dictionary<int, Texture2D>();
-    private static readonly string[][] MenuGlyphs = {
-        new[] { "...##...", "..####..", ".######.", "########", ".######.", ".##..##.", ".##..##.", ".######." },
-        new[] { "...##...", "..#..#..", ".#.##.#.", "#.#..#.#", "#.#..#.#", ".#.##.#.", "..#..#..", "...##..." },
-        new[] { ".##.....", ".##..##.", ".....##.", "........", "###..###", "........", "###..###", "........" },
-        new[] { ".....##.", ".#######", "########", "..####..", "..##.#..", ".##..#..", ".##.....", "........" },
-        new[] { "..####..", ".######.", ".##..##.", "..####..", "...##...", ".######.", "########", "########" },
-        new[] { "########", "#.####.#", "#.####.#", ".######.", "..####..", "...##...", "..####..", ".######." },
-        new[] { "..#..#..", ".######.", "##....##", ".#.##.#.", ".#.##.#.", "##....##", ".######.", "..#..#.." }
-    };
-
     private void MenuIcon(int glyph, Vector2 at, float scale, Color color)
         => DrawClearIcon(glyph, at, scale, color);
 
@@ -74,10 +64,12 @@ public sealed partial class RuneholdGame
         if (accent.maxColorComponent < .65f) accent = UiBlue;
         Color face = !available ? Hex("e6ebf2") : selected ? UiBlue : Color.Lerp(accent, Color.white, hover ? .68f : .84f);
         Color text = !available ? Hex("66758a") : selected ? Color.white : UiInk;
-        UiRound(new Rect(rect.x, rect.y + 4, rect.width, rect.height), new Color(.12f, .24f, .4f, .16f));
-        Rect drawn = new Rect(rect.x, rect.y + (pressed ? 2 : 0), rect.width, rect.height);
-        UiRound(drawn, available ? Color.Lerp(accent, UiLine, .65f) : UiLine);
-        UiRound(new Rect(drawn.x + 1.5f, drawn.y + 1.5f, drawn.width - 3, drawn.height - 3), face, 11);
+        PixelSurface(new Rect(rect.x, rect.y + 5, rect.width, rect.height), available ? Hex("849fb9") : Hex("c0cbd5"));
+        Rect drawn = new Rect(rect.x, rect.y + (pressed ? 3 : 0), rect.width, rect.height);
+        PixelSurface(drawn, available ? PixelEdge : Hex("8ea3b7"));
+        PixelSurface(new Rect(drawn.x + 3, drawn.y + 3, drawn.width - 6, drawn.height - 6), face, 4);
+        Fill(drawn.x + 8, drawn.y + 3, drawn.width - 16, 3, selected && available ? Hex("68b9df") : Hex("f5fcff"));
+        Fill(drawn.x + 7, drawn.yMax - 7, drawn.width - 14, 4, selected && available ? Hex("1c508b") : Color.Lerp(face, Hex("839fb9"), .2f));
         GUIStyle type = UiStyle(rect.height >= 64 ? 23 : 19, text, true, TextAnchor.MiddleCenter);
         while (type.fontSize > 17 && type.CalcSize(new GUIContent(label)).x > rect.width - 24) type.fontSize--;
         GUI.Label(new Rect(drawn.x + 10, drawn.y + 2, drawn.width - 20, drawn.height - 4), label, type);
@@ -92,20 +84,17 @@ public sealed partial class RuneholdGame
 
     private void MenuPill(string label, Rect rect, Color color)
     {
-        UiRound(rect, Color.Lerp(color, Color.white, .83f), 8);
+        PixelSurface(rect, PixelEdge, 4);
+        PixelSurface(new Rect(rect.x + 2, rect.y + 2, rect.width - 4, rect.height - 4), Color.Lerp(color, Color.white, .83f), 2);
         UiText(label, new Rect(rect.x + 10, rect.y, rect.width - 20, rect.height), 17, true, Color.Lerp(color, UiInk, .65f));
     }
 
     private void DrawMenuPlanet(Vector2 center, int lesson, float radius, bool current, bool complete)
     {
-        Color[] colors = { Hex("65d5ee"), Hex("7ed6ad"), Hex("f4cf7e"), Hex("e7a483"), Hex("b7a0eb"), Hex("e79fbd") };
-        Color color = colors[lesson % colors.Length];
-        DrawPixelEllipse(center + new Vector2(0, radius * .2f), radius + 7, radius + 5, new Color(color.r, color.g, color.b, current ? .16f : .07f));
-        DrawPixelEllipse(center, radius + 2, radius + 2, Hex("091626"));
-        DrawPixelEllipse(center, radius, radius, Color.Lerp(color, Hex("19324a"), .3f));
-        DrawPixelEllipse(center + new Vector2(-radius * .19f, -radius * .18f), radius * .73f, radius * .73f, color);
-        DrawPixelEllipse(center + new Vector2(-radius * .36f, -radius * .25f), radius * .18f, radius * .12f, Color.Lerp(color, Color.white, .22f));
-        DrawPixelEllipse(center + new Vector2(radius * .23f, radius * .22f), radius * .24f, radius * .17f, Color.Lerp(color, Hex("17314a"), .32f));
+        DrawPixelEllipse(center + new Vector2(0, 3), radius + 4, radius + 4, Hex("bfd5e4"));
+        DrawPixelEllipse(center, radius + 4, radius + 4, current ? PixelEdge : Hex("9ab6cc"));
+        DrawPixelEllipse(center, radius + 1, radius + 1, Hex("e6f3f8"));
+        DrawElementSprite(new[] { 1, 2, 3, 0, 1, 2 }[lesson % 6], center, radius * 1.8f, -12);
         if (current || complete)
         {
             Color ring = complete ? Mint : Gold;
@@ -150,29 +139,17 @@ public sealed partial class RuneholdGame
     {
         if (upgrade < Upgrade.PlasmaRifle) { DrawUpgradeArt(upgrade, center, height, Color.white); return; }
         if (upgrade == Upgrade.PlasmaRifle)
-        { DrawTrimmedSprite(LiveryTexture(carbineTexture), carbineUv, center, height * .3f, Color.white); return; }
-        Color color = UpgradeColor(upgrade);
-        DrawPixelEllipse(center, height * .4f, height * .4f, Hex("0a1b2b"));
+        {
+            float ratio = carbineUv.height * carbineTexture.height / Mathf.Max(1, carbineUv.width * carbineTexture.width);
+            DrawTrimmedSprite(carbineTexture, carbineUv, center, Mathf.Min(height * .3f, height * 1.15f * ratio), Color.white); return;
+        }
         if (upgrade == Upgrade.OrbitDrones)
         {
-            for (int i = 0; i < 3; i++)
-            {
-                float angle = i * Mathf.PI * 2 / 3 - .5f;
-                Vector2 at = center + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * height * .25f;
-                Fill(at.x - 10, at.y - 2, 20, 4, Hex("40576e"));
-                Fill(at.x - 5, at.y - 5, 10, 10, Hex("93b4c9"));
-                Fill(at.x - 3, at.y - 3, 6, 6, color);
-                Fill(at.x - 1, at.y - 1, 2, 2, Cream);
-            }
+            DrawTrimmedSprite(droneArt, droneArtUv, center + new Vector2(-height * .27f, height * .16f), height * .36f, Color.white);
+            DrawTrimmedSprite(droneArt, droneArtUv, center + new Vector2(height * .27f, height * .16f), height * .36f, Color.white);
+            DrawTrimmedSprite(droneArt, droneArtUv, center + new Vector2(0, -height * .1f), height * .63f, Color.white);
         }
-        else
-        {
-            DrawPixelEllipse(center, height * .31f, height * .31f, Hex("436578"));
-            DrawPixelEllipse(center, height * .25f, height * .25f, Hex("102e40"));
-            DrawPixelEllipse(center, height * .16f, height * .16f, color);
-            Fill(center.x - 2, center.y - height * .25f, 4, height * .5f, Cream);
-            Fill(center.x - height * .25f, center.y - 2, height * .5f, 4, Cream);
-        }
+        else DrawTrimmedSprite(repairArt, repairArtUv, center, height, Color.white);
     }
 
 }

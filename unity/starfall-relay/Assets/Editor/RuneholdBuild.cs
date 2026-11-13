@@ -18,6 +18,7 @@ internal static class RuneholdBuild
 
     private static void Build(bool preview)
     {
+        PixelArtTextureSettings.RefreshArtwork();
         string output = preview ? "Build/StarfallExpeditionPreview.app" : "Build/Runehold.app";
         Directory.CreateDirectory("Build");
         string originalIdentifier = PlayerSettings.GetApplicationIdentifier(UnityEditor.Build.NamedBuildTarget.Standalone);

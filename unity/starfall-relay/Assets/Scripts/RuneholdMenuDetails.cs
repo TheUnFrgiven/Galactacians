@@ -88,7 +88,7 @@ public sealed partial class RuneholdGame
             {
                 int i = achievementPage * 4 + row; Rect card = new Rect(334, 320 + row * 89, 866, 77);
                 bool earned = pilotJournal.Achievements.Contains(AchievementId(i)); UiCard(card, earned ? Gold : Cyan);
-                DrawClearIcon(5, new Vector2(card.x + 17, card.y + 24), 4, earned ? Hex("ca8c20") : UiBlue);
+                DrawAchievementMedal(i, new Vector2(card.x + 38, card.y + 39), earned);
                 UiText(AchievementNames[i], new Rect(card.x + 75, card.y + 6, 610, 31), 24, true);
                 UiText(AchievementCopy[i], new Rect(card.x + 75, card.y + 42, 610, 29), 19, false, UiMuted);
                 UiText(earned ? "Earned!" : Mathf.Min(AchievementValue(i), AchievementTarget(i)) + " / " + AchievementTarget(i), new Rect(card.x + 690, card.y + 9, 156, 30), 21, true, UiBlue, TextAnchor.MiddleRight);
@@ -107,7 +107,7 @@ public sealed partial class RuneholdGame
             string[] names = { "Orange", "Green", "Purple", "Gold" };
             UiText(names[i], new Rect(card.x + 132, card.y + 15, 272, 37), 26, true);
             UiText("Astronaut, tools and lights", new Rect(card.x + 132, card.y + 63, 272, 53), 20, false, UiMuted);
-            string action = equipped ? "Wearing these!" : owned ? "Wear these colors" : canUnlock ? "Unlock · " + LiveryPrices[i] + " credits" : "Need " + (LiveryPrices[i] - pilotJournal.Tokens) + " credits";
+            string action = equipped ? "Wearing these!" : owned ? "Wear these colors" : canUnlock ? "Unlock · " + LiveryPrices[i] + " credits" : "Need " + MenuCount(LiveryPrices[i] - pilotJournal.Tokens, "credit");
             if (MenuButton(action, new Rect(card.x + 132, card.y + 126, 272, 50), LiveryEnergy(i), !equipped && (owned || canUnlock), equipped)) EquipLivery(i);
         }
         UiText("New badges and daily maths earn color credits. Earned colors stay yours.", new Rect(334, 737, 866, 40), 20, false, UiMuted);

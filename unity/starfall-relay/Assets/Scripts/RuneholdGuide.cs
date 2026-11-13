@@ -153,22 +153,8 @@ public sealed partial class RuneholdGame
 
     private void DrawBotPortrait(Rect box)
     {
-        Matrix4x4 old = GUI.matrix;
-        GUI.matrix *= Matrix4x4.TRS(new Vector3(box.x, box.y, 0), Quaternion.identity, new Vector3(box.width / 100, box.height / 115, 1));
-        UiRound(new Rect(25, 73, 50, 30), Hex("67bedc"), 12);
-        UiDot(new Vector2(50, 87), 8, Hex("fff0b5"));
-        UiStroke(new Vector2(50, 13), new Vector2(50, 26), 5, Hex("79cfe1"));
-        UiDot(new Vector2(50, 10), 7, Gold);
-        UiRound(new Rect(5, 40, 15, 26), Hex("62b5d9"), 5);
-        UiRound(new Rect(80, 40, 15, 26), Hex("62b5d9"), 5);
-        UiRound(new Rect(16, 24, 68, 57), Hex("d9eff6"), 16);
-        UiRound(new Rect(22, 30, 56, 44), Hex("174d77"), 12);
-        bool blink = !reducedMotion && corePulse % 5 < .12f;
-        if (blink) { UiStroke(new Vector2(31, 48), new Vector2(39, 48), 4, Cyan); UiStroke(new Vector2(61, 48), new Vector2(69, 48), 4, Cyan); }
-        else { UiDot(new Vector2(35, 47), 6, Cyan); UiDot(new Vector2(65, 47), 6, Cyan); }
-        UiStroke(new Vector2(40, 61), new Vector2(50, 65), 3, Color.white); UiStroke(new Vector2(50, 65), new Vector2(60, 61), 3, Color.white);
-        UiStroke(new Vector2(28, 87), new Vector2(14, 94), 6, Hex("79cfe1")); UiStroke(new Vector2(72, 87), new Vector2(86, 94), 6, Hex("79cfe1"));
-        GUI.matrix = old;
+        float bob = reducedMotion ? 0 : Mathf.Round(Mathf.Sin(corePulse * 1.8f) * 2);
+        DrawTrimmedSprite(botArt, botArtUv, box.center + new Vector2(0, bob), box.height, Color.white);
     }
 
     private void DrawGuideTaskHint()
@@ -184,9 +170,8 @@ public sealed partial class RuneholdGame
         if (!guideOpen || guidePages.Length == 0) return;
         OverlayShade(.52f);
         Rect panel = new Rect(64, 404, 1152, 340);
-        UiRound(panel, Hex("7ab9df"), 14);
-        UiRound(new Rect(68, 408, 1144, 332), Hex("163554"), 11);
-        UiRound(new Rect(84, 428, 195, 290), Hex("224969"), 10);
+        PixelPanel(panel, Cyan, false, true);
+        PixelPanel(new Rect(84, 428, 195, 290), Gold, false, true);
         DrawBotPortrait(new Rect(100, 466, 163, 206));
         UiText("Bot", new Rect(306, 425, 800, 43), 30, true, Gold);
         UiText(guidePages[guidePage], new Rect(306, 481, 874, 160), 26, false, Hex("f4f8ff"));

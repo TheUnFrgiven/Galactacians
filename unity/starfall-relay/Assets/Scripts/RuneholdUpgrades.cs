@@ -136,11 +136,11 @@ public sealed partial class RuneholdGame
                 else if (phase == Phase.Day && i == level)
                 {
                     Color color = UpgradeColor(upgrade);
-                    DrawPixelEllipse(position + new Vector2(0, 24), 48, 18, Ink);
-                    DrawPixelEllipse(position + new Vector2(0, 24), 43, 13, color);
-                    DrawUpgradeArt(upgrade, position + new Vector2(0, -10), 94, new Color(.85f, .94f, 1, .9f));
-                    Fill(position.x - 9, position.y + 22, 18, 5, Color.white);
-                    Fill(position.x - 3, position.y + 16, 6, 17, Color.white);
+                    DrawTrimmedSprite(turretMountTexture, turretMountUv, position + new Vector2(0, 8), 70, new Color(.7f, .82f, .94f));
+                    PixelSurface(new Rect(position.x - 13, position.y - 9, 26, 26), Ink, 4);
+                    PixelSurface(new Rect(position.x - 10, position.y - 6, 20, 20), UiBlue, 2);
+                    Fill(position.x - 7, position.y + 2, 14, 4, Color.white);
+                    Fill(position.x - 2, position.y - 3, 4, 14, Color.white);
                 }
             }
         }

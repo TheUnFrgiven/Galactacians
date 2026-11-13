@@ -34,6 +34,7 @@ public sealed partial class RuneholdGame : MonoBehaviour
         public bool Alive = true;
         public bool Commander;
         public int Role;
+        public int Element;
     }
 
     private sealed class Bolt
@@ -157,6 +158,7 @@ public sealed partial class RuneholdGame : MonoBehaviour
         LoadUpgradeArtwork();
         CacheSpriteFrames();
         LoadCombatArtwork();
+        LoadPolishedArtwork();
         LoadLearningProfile();
         pixel = new Texture2D(1, 1, TextureFormat.RGBA32, false);
         pixel.SetPixel(0, 0, Color.white);
@@ -181,6 +183,8 @@ public sealed partial class RuneholdGame : MonoBehaviour
     {
         foreach (Texture2D variant in liveryTextures.Values) Destroy(variant);
         foreach (Texture2D portrait in menuPortraits.Values) Destroy(portrait);
+        foreach (Texture2D icon in pixelIcons.Values) Destroy(icon);
+        foreach (Texture2D disc in pixelDiscs.Values) Destroy(disc);
         foreach (AudioClip clip in relaySounds) Destroy(clip);
         if (relayMusic != null) relayMusic.Stop();
         if (relayMusicClip != null) Destroy(relayMusicClip);
@@ -597,8 +601,7 @@ public sealed partial class RuneholdGame : MonoBehaviour
         {
             if (node.Collected) continue;
             Color color = node.Kind == MaterialKind.Alloy ? Cyan : Gold;
-            DrawPixelEllipse(node.Position + new Vector2(0, 22), 43, 15, Ink);
-            DrawPixelEllipse(node.Position + new Vector2(0, 22), 38, 11, color);
+            DrawResourceDock(node.Position + new Vector2(0, 22), color);
             DrawPickup(node.Kind, node.Position + new Vector2(0, -8), 66, Color.white);
         }
     }
@@ -788,13 +791,7 @@ public sealed partial class RuneholdGame : MonoBehaviour
     }
 
     private void DrawPixelEllipse(Vector2 center, float radiusX, float radiusY, Color color)
-    {
-        for (float y = -radiusY; y <= radiusY; y += 2)
-        {
-            float halfWidth = Mathf.Sqrt(Mathf.Max(0, 1 - y * y / (radiusY * radiusY))) * radiusX;
-            Fill(Mathf.Round(center.x - halfWidth), Mathf.Round(center.y + y), Mathf.Round(halfWidth * 2), 2, color);
-        }
-    }
+        => PixelEllipse(center, radiusX, radiusY, color);
 
     private void OverlayShade(float alpha) => Fill(0, 0, DesignWidth, DesignHeight, new Color(.015f, .025f, .06f, alpha));
 

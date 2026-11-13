@@ -1,0 +1,14 @@
+# Sprite prompt specifications — 13 November 2026
+
+Tool: built-in imagegen. Six separate generations, transparent background enabled. Final files: `Assets/Resources/Art/`. This is the prompt set's shared direction and individual subject specifications.
+
+Shared direction: production game sprites for a child-friendly maths space adventure. Match the supplied existing artwork: dark navy stepped outlines, crisp deliberate pixel clusters, hard upper-left highlights, restrained palettes and readable silhouettes. Logical-pixel appearance enlarged with nearest-neighbor blocks. Whole subject centered with generous transparent padding. No text, blur, painterly gradients, smooth vector curves, surrounding scene, ground shadow or concept sheet.
+
+| Final file | Individual prompt specification | References |
+| --- | --- | --- |
+| BotGuide.png | One friendly floating robot called Bot. Compact round-square head, navy screen, two expressive cyan eyes, tiny smiling pixel mouth, gold antenna, armored torso and small articulated arms. Off-white steel/navy casing, cyan glass, amber accents and mechanical panelwork. Mostly front-facing, slightly top-down three-quarter sprite, roughly 80×96 logical-pixel appearance. | Pilot.png; ShieldGenerator.png |
+| OrbitDrone.png | One friendly defensive orbit drone. Compact horizontal hexagonal body, bright cyan circular lens, two short engine pods, downward thruster and small integrated blaster. Navy armor, steel highlights and amber trim. Slightly top-down three-quarter view; readable at 32 pixels tall; roughly 64×48 logical-pixel appearance. | ShieldGenerator.png; Pilot.png |
+| RepairModule.png | Complete Repair pod matching Shield machinery. Octagonal navy/steel pedestal, amber trim, two short articulated repair arms around a mint-green energy chamber, clear white plus-shaped front inset. Immediately readable as healing machinery. Slightly top-down three-quarter view, roughly 96×96 logical-pixel appearance. | ShieldGenerator.png; SalvageRig.png |
+| IceMeteor.png | One frost meteor. Irregular faceted deep-blue rock, angular turquoise ice plates, cyan fissures, white icy core, asymmetrical diamond silhouette and a few floating ice chips. No flames. Readable at 32–64 pixels; roughly 64×64 logical-pixel appearance. | EmberMeteor.png |
+| CrystalMeteor.png | One arcane meteor. Dark violet shell around amethyst spikes, lavender fissures, pale pink crystalline core, angular jagged silhouette and a few purple chips. No flames. Readable at 32–64 pixels; roughly 64×64 logical-pixel appearance. | EmberMeteor.png |
+| SunMeteor.png | One solar meteor. Dark bronze/ochre armor around molten gold-white core, amber fissures, slightly rounded jagged silhouette and a few golden chips. Clearly yellow/gold rather than orange fire. Readable at 32–64 pixels; roughly 64×64 logical-pixel appearance. | EmberMeteor.png |

@@ -92,9 +92,10 @@ public sealed partial class RuneholdGame
         {
             Vector2 at = new Vector2(area.x + 24 + i % 10 * 53 + (i % 10 >= 5 ? 10 : 0), area.y + 77 + i / 10 * 48);
             bool removed = subtract && i < occupied && i >= question.First - visualSteps;
-            UiDot(at, 19, Hex("dae5f1"));
+            PixelSurface(new Rect(at.x - 19, at.y - 20, 38, 40), Hex("d3e0eb"), 4);
+            PixelSurface(new Rect(at.x - 16, at.y - 17, 32, 34), Hex("edf3f8"), 2);
             if (i < occupied && !removed)
-            { UiDot(at, 16, i < question.First ? UiBlue : Hex("d58a25")); UiDot(at + new Vector2(-4, -5), 4, new Color(1, 1, 1, .6f)); }
+                DrawEnergyCell(at, 32, i < question.First ? Cyan : Gold);
             if (removed)
             { UiStroke(at + new Vector2(-10, -10), at + new Vector2(10, 10), 3, UiMuted); UiStroke(at + new Vector2(10, -10), at + new Vector2(-10, 10), 3, UiMuted); }
         }
@@ -103,7 +104,7 @@ public sealed partial class RuneholdGame
         for (int i = 0; i < waiting; i++)
         {
             Vector2 at = new Vector2(area.x + 24 + i % 10 * 53 + (i % 10 >= 5 ? 10 : 0), area.y + 212 + i / 10 * 45);
-            UiDot(at, 16, Hex("d58a25")); UiDot(at + new Vector2(-4, -5), 4, Hex("ffe3a1"));
+            DrawEnergyCell(at, 32, Gold);
         }
     }
 
@@ -118,7 +119,7 @@ public sealed partial class RuneholdGame
             float width = (area.width - 24) / 3, x = area.x + i % 3 * (width + 12), y = area.y + 59 + i / 3 * 53;
             UiRound(new Rect(x, y, width, 45), Hex("e5edf9"), 8);
             int filled = share ? visualSteps : i < visualSteps ? each : 0;
-            for (int dot = 0; dot < Mathf.Min(10, filled); dot++) UiDot(new Vector2(x + 13 + dot % 5 * 19, y + 14 + dot / 5 * 17), 6, UiBlue);
+            for (int dot = 0; dot < Mathf.Min(10, filled); dot++) DrawEnergyCell(new Vector2(x + 13 + dot % 5 * 19, y + 14 + dot / 5 * 17), 13, Cyan);
             UiText(filled.ToString(), new Rect(x + width - 52, y + 1, 43, 43), 23, true, UiInk, TextAnchor.MiddleCenter);
         }
         if (groups > shown) UiText(shown + " of " + groups + " groups shown. Each group follows the same rule.", new Rect(area.x, area.y + 271, area.width, 32), 18, false, UiMuted);

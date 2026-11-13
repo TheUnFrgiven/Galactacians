@@ -1,5 +1,9 @@
 # Starfall Relay
 
+## Unified pixel artwork — 13 November 2026
+
+The ship's existing art family now extends through the whole interface: stepped frames and buttons, pixel icons and wordmark, a detailed Bot guide, finished Drones and Repair artwork, four distinct elemental meteor sprites, illustrated medals, steel resource docks and matching energy cells. Original texture proportions are preserved. See [the asset inventory and review](Docs/pixel-art-production-pass.md) and [sprite prompt specifications](Docs/pixel-art-prompts.md).
+
 A C# Unity pixel-art action-defense prototype: Captain Aria walks the Wayfarer’s outer deck, salvages material during the day, solves a short math calibration to authorize upgrades, and fights elemental meteor waves at night while the Helios Core must survive.
 
 ## Child-friendly readability — 11 November 2026

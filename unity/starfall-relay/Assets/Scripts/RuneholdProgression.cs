@@ -150,10 +150,9 @@ public sealed partial class RuneholdGame
         for (int i = 0; i < count; i++)
         {
             Vector2 at = DronePosition(i, count);
-            DrawBeam(at - (at - pilotPosition).normalized * 11, at, 6, Ink);
-            Fill(at.x - 7, at.y - 7, 14, 14, Ink);
-            Fill(at.x - 5, at.y - 5, 10, 10, Mint);
-            Fill(at.x - 2, at.y - 3, 4, 5, Color.white);
+            DrawPixelEllipse(at + new Vector2(0, 12), 16, 5, new Color(.02f, .05f, .1f, .45f));
+            DrawTrimmedSprite(droneArt, droneArtUv, at, 30, Color.white);
+            if (droneTimer > .45f) PixelSpark(at + new Vector2(0, 10), 5, Cyan);
         }
         if (AscensionPower < 18 && ascensionFlash <= 0) return;
         Color aura = AscensionPower >= 60 ? Gold : LearnerAccent;

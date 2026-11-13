@@ -12,11 +12,13 @@ public sealed partial class RuneholdGame
     private void DrawRelayMenuShell()
     {
         Fill(0, 0, 1280, 800, Hex("edf4ff"));
-        UiRound(new Rect(20, 20, 286, 760), Hex("dceaff"), 22);
+        DrawMenuConstellation(new Rect(314, 120, 926, 660));
+        PixelPanel(new Rect(20, 20, 286, 760), Cyan, true);
+        PixelSurface(new Rect(32, 32, 262, 348), Hex("deedf7"), 6);
         Color[] colors = { Cyan, Gold, Hex("bca4f2"), Mint };
-        UiText("STARFALL", new Rect(44, 43, 238, 42), 32, true);
+        DrawStarfallWordmark(new Vector2(44, 50));
         UiText("A maths space adventure", new Rect(44, 92, 238, 54), 22, false, UiMuted);
-        UiDot(new Vector2(163, 215), 67, Hex("f4f9ff"));
+        DrawPortraitDock(new Vector2(163, 214), 77);
         DrawMenuPilot(new Vector2(163, 212), 0, 1.3f);
         UiText(learningProfile.CadetName, new Rect(44, 296, 238, 36), 26, true);
         UiText("Space explorer · Level " + astronautLevel, new Rect(44, 335, 238, 28), 19, false, UiMuted);
@@ -49,10 +51,11 @@ public sealed partial class RuneholdGame
         UiText("A little maths. A lot of possibility.", new Rect(358, 255, 520, 70), 31, true, UiBlue);
         UiText("Collect resources, solve an energy puzzle and build something brilliant.", new Rect(358, 330, 510, 75), 25);
         if (MenuButton("Play in space", new Rect(358, 432, 500, 68), Cyan, true, true)) ResumeExpedition();
-        UiDot(new Vector2(1050, 370), 108, Hex("e2eeff"));
-        DrawElementalMenuRock(new Vector2(964, 285), 22, Cyan);
-        DrawElementalMenuRock(new Vector2(1129, 303), 25, Hex("ffac7d"));
-        DrawElementalMenuRock(new Vector2(1132, 445), 20, Mint);
+        DrawPortraitDock(new Vector2(1050, 370), 104);
+        DrawElementSprite(1, new Vector2(965, 291), 58, -15);
+        DrawElementSprite(0, new Vector2(1130, 295), 64, 10);
+        DrawElementSprite(2, new Vector2(1138, 437), 52, 12);
+        DrawElementSprite(3, new Vector2(956, 444), 44, -12);
         DrawMenuPilot(new Vector2(1052, 374), -12, 2.1f);
         string[] titles = { "1. Explore", "2. Learn", "3. Build" };
         string[] copy = { "Find metal and crystals.", "Try a maths puzzle.", "Power up your ship." };
@@ -68,24 +71,4 @@ public sealed partial class RuneholdGame
         UiText("Today's learning: " + Mathf.Min(5, learningProfile.DailySolved) + " of 5 puzzles", new Rect(334, 722, 530, 32), 21, true);
         UiText("Earn a star and a new color credit.", new Rect(868, 721, 332, 50), 18, false, UiMuted);
     }
-    private void DrawElementalMenuRock(Vector2 at, float radius, Color element)
-    {
-        for (int i = 3; i > 0; i--)
-        {
-            float size = radius * (.5f - i * .09f);
-            Vector2 trail = at + new Vector2(i * radius * .65f, -i * radius * .45f);
-            Fill(trail.x - size, trail.y - size, size * 2, size * 2, Color.Lerp(element, Color.white, .45f + i * .12f));
-        }
-        DrawPixelEllipse(at, radius + 7, radius + 6, Color.Lerp(element, Color.white, .73f));
-        float[] silhouette = { .35f, .62f, .82f, .94f, 1, .96f, .84f, .72f, .44f };
-        for (int y = 0; y < silhouette.Length; y++)
-        {
-            float width = silhouette[y] * radius;
-            Fill(at.x - width, at.y - radius + y * radius * 2 / 9, width * 2, radius * 2 / 9 + 1, Color.Lerp(element, Hex("435d87"), .25f));
-            Fill(at.x - width, at.y - radius + y * radius * 2 / 9, width * 1.5f, radius * 2 / 9 + 1, element);
-        }
-        Fill(at.x - radius * .46f, at.y - radius * .42f, radius * .4f, radius * .26f, Color.Lerp(element, Color.white, .5f));
-        Fill(at.x + radius * .12f, at.y + radius * .19f, radius * .44f, radius * .3f, Color.Lerp(element, Hex("435d87"), .48f));
-    }
-
 }

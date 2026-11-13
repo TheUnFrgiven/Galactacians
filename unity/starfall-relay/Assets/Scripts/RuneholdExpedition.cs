@@ -219,7 +219,7 @@ public sealed partial class RuneholdGame
         foreach (Texture2D old in liveryTextures.Values) Destroy(old);
         liveryTextures.Clear(); cachedLivery = learningProfile.Accent;
         if (cachedLivery == 0) return;
-        foreach (Texture2D source in new[] { pilotTexture, carbineTexture, turretHeadTexture, turretMountTexture, shieldTexture })
+        foreach (Texture2D source in new[] { pilotTexture, carbineTexture, turretHeadTexture, turretMountTexture, shieldTexture, droneArt, botArt })
         {
             if (source == null || !source.isReadable || liveryTextures.ContainsKey(source)) continue;
             Color32[] colors = source.GetPixels32();
@@ -378,9 +378,7 @@ public sealed partial class RuneholdGame
         foreach (CapacitorDrop drop in capacitors)
         {
             DrawPixelEllipse(drop.Position + new Vector2(0, 8), 9, 3, Ink);
-            Fill(drop.Position.x - 6, drop.Position.y - 6, 12, 12, Ink);
-            Fill(drop.Position.x - 4, drop.Position.y - 4, 8, 8, LearnerAccent);
-            Fill(drop.Position.x - 1, drop.Position.y - 5, 2, 10, Cream);
+            DrawEnergyCell(drop.Position, 20, LearnerAccent);
         }
         if (pulseAge < .6f)
         {
