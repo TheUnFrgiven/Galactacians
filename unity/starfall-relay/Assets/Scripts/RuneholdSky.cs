@@ -34,7 +34,7 @@ public sealed partial class RuneholdGame
     {
         Matrix4x4 previous = GUI.matrix; GUI.matrix = Matrix4x4.identity;
         Color old = GUI.color; GUI.color = Color.white;
-        if (menuOpen && phase != Phase.Quiz) GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), pixel, ScaleMode.StretchToFill, true, 0, Hex("edf4ff"), 0, 0);
+        if (menuOpen && phase != Phase.Quiz) GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), pixel, ScaleMode.StretchToFill, true, 0, Hex("f2f6fa"), 0, 0);
         else if (spaceSky != null) GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), spaceSky, ScaleMode.ScaleAndCrop, false);
         GUI.color = old; GUI.matrix = previous;
     }

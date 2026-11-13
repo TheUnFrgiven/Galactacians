@@ -1,5 +1,9 @@
 # Starfall Relay
 
+## Minimal menus
+
+Home now shows Play, Learn maths, My stuff and Settings. Rewards, progress and equipment sit under My stuff; secondary screens use Back instead of a permanent sidebar. Shared controls have quieter borders and more whitespace. See [the menu structure](Docs/minimal-menu.md).
+
 ## Unified pixel artwork — 13 November 2026
 
 The ship's existing art family now extends through the whole interface: stepped frames and buttons, pixel icons and wordmark, a detailed Bot guide, finished Drones and Repair artwork, four distinct elemental meteor sprites, illustrated medals, steel resource docks and matching energy cells. Original texture proportions are preserved. See [the asset inventory and review](Docs/pixel-art-production-pass.md) and [sprite prompt specifications](Docs/pixel-art-prompts.md).

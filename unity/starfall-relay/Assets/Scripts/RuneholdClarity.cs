@@ -38,7 +38,10 @@ public sealed partial class RuneholdGame
         => PixelSurface(rect, color, radius <= 0 ? 0 : Mathf.Min(6, radius));
 
     private void UiCard(Rect rect, Color accent, bool selected = false)
-        => PixelPanel(rect, accent, selected);
+    {
+        PixelSurface(rect, selected ? UiBlue : Hex("dce5ed"), 4);
+        PixelSurface(new Rect(rect.x + 2, rect.y + 2, rect.width - 4, rect.height - 4), selected ? Hex("eaf3fa") : UiPaper, 2);
+    }
 
     private GUIStyle UiStyle(int size, Color color, bool bold = false, TextAnchor anchor = TextAnchor.MiddleLeft)
     {

@@ -3,17 +3,15 @@ using UnityEngine;
 
 public sealed partial class RuneholdGame
 {
-    private enum HubPage { Home, Galaxy, Practice, Armory, Progress, Achievements, Settings, Lesson, Results }
+    private enum HubPage { Home, Galaxy, Practice, Armory, Progress, Achievements, Settings, Lesson, Results, More }
     private bool menuOpen, studySession, studyResult, reducedMotion;
     private HubPage hubPage;
     private Phase studyReturnPhase;
-    private int hubFocus, selectedLesson, practiceSkill, studyIndex, studyIndependent, studySupported, studyXp;
+    private int selectedLesson, practiceSkill, studyIndex, studyIndependent, studySupported, studyXp;
     private string typedAnswer = "";
     private bool showWeaponPoses;
     private Font academyFont;
     private GUIStyle hubTitle, hubCopy, hubLabel;
-    private static readonly string[] HubLabels = { "Command deck", "Learning galaxy", "Practice lab", "Equipment", "Pilot profile", "Collection", "Settings" };
-    private static readonly HubPage[] HubPages = { HubPage.Home, HubPage.Galaxy, HubPage.Practice, HubPage.Armory, HubPage.Progress, HubPage.Achievements, HubPage.Settings };
     private static readonly string[] SkillNames = { "Addition", "Subtraction", "Multiplication", "Division" };
     private static readonly string[] LevelNames = { "Level 1", "Level 2", "Level 3" };
     private Color LearnerAccent => LiveryEnergy(learningProfile.Accent);
@@ -66,7 +64,23 @@ public sealed partial class RuneholdGame
         if (phase == Phase.Quiz && studySession && Input.GetKeyDown(KeyCode.Escape))
         { EndStudySession(false); return true; }
         if (!menuOpen || phase == Phase.Quiz) return false;
-        if (Input.GetKeyDown(KeyCode.Escape)) { if (hubPage == HubPage.Home) ResumeExpedition(); else NavigateHub(HubPage.Home); return true; }
+        if (Input.GetKeyDown(KeyCode.Escape)) { if (hubPage == HubPage.Home) ResumeExpedition(); else NavigateHub(MenuParent); return true; }
+        if (hubPage == HubPage.Home || hubPage == HubPage.More)
+        {
+            int direction = Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S) ? 1 : Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W) ? -1 : 0;
+            if (direction != 0)
+            {
+                if (hubPage == HubPage.Home) homeChoice = (homeChoice + direction + 4) % 4;
+                else moreChoice = (moreChoice + direction + 3) % 3;
+                menuNavPending = true;
+            }
+            if (Input.GetKeyDown(KeyCode.Return))
+            {
+                if (hubPage == HubPage.Home) ChooseHomeAction();
+                else NavigateHub(moreChoice == 0 ? HubPage.Achievements : moreChoice == 1 ? HubPage.Progress : HubPage.Armory);
+            }
+            return true;
+        }
         if (hubPage == HubPage.Settings)
         {
             if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) || Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand)) && Input.GetKeyDown(KeyCode.S))
@@ -83,10 +97,6 @@ public sealed partial class RuneholdGame
             if (showFactRecords && Input.GetKeyDown(KeyCode.RightArrow)) factPage = Mathf.Min(Mathf.Max(0, (learningProfile.Facts.Count - 1) / 4), factPage + 1);
             if (showFactRecords && Input.GetKeyDown(KeyCode.LeftArrow)) factPage = Mathf.Max(0, factPage - 1);
         }
-        int navigation = Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S) ? 1 : Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W) ? -1 : 0;
-        if (navigation != 0)
-        { hubFocus = (hubFocus + navigation + HubLabels.Length) % HubLabels.Length; menuNavPending = true; return true; }
-        if (menuNavPending && Input.GetKeyDown(KeyCode.Return)) { NavigateHub(HubPages[hubFocus]); return true; }
         if (hubPage == HubPage.Practice)
         {
             for (int i = 0; i < 4; i++)
@@ -99,6 +109,8 @@ public sealed partial class RuneholdGame
         {
             if (Input.GetKeyDown(KeyCode.RightArrow)) selectedLesson = (selectedLesson + 1) % 6;
             if (Input.GetKeyDown(KeyCode.LeftArrow)) selectedLesson = (selectedLesson + 5) % 6;
+            if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.UpArrow)) selectedLesson = (selectedLesson + 3) % 6;
+            if (Input.GetKeyDown(KeyCode.Tab)) { NavigateHub(HubPage.Practice); return true; }
             if (Input.GetKeyDown(KeyCode.Return)) { NavigateHub(HubPage.Lesson); return true; }
         }
         if (hubPage == HubPage.Lesson && Input.GetKeyDown(KeyCode.Return)) { StartStudySession(selectedLesson); return true; }
@@ -110,10 +122,6 @@ public sealed partial class RuneholdGame
             for (int i = 0; i < 4; i++)
                 if (Input.GetKeyDown((KeyCode)((int)KeyCode.Alpha1 + i))) EquipLivery(i);
         if (hubPage == HubPage.Results && Input.GetKeyDown(KeyCode.Return)) { ResumeExpedition(); return true; }
-        if (Input.GetKeyDown(KeyCode.Return))
-        {
-            NavigateHub(HubPages[hubFocus]);
-        }
         return true;
     }
 
@@ -124,9 +132,12 @@ public sealed partial class RuneholdGame
         hubCopy = MenuType(20, Hex("becddd"));
         hubLabel = MenuType(22, Cream, true);
         DrawRelayMenuShell();
+        Matrix4x4 menuMatrix = GUI.matrix;
+        if (hubPage != HubPage.Home) GUI.matrix *= Matrix4x4.Translate(new Vector3(-127, 0, 0));
         switch (hubPage)
         {
             case HubPage.Home: DrawHubHome(); break;
+            case HubPage.More: DrawMoreMenu(); break;
             case HubPage.Galaxy: DrawGalaxyRoute(); break;
             case HubPage.Practice: DrawPracticeLab(); break;
             case HubPage.Lesson: DrawLessonBrief(); break;
@@ -136,6 +147,7 @@ public sealed partial class RuneholdGame
             case HubPage.Settings: DrawLearningSettings(); break;
             case HubPage.Results: DrawStudyResults(); break;
         }
+        GUI.matrix = menuMatrix;
         menuNameEditing = hubPage == HubPage.Settings && GUI.GetNameOfFocusedControl() == "CadetName";
     }
 
@@ -152,45 +164,37 @@ public sealed partial class RuneholdGame
 
     private void DrawGalaxyRoute()
     {
-        HubHeading("Where shall we learn?", "Pick a lesson. Every lesson is open for practice.");
+        HubHeading("Learn maths", "Choose a lesson.");
         DrawRouteNodes(240, false);
-        UiCard(new Rect(334, 638, 866, 119), Cyan);
-        UiText(StarfallCurriculum.Names[selectedLesson], new Rect(358, 650, 500, 37), 25, true);
-        UiText(selectedLesson <= learningProfile.UnlockedLesson ? "Use this maths for your space upgrades." : "Practise here. Space milestones unlock its upgrades.", new Rect(358, 692, 500, 52), 20, false, UiMuted);
-        if (MenuButton("Open lesson", new Rect(886, 666, 290, 64), Cyan, true, true)) NavigateHub(HubPage.Lesson);
+        if (MenuLink("Quick practice  >", new Rect(494, 666, 546, 64), false, TextAnchor.MiddleCenter)) NavigateHub(HubPage.Practice);
     }
 
     private void DrawRouteNodes(float top, bool compact)
     {
-        string[] titles = { "Adding", "Taking away", "Making ten", "Equal groups", "Sharing", "Mixed puzzles" };
         for (int i = 0; i < 6; i++)
         {
-            Rect card = new Rect(334 + i % 3 * 292, top + i / 3 * 194, 282, 176);
-            bool selected = i == selectedLesson; UiCard(card, i % 2 == 0 ? Cyan : Gold, selected);
-            DrawMenuPlanet(new Vector2(card.x + 43, card.y + 49), i, 25, selected, learningProfile.Wins[i] > 0);
-            UiText(titles[i], new Rect(card.x + 87, card.y + 19, 177, 65), 25, true);
-            UiText("Lesson " + (i + 1) + " · Tap to explore", new Rect(card.x + 20, card.y + 106, 242, 52), 20, false, UiMuted);
+            Rect card = new Rect(334 + i % 3 * 292, top + i / 3 * 182, 282, 150);
+            bool selected = i == selectedLesson; UiCard(card, Cyan, selected);
+            DrawElementSprite(new[] { 1, 2, 3, 0, 1, 2 }[i], new Vector2(card.center.x, card.y + 43), 44);
+            UiText(StarfallCurriculum.Names[i], new Rect(card.x + 16, card.y + 88, 250, 42), 24, true, UiInk, TextAnchor.MiddleCenter);
             if (GUI.Button(card, GUIContent.none, GUIStyle.none)) { selectedLesson = i; PlayRelaySound(4, .5f); NavigateHub(HubPage.Lesson); }
         }
     }
 
     private void DrawPracticeLab()
     {
-        HubHeading("Let's try some maths", "Pick a skill, then solve five puzzles. You can always ask for help.");
+        HubHeading("Quick practice", "Choose a skill.");
         for (int level = 0; level < 3; level++)
             if (MenuTab(LevelNames[level], new Rect(334 + level * 292, 240, 282, 58), learningProfile.PracticeDifficulty == level))
             { learningProfile.PracticeDifficulty = level; SaveLearningProfile(); }
         string[] symbols = { "+", "−", "×", "÷" };
-        string[] copy = { "Put amounts together.", "Find what is left.", "Make equal groups.", "Share things fairly." };
         for (int i = 0; i < 4; i++)
         {
-            Rect card = new Rect(334 + i % 2 * 442, 320 + i / 2 * 206, 424, 187); UiCard(card, i < 2 ? Cyan : Gold);
-            UiText(symbols[i], new Rect(card.x + 19, card.y + 17, 62, 62), 55, true, UiBlue, TextAnchor.MiddleCenter);
-            UiText(SkillNames[i], new Rect(card.x + 99, card.y + 17, 305, 36), 26, true);
-            UiText(copy[i], new Rect(card.x + 99, card.y + 60, 305, 45), 22, false, UiMuted);
-            if (MenuButton("Let's practise", new Rect(card.x + 99, card.y + 118, 305, 53), Cyan)) { practiceSkill = i; selectedLesson = SkillLesson(i); NavigateHub(HubPage.Lesson); }
+            Rect card = new Rect(334 + i % 2 * 442, 350 + i / 2 * 174, 424, 142); UiCard(card, Cyan);
+            UiText(symbols[i], new Rect(card.x + 24, card.y + 29, 62, 72), 50, true, UiBlue, TextAnchor.MiddleCenter);
+            UiText(SkillNames[i], new Rect(card.x + 112, card.y + 26, 288, 80), 28, true);
+            if (GUI.Button(card, GUIContent.none, GUIStyle.none)) { practiceSkill = i; selectedLesson = SkillLesson(i); NavigateHub(HubPage.Lesson); }
         }
-        UiText("No timer. Your space adventure stays safe while you learn.", new Rect(334, 744, 866, 32), 21, false, UiMuted);
     }
 
     private static int SkillLesson(int skill) => skill < 2 ? skill : skill == 2 ? 3 : 4;

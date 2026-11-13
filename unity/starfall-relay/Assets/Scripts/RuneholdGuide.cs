@@ -130,7 +130,7 @@ public sealed partial class RuneholdGame
         { OpenBot(new[] { "You can prepare and try this night again. Your tools and completed maths are kept. The retry starts with the Health you had before this shower, not a free full heal.",
             "A stronger Shield can absorb more hits next time. You can also improve Tower, Blaster or Drones to stop meteors sooner." }); return; }
         if (menuOpen)
-        { OpenBot(new[] { "My adventure returns to the ship. Learn maths has lessons and practice. My rewards has badges and colors. My progress shows what you have learned.",
+        { OpenBot(new[] { "Play returns to the ship. Learn maths has lessons and practice. My stuff holds your rewards, colors, progress and space tools.",
             "Play whenever you are ready. If you are learning the controls, I will guide you on the ship. Ask for help works here and during the game." }); return; }
         OpenBot(new[] { "You move the astronaut yourself with the stick. Walk over Metal and Crystal to collect them. Tap a building's sign or Build & upgrade to inspect tools.",
             "Tower shoots. Shield protects. Collector gathers more. Blaster and Drones attack. Repair heals Health during a night.",

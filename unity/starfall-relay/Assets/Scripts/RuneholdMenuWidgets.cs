@@ -64,17 +64,25 @@ public sealed partial class RuneholdGame
         if (accent.maxColorComponent < .65f) accent = UiBlue;
         Color face = !available ? Hex("e6ebf2") : selected ? UiBlue : Color.Lerp(accent, Color.white, hover ? .68f : .84f);
         Color text = !available ? Hex("66758a") : selected ? Color.white : UiInk;
-        PixelSurface(new Rect(rect.x, rect.y + 5, rect.width, rect.height), available ? Hex("849fb9") : Hex("c0cbd5"));
-        Rect drawn = new Rect(rect.x, rect.y + (pressed ? 3 : 0), rect.width, rect.height);
-        PixelSurface(drawn, available ? PixelEdge : Hex("8ea3b7"));
-        PixelSurface(new Rect(drawn.x + 3, drawn.y + 3, drawn.width - 6, drawn.height - 6), face, 4);
-        Fill(drawn.x + 8, drawn.y + 3, drawn.width - 16, 3, selected && available ? Hex("68b9df") : Hex("f5fcff"));
-        Fill(drawn.x + 7, drawn.yMax - 7, drawn.width - 14, 4, selected && available ? Hex("1c508b") : Color.Lerp(face, Hex("839fb9"), .2f));
+        Rect drawn = new Rect(rect.x, rect.y + (pressed ? 1 : 0), rect.width, rect.height);
+        PixelSurface(drawn, selected && available ? UiBlue : UiLine, 4);
+        PixelSurface(new Rect(drawn.x + 2, drawn.y + 2, drawn.width - 4, drawn.height - 4), face, 2);
         GUIStyle type = UiStyle(rect.height >= 64 ? 23 : 19, text, true, TextAnchor.MiddleCenter);
         while (type.fontSize > 17 && type.CalcSize(new GUIContent(label)).x > rect.width - 24) type.fontSize--;
         GUI.Label(new Rect(drawn.x + 10, drawn.y + 2, drawn.width - 20, drawn.height - 4), label, type);
         bool previous = GUI.enabled; GUI.enabled = available;
         bool clicked = GUI.Button(rect, GUIContent.none, GUIStyle.none); GUI.enabled = previous;
+        if (clicked) { PlayRelaySound(4, .55f); menuClearFocus = true; }
+        return clicked;
+    }
+
+    private bool MenuLink(string label, Rect rect, bool focused = false, TextAnchor anchor = TextAnchor.MiddleLeft)
+    {
+        bool hover = GUI.enabled && rect.Contains(Event.current.mousePosition);
+        if (hover || focused) PixelSurface(rect, Hex("e2edf5"), 4);
+        if (focused) Fill(rect.x, rect.y + 20, 3, rect.height - 40, UiBlue);
+        UiText(label, new Rect(rect.x + 16, rect.y, rect.width - 32, rect.height), 23, false, UiBlue, anchor);
+        bool clicked = GUI.Button(rect, GUIContent.none, GUIStyle.none);
         if (clicked) { PlayRelaySound(4, .55f); menuClearFocus = true; }
         return clicked;
     }
